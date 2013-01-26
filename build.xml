@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="GridPortServer" default="build" basedir=".">
+
+	<target name="build">
+		
+		<mkdir dir="target/bin"/>
+		
+		<!-- build binary -->		
+		<copy todir="target/bin">
+			<fileset dir="src" includes="*.properties"/>
+			<fileset dir="target" includes="gridport-server.jar"/>
+		</copy>		
+		
+		<!-- prepare installer files -->		
+		<echo file="target/bin/nt.run.bat">java -Djava.library.path=. -jar gridport-server.jar cli</echo>
+		<echo file="target/bin/run.sh">#!/bin/bash
+java -Djava.library.path=. -jar gridport-server.jar cli</echo>		
+		<copy todir="target/bin">			
+			<fileset dir="./target/classes" includes="policy.init.*"/>
+			<fileset dir="dwrapper" includes="wrapper.conf"/>
+			<fileset dir="dwrapper" includes="sh.daemon"/>			
+		</copy>		
+		<replace file="target/bin/wrapper.conf">
+			<replacefilter token="@ServiceName@" value="GridPortd"/>
+			<replacefilter token="@ServiceDisplayName@" value="GridPort Daemon"/>
+			<replacefilter token="@ServiceDescription@" value="Reverse Proxy and Ansynchronous HTTP Agent"/>
+			<replacefilter token="@ServiceJarFile@" value="gridport-server.jar"/>
+			<replacefilter token="@ServiceMainClass@" value="co.gridport.server.GridPortServer"/>
+			<replacefilter token="@LibClassPath@" value="./"/>
+			<replacefilter token="@ServiceLogFile@" value=""/>
+		</replace>
+		<replace file="target/bin/sh.daemon">
+			<replacefilter token="@app.name@" value="GridPortd"/>
+			<replacefilter token="@app.log.name@" value="GridPort Daemon"/>
+			<replacefilter token="@app.description@" value="Reverse Proxy and Ansynchronous HTTP Agent"/>
+		</replace>	
+	</target>
+
+	<target name="distro" depends="build">
+		<mkdir dir="target/dist"/>
+		
+		<!--common distro zip macro-->
+		<macrodef name="distro">
+			<attribute name="destfile"/>
+			<element name="os-specific"/> 
+			<sequential>			
+				<zip destfile="@{destfile}">
+					<fileset dir="target/bin" includes="policy.init.*"/>
+					<fileset dir="./" includes="README.md"/>					
+					<!--
+					<fileset dir="c:/apache/bin" includes="keystore.jks"/>
+					-->
+					<zipfileset prefix="bin" dir="target/bin" includes="gridport-server.jar"/>
+					<zipfileset prefix="bin" dir="target/bin" includes="wrapper.conf"/>
+					<zipfileset prefix="bin" dir="target/bin" includes="*.properties"/>
+					
+					<os-specific/>
+					
+				</zip>	
+				<checksum file="@{destfile}" todir="target/dist" forceOverwrite="yes"/>
+			</sequential>
+		</macrodef>		
+		
+		<!--generate i386 distro-->
+		<distro destfile="target/dist/GridPort-i386.zip">
+			<os-specific>
+				<zipfileset prefix="bin" dir="target/bin" includes="run.sh"/>
+				<zipfileset prefix="bin" dir="target/bin" includes="sh.daemon"/>
+				<zipfileset prefix="bin" dir="dwrapper" includes="wrapper.jar"/>
+				<zipfileset prefix="bin" dir="dwrapper" includes="wrapper-linux-x86-32" />				
+				<zipfileset prefix="bin" dir="dwrapper" includes="libwrapper-linux-x86-32.so" />
+			</os-specific>
+		</distro>
+			
+		<!--generate Amd64 distro -->	
+		<distro destfile="target/dist/GridPort-amd64.zip">
+			<os-specific>
+				<zipfileset prefix="bin" dir="target/bin" includes="run.sh"/>
+				<zipfileset prefix="bin" dir="target/bin" includes="sh.daemon"/>
+				<zipfileset prefix="bin" dir="dwrapper" includes="wrapper.jar"/>
+				<zipfileset prefix="bin" dir="dwrapper" includes="wrapper-linux-x86-64" />
+				<zipfileset prefix="bin" dir="dwrapper" includes="libwrapper-linux-x86-64.so" />
+			</os-specific>
+		</distro>
+
+		<!--generate win32 distro-->
+		<distro destfile="target/dist/GridPort-win32.zip">
+			<os-specific>
+				<zipfileset prefix="bin" dir="target/bin" includes="*.bat"/>
+				<zipfileset prefix="bin" dir="dwrapper" includes="*.bat"/>				
+				<zipfileset prefix="bin" dir="dwrapper" includes="wrapper.jar"/>
+				<zipfileset prefix="bin" dir="dwrapper" includes="wrapper-windows-x86-32.*" />
+			</os-specific>
+		</distro>
+	
+		<!--generate win64 distro-->
+		<distro destfile="target/dist/GridPort-win64.zip">
+			<os-specific>
+				<zipfileset prefix="bin" dir="target/bin" includes="*.bat"/>
+				<zipfileset prefix="bin" dir="dwrapper" includes="*.bat"/>				
+				<zipfileset prefix="bin" dir="dwrapper" includes="wrapper.jar"/>
+				<zipfileset prefix="bin" dir="dwrapper" includes="wrapper-windows-x86-64.*" />
+			</os-specific>
+		</distro>		
+		
+	</target>	
+	
+</project>

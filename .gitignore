@@ -1,0 +1,15 @@
+.settings
+.project
+.buildpath
+.classpath
+target
+dist
+logs
+policy.db
+policy.db-journal
+space.db
+jms.db
+
+#this should be an optional submodule
+dwrapper
+
