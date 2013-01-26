@@ -2,7 +2,18 @@
 
 <project name="GridPortServer" default="build" basedir=".">
 
-	<target name="build">
+    <target name="check-dwrapper">
+        <available file="dwrapper/wrapper.conf" property="dwrapper.present"/>
+    </target>
+    <target name="dwrapper" depends="check-dwrapper" unless="dwrapper.present">
+        <exec executable="svn">
+            <arg value="co" />
+            <arg value="http://svn.xp-dev.com/svn/dwrapper/trunk"/>
+            <arg value="dwrapper" />
+        </exec>     
+    </target>
+
+	<target name="build" depends="dwrapper">
 		
 		<mkdir dir="target/bin"/>
 		
@@ -36,8 +47,8 @@ java -Djava.library.path=. -jar gridport-server.jar cli</echo>
 			<replacefilter token="@app.description@" value="Reverse Proxy and Ansynchronous HTTP Agent"/>
 		</replace>	
 	</target>
-
-	<target name="distro" depends="build">
+	
+	<target name="distrobuild" depends="build">
 		<mkdir dir="target/dist"/>
 		
 		<!--common distro zip macro-->

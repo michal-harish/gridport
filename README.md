@@ -1,20 +1,57 @@
-Objectives
+Motivation and Objectives
 ========================================================================
- The motivation is to have a component that can be placed between http server
- and http service ( either in front or behind the server ) which serves as 
- a common gateway for accessing various http (RESTful included) services and 
- being able to control various ACL and SLA aspects by intercepting and 
- forwarding/rejecting/routing requests to the service endpoints without
- any implementation requirement on the part of the service endpoints. 
-  
- 1. Http Service Registry 
-    - ACL+SLA - authentication, contracts (throttling, routing, ...)
+ The motivation is to have a standalone http component that can be placed 
+ in the http request path which can intercept, filter, throttle and route
+ http requests to various deployed http service endpoints without any implementation
+ or awareness requirement on the part of the service endpoints based 
+ on SLA Contracts, ACL Rules and Routing Definitions.
+   
+ Objective 1: To be a Service Registry for HTTP/RESTful services 
+    - ACL Rules & SLA Contracts for authentication, authorisation, throttling and routing
     - Monitoring and statistics
     - SSL proxy
-    - Http Caching (not implemented)
- 2. Misceleanous Modules
-    - Tuple Space Module
-    - Http-JMS Bridge Module
+    - Http Caching (not implemented yet)
+ Objective 2: To be a gateway to the Event-Driven world 
+    - option for completing http requests asynchronously       
+    - Http interface to publish and subscribe systems
+        - JMS Module
+        - Kafka Module (not implemented yet)   
+
+Quick Start Instructions
+========================================================================
+
+Installation
+------------
+ 1. checkout code 
+    $> git clone git://github.com/michal-harish/gridport.git
+    $> cd gridport 
+ 2. build a single executable jar 
+    $> mvn package assembly:single
+ 3. quick launch 
+    $> java -jar ./target/gridport-server.jar 
+ 4. add some test rules to newly generated policy.db  
+    - it is a sqlList database which should be initialized - http://sqlitebrowser.sourceforge.net
+    - see SLA Contracs & ACL Rules reference below 
+ 5. Optionally, generate gzip distros with service wrapper $> ant distrobuild
+    - this should generate different packages in ./target/dist
+
+SLA Contracts
+------------------------------------------------------------------------
+SLA Contracs define under which conditions and how frequently can certain
+endpoint be send requests to.
+
+ACL Rules reference
+------------------------------------------------------------------------
+ACL Rules define groups and users who can be added to contracts for authorisation
+
+WEB INTERFACE /manage
+------------------------------------------------------------------------
+ssl service_endpoint        http_method                 gateway_host    auth_group  uri_base
+1   module://manager        GET POST DELETE             -               admin root  /manage/*
+0   module://space          GET POST OPTIONS MOVE PUT   -                           /space/ 
+1   module://jms            POST PUT DELETE OPTIONS     -                           /jms/*
+
+
 
 Anatomy - TODO Update as per firewall-authenticator-handler design after threading done
 ========================================================================
@@ -32,20 +69,6 @@ Anatomy - TODO Update as per firewall-authenticator-handler design after threadi
 * Modules are initialized on demand (only if there is actual Client Request)
 * All server activity is logged into the gridportd.log
 * On shutdown server first closes request listeners and calls all modules to cleanup 
-
-Quick Start Instructions
-========================================================================
- 1. to build a single executable jar $> mvn package assembly:single 
- 2. TODO quick launch
- 3. policy.db is a sqlList database which will be initialized to default on startup
- 4. OPTIONALLY generate gzip distro service wrapper for common os(s)
-
-WEB INTERFACE /manage
-========================================================================
-ssl service_endpoint        http_method                 gateway_host    auth_group  uri_base
-1   module://manager        GET POST DELETE             -               admin root  /manage/*
-0   module://space          GET POST OPTIONS MOVE PUT   -                           /space/ 
-1   module://jms            POST PUT DELETE OPTIONS     -                           /jms/*
 
 
 SSL CERTIFICATE & KEY STORES 
@@ -76,48 +99,37 @@ REQUEST PROCESSING PATH
  
 EXAMPLE CONFIGURATON AT PORT 8040 BEHIND APACHE PROXY
 ========================================================================
-<VirtualHost *:80>
-    ServerName gridport.co 
-    #ServerAlias someservice.gridport.co
-    ProxyPreserveHost On
-    ProxyVia On
-    ProxyPass / http://127.0.0.1:8040/
-</VirtualHost>
+    <VirtualHost *:80>
+        ServerName gridport.co 
+        #ServerAlias someservice.gridport.co
+        ProxyPreserveHost On
+        ProxyVia On
+        ProxyPass / http://127.0.0.1:8040/
+    </VirtualHost>
 
 JMS Receiver Example (php)
 ========================================================================
-<?php 
-if ($_SERVER['REQUEST_METHOD']=='PUT') { //subscribe acknowledge
-    header("HTTP/1.1 201 Created"); 
-            
-} elseif($_SERVER['REQUEST_METHOD']=='POST') { //receive message    
-    ob_start();
-    $message = file_get_contents("php://input");
-    $destination = $_SERVER['HTTP_JMSDESTINATION'];
-    $priority = $_SERVER['HTTP_JMSPRIORITY'];
-    $messageId = $_SERVER['HTTP_JMSMESSAGEID'];     
-    //..critical process of $message that must succeed prior to acknowledgement                 
-    //..throw new exception("some problem");        
-    header("HTTP/1.1 202 Accepted"); //acknowledge      
-    //..some post-acknowledgement processing ..     
-}
-?>
+    <?php 
+    if ($_SERVER['REQUEST_METHOD']=='PUT') { //subscribe acknowledge
+        header("HTTP/1.1 201 Created"); 
+                
+    } elseif($_SERVER['REQUEST_METHOD']=='POST') { //receive message    
+        ob_start();
+        $message = file_get_contents("php://input");
+        $destination = $_SERVER['HTTP_JMSDESTINATION'];
+        $priority = $_SERVER['HTTP_JMSPRIORITY'];
+        $messageId = $_SERVER['HTTP_JMSMESSAGEID'];     
+        //..critical process of $message that must succeed prior to acknowledgement                 
+        //..throw new exception("some problem");        
+        header("HTTP/1.1 202 Accepted"); //acknowledge      
+        //..some post-acknowledgement processing ..     
+    }
+    ?>
 
 Backlog
 ========================================================================
-TODO migrate to github (ignore:  
-        .settings
-        .project
-        .buildpath
-        .classpath
-        target
-        dist
-        logs
-        policy.db
-        policy.db-journal
-        space.db
-        jms.db
-
+TODO create install script for linux 
+TODO START THINKING OF TEST STRATEGY (ESP. EXPECTATIONS AND ASSUMPTIONS ABOUT ROUTING)
 FIXME null base_uri throws exception in GridPortHandler:207
 FIXME query string is missing from the REQUEST_URI after migration to jetty
 TODO unit tests and performance benchmarks
@@ -128,12 +140,10 @@ TODO Create internal PolicyProvider to manage access to the sqlite config
     - Add/remove contexts on the fly
 TODO Jackson
 TODO Metrics
-TODO look for //??? as unresolved migration code      
+TODO look for //??? as unresolved migration code
+      
 DEPRIORITISED nexus proxying (used to fail prior to jetty)
 DEPRIORITISED implement keep-alive connection (for svn proxying and other similar ones)
-=======================================================    
-TODO RETHINK THE DESIGN (DEFINE GOAL OF THE PROJECT) + START THINKING OF TEST STRATEGY (ESP. EXPECTATIONS AND ASSUMPTIONS ABOUT ROUTING)
-=======================================================
 
 TODO Tidy up context class
 FIXME JMS Subscription initailization doesn't invoke recovery thread
@@ -166,6 +176,8 @@ TODO ROUTER SECONDARY employ user_agent routing variables if SLAs
  
 CHANGE LOG
 ========================================================================
+26 Jan 2013 - moved to github (dwrapper was removed and will be optional)
+
 22 Oct 2012
  * Mavenized and build and distro processes
  
