@@ -231,6 +231,15 @@ public class GridPortServer {
 	    	s.addBatch("CREATE UNIQUE INDEX user ON users(username ASC);");
 	    	s.executeBatch();
 	    	s.close();
+	    	
+	    	s = policydb.createStatement();
+	    	s.addBatch("INSERT INTO settings(name,value) VALUES('httpPort','8040')");
+	    	s.addBatch("INSERT INTO settings(name,value) VALUES('sslPort','')");
+	    	s.addBatch("INSERT INTO settings(name,value) VALUES('keyStoreFile','')");
+	    	s.addBatch("INSERT INTO settings(name,value) VALUES('keyStorePass','')");
+	    	s.addBatch("INSERT INTO settings(name,value) VALUES('generalTimeout','')");	    	
+	    	s.close();
+	    	
 	    	version = 6;
 	    }
 	    
