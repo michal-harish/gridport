@@ -1,4 +1,4 @@
-package co.gridport.server;
+package co.gridport;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -23,6 +23,11 @@ import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import co.gridport.server.Authenticator;
+import co.gridport.server.ClientThread;
+import co.gridport.server.ClientThreadRouter;
+import co.gridport.server.Firewall;
+import co.gridport.server.GridPortHandler;
 import co.gridport.server.utils.Utils;
 
 public class GridPortServer {
@@ -231,13 +236,16 @@ public class GridPortServer {
 	    	s.addBatch("CREATE UNIQUE INDEX user ON users(username ASC);");
 	    	s.executeBatch();
 	    	s.close();
-	    	
-	    	s = policydb.createStatement();
+
 	    	s.addBatch("INSERT INTO settings(name,value) VALUES('httpPort','8040')");
 	    	s.addBatch("INSERT INTO settings(name,value) VALUES('sslPort','')");
 	    	s.addBatch("INSERT INTO settings(name,value) VALUES('keyStoreFile','')");
 	    	s.addBatch("INSERT INTO settings(name,value) VALUES('keyStorePass','')");
-	    	s.addBatch("INSERT INTO settings(name,value) VALUES('generalTimeout','')");	    	
+	    	s.addBatch("INSERT INTO settings(name,value) VALUES('generalTimeout','')");
+            s.addBatch("INSERT INTO endpoints(ID,http_method,uri_base,service_endpoint) VALUES(1,'GET','/manage/*','module://manager')");
+            s.addBatch("INSERT INTO endpoints(ID,http_method,uri_base,service_endpoint) VALUES(2,'GET POST MOVE PUT OPTIONS','/space/*','module://space')");	    	
+            s.addBatch("INSERT INTO endpoints(ID,http_method,uri_base,service_endpoint) VALUES(3,'GET POST','/example/*','http://localhost:80/')");
+	    	s.executeBatch();
 	    	s.close();
 	    	
 	    	version = 6;
@@ -255,45 +263,54 @@ public class GridPortServer {
 		}		
 		s.close();
 		
-		if (version <1 ) { s.executeUpdate("ALTER TABLE endpoints ADD async TEXT "); s.close(); version = 1; }
-		if (version <2 ) { s.executeUpdate("ALTER TABLE endpoints ADD auth_group TEXT "); s.close(); version = 2; }		
-		if (version <3 ) { 
-				s.executeUpdate("CREATE TABLE users (groups TEXT, username TEXT) ");s.close();
-				s.executeUpdate("CREATE UNIQUE INDEX user ON users(username ASC)");s.close();
-				version = 3; 
-		}
-		if (version <4 ) {s.executeUpdate("ALTER TABLE endpoints ADD gateway TEXT"); s.close(); version = 4;}
-		if (version <5 ) {s.executeUpdate("ALTER TABLE endpoints ADD uri_base TEXT"); s.close(); version = 5;}
-		if (version <6 ) {
-			version = 6;
-		}
-		
-		if (version <7 ) {	
-			s.addBatch("CREATE TABLE contracts (name TEXT, content TEXT, ip_range TEXT, interval REAL, frequency INTEGER)");
-			s.executeBatch();
-			s.close(); 
-			version = 7;	
-		}
-		if (version <8 ) { s.executeUpdate("ALTER TABLE contracts ADD auth_group TEXT "); s.close(); version = 8; }
-		if (version <9 ) { 			
-	    	s.addBatch("CREATE TEMPORARY TABLE temp_table (ID INTEGER PRIMARY KEY,gateway_host TEXT, http_method TEXT, uri_base TEXT, ssl NUMERIC, async TEXT, service_endpoint TEXT, gateway TEXT)");
-	    	s.addBatch("INSERT INTO temp_table SELECT ID,gateway_host, http_method, uri_base, ssl, async, service_endpoint, gateway FROM endpoints");
-	    	s.addBatch("DROP TABLE endpoints");
-	    	s.addBatch("CREATE TABLE endpoints (ID INTEGER PRIMARY KEY,gateway_host TEXT, http_method TEXT, uri_base TEXT, ssl NUMERIC, async TEXT, service_endpoint TEXT, gateway TEXT)");
-	    	s.addBatch("INSERT INTO endpoints SELECT * FROM temp_table");
-	    	s.addBatch("DROP TABLE temp_table");
-			s.addBatch("DELETE FROM settings WHERE name='R-service-log'");
-			s.executeBatch();
-			s.close(); 
-			version = 9; 
-		}
-		
-		log.info("*** POLICY-DB Version: "+ version);		
-		s = policydb.createStatement();
-		s.addBatch("DELETE FROM settings WHERE name='configVersion'");
-		s.addBatch("INSERT INTO settings(name,value) VALUES('configVersion','"+version+"')");
-		s.executeBatch();
-		s.close();
-		
+		try {
+    		if (version <1 ) { s.executeUpdate("ALTER TABLE endpoints ADD async TEXT "); s.close(); version = 1; }
+    		if (version <2 ) { s.executeUpdate("ALTER TABLE endpoints ADD auth_group TEXT "); s.close(); version = 2; }		
+    		if (version <3 ) { 
+    				s.executeUpdate("CREATE TABLE users (groups TEXT, username TEXT) ");s.close();
+    				s.executeUpdate("CREATE UNIQUE INDEX user ON users(username ASC)");s.close();
+    				version = 3; 
+    		}
+    		if (version <4 ) {s.executeUpdate("ALTER TABLE endpoints ADD gateway TEXT"); s.close(); version = 4;}
+    		if (version <5 ) {s.executeUpdate("ALTER TABLE endpoints ADD uri_base TEXT"); s.close(); version = 5;}
+    		if (version <6 ) {
+    			version = 6;
+    		}
+    		
+    		if (version <7 ) {	
+    			s.addBatch("CREATE TABLE contracts (name TEXT, content TEXT, ip_range TEXT, interval REAL, frequency INTEGER)");
+    			s.executeBatch();
+    			s.close(); 
+    			version = 7;	
+    		}
+    		if (version <8 ) {
+    		    s.addBatch("ALTER TABLE contracts ADD auth_group TEXT "); s.close();
+    		    s.addBatch("INSERT INTO users(groups,username) VALUES('examplegroup','exampleuser')");
+                s.addBatch("INSERT INTO contracts(name,content,ip_range) VALUES('localAdmin','1,2','127.0.0.1')");          
+                s.addBatch("INSERT INTO contracts(name,content,interval,frequency,auth_group) VALUES('examplecontract','3',1.0,1,'examplegroup')");
+                s.executeBatch();
+                s.close(); 		    
+    		    version = 8; 
+    	    }
+    		if (version <9 ) { 			
+    	    	s.addBatch("CREATE TEMPORARY TABLE temp_table (ID INTEGER PRIMARY KEY,gateway_host TEXT, http_method TEXT, uri_base TEXT, ssl NUMERIC, async TEXT, service_endpoint TEXT, gateway TEXT)");
+    	    	s.addBatch("INSERT INTO temp_table SELECT ID,gateway_host, http_method, uri_base, ssl, async, service_endpoint, gateway FROM endpoints");
+    	    	s.addBatch("DROP TABLE endpoints");
+    	    	s.addBatch("CREATE TABLE endpoints (ID INTEGER PRIMARY KEY,gateway_host TEXT, http_method TEXT, uri_base TEXT, ssl NUMERIC, async TEXT, service_endpoint TEXT, gateway TEXT)");
+    	    	s.addBatch("INSERT INTO endpoints SELECT * FROM temp_table");
+    	    	s.addBatch("DROP TABLE temp_table");
+    			s.addBatch("DELETE FROM settings WHERE name='R-service-log'");
+    			s.executeBatch();
+    			s.close(); 
+    			version = 9; 
+    		}
+		} finally {		
+    		log.info("*** POLICY-DB Version: "+ version);		
+    		s = policydb.createStatement();
+    		s.addBatch("DELETE FROM settings WHERE name='configVersion'");
+    		s.addBatch("INSERT INTO settings(name,value) VALUES('configVersion','"+version+"')");
+    		s.executeBatch();
+    		s.close();
+		}		
 	}
 }

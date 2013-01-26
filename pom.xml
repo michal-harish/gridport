@@ -93,7 +93,7 @@
               <appendAssemblyId>false</appendAssemblyId>              
               <archive>
                   <manifest>
-                      <mainClass>co.gridport.server.GridPortServer</mainClass>                      
+                      <mainClass>co.gridport.GridPortServer</mainClass>                      
                   </manifest>
               </archive>
             <descriptorRefs>

@@ -8,6 +8,7 @@ import java.util.List;
 
 import javax.jms.JMSException;
 
+import co.gridport.GridPortServer;
 import co.gridport.server.utils.Utils;
 
 public class ClientThreadRouter extends ClientThread {

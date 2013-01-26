@@ -30,11 +30,28 @@ Installation
  2. Build a single executable jar 
     * $> mvn package assembly:single
  3. Start the server 
-    * $> java -jar ./target/gridport-server.jar 
- 4. Add some test rules to newly generated policy.db  
-    * it is a sqlList database which should be initialized - http://sqlitebrowser.sourceforge.net
+    * $> java -jar ./target/gridport-server.jar
+    * default policy.db should be generated with the following settings
+        * only http port set to 8040
+        * ssl port disabled
+        * localAdmin contract created for any requests from localhost without authorisation        
+        * default endpoint for managing the server created at the uri /manage/
+        * example settings were also generated:
+            * '/example' endpoint was added pointing to 'http://localhost:80/'  
+            * 'examplegroup' with one user 'exampleuser' were added
+            * 'examplecontract' was created requiring authenticated user from 'examplegroup'
+                through which '/example' endpoint can be accessed at most once every second   
+ 4. Try http://localhost:8040/manage/ from your browser 
+    * you should see some rudimentary information about the server - this will become
+        the console for managing the policy.db but until then we have to edit it manually
+ 5. Now try http://localhost:8040/example/
+    * as per example configuration this endpoint requires authenticated user so a http login box should pop up
+    * note: the authentication is actually digest-md5 not a basic http one 
+    * the user must be from the 'exampleuser' group so use 'exampleuser' as username and no password
+    * if you have apache or another http server running on port 80 you should see now its default page
+ 5. Add some test rules to newly generated policy.db  
+    * edit the ./policy.db sqlite database (with something like http://sqlitebrowser.sourceforge.net)
     * see SLA Contracs & ACL Rules reference below
- 5. Try http://localhost:8040/manage/ 
  6. Optionally, generate gzip distros with service wrapper $> ant distrobuild
     * this should generate different packages in ./target/dist
 

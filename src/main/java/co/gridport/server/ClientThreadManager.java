@@ -12,6 +12,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONWriter;
 
+import co.gridport.GridPortServer;
 import co.gridport.server.space.Space2;
 import co.gridport.server.space.Subscription;
 import co.gridport.server.utils.Utils;

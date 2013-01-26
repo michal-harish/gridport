@@ -37,7 +37,7 @@ java -Djava.library.path=. -jar gridport-server.jar cli</echo>
 			<replacefilter token="@ServiceDisplayName@" value="GridPort Daemon"/>
 			<replacefilter token="@ServiceDescription@" value="Reverse Proxy and Ansynchronous HTTP Agent"/>
 			<replacefilter token="@ServiceJarFile@" value="gridport-server.jar"/>
-			<replacefilter token="@ServiceMainClass@" value="co.gridport.server.GridPortServer"/>
+			<replacefilter token="@ServiceMainClass@" value="co.gridport.GridPortServer"/>
 			<replacefilter token="@LibClassPath@" value="./"/>
 			<replacefilter token="@ServiceLogFile@" value=""/>
 		</replace>

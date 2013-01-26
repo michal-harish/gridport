@@ -16,6 +16,7 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import co.gridport.GridPortServer;
 import co.gridport.server.jms.ClientThreadJMS;
 import co.gridport.server.space.ClientThreadSpace;
 import co.gridport.server.utils.Utils;

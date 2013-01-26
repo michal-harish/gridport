@@ -20,7 +20,7 @@ import javax.naming.NamingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.gridport.server.GridPortServer;
+import co.gridport.GridPortServer;
 
 
 public class POSTListenerTopic extends POSTListener {
