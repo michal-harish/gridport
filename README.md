@@ -6,39 +6,42 @@ Motivation and Objectives
  or awareness requirement on the part of the service endpoints based 
  on SLA Contracts, ACL Rules and Routing Definitions.
    
- Objective 1: To be a Service Registry for HTTP/RESTful services 
-    - ACL Rules & SLA Contracts for authentication, authorisation, throttling and routing
-    - Monitoring and statistics
-    - SSL proxy
-    - Http Caching (not implemented yet)
- Objective 2: To be a gateway to the Event-Driven world 
-    - option for completing http requests asynchronously       
-    - Http interface to publish and subscribe systems
-        - JMS Module
-        - Kafka Module (not implemented yet)   
+ **Objective 1**: To be a Service Registry for Http/RESTful Services 
+    * ACL Rules & SLA Contracts for authentication, authorisation, throttling and routing
+    * Monitoring and statistics
+    * SSL proxy
+    * Http Caching (not implemented yet)
+
+ **Objective 2**: To be a gateway to the Event-Driven world 
+    * option for completing http requests asynchronously       
+    * to be a Http interface to publish-subscribe systems
+        * JMS Module - working
+        * Tuple Space Module - experimental
+        * Kafka Module - not implemented yet   
 
 Quick Start Instructions
 ========================================================================
 
 Installation
 ------------
- 1. checkout code 
-    $> git clone git://github.com/michal-harish/gridport.git
-    $> cd gridport 
- 2. build a single executable jar 
-    $> mvn package assembly:single
- 3. quick launch 
-    $> java -jar ./target/gridport-server.jar 
- 4. add some test rules to newly generated policy.db  
-    - it is a sqlList database which should be initialized - http://sqlitebrowser.sourceforge.net
-    - see SLA Contracs & ACL Rules reference below 
- 5. Optionally, generate gzip distros with service wrapper $> ant distrobuild
-    - this should generate different packages in ./target/dist
+ 1. Checkout code 
+    * $> git clone git://github.com/michal-harish/gridport.git
+    * $> cd gridport 
+ 2. Build a single executable jar 
+    * $> mvn package assembly:single
+ 3. Start the server 
+    * $> java -jar ./target/gridport-server.jar 
+ 4. Add some test rules to newly generated policy.db  
+    * it is a sqlList database which should be initialized - http://sqlitebrowser.sourceforge.net
+    * see SLA Contracs & ACL Rules reference below
+ 5. Try http://localhost:8040/manage/ 
+ 6. Optionally, generate gzip distros with service wrapper $> ant distrobuild
+    * this should generate different packages in ./target/dist
 
 SLA Contracts
 ------------------------------------------------------------------------
 SLA Contracs define under which conditions and how frequently can certain
-endpoint be send requests to.
+endpoint be queried.
 
 ACL Rules reference
 ------------------------------------------------------------------------
@@ -128,52 +131,48 @@ JMS Receiver Example (php)
 
 Backlog
 ========================================================================
-TODO create install script for linux 
-TODO START THINKING OF TEST STRATEGY (ESP. EXPECTATIONS AND ASSUMPTIONS ABOUT ROUTING)
-FIXME null base_uri throws exception in GridPortHandler:207
-FIXME query string is missing from the REQUEST_URI after migration to jetty
-TODO unit tests and performance benchmarks
-TODO Create internal PolicyProvider to manage access to the sqlite config
-    - Insert default settings, user, contract and endpoints when initializing policy.db
-    - Prepare for .conf provider with dir.watcher (will be faster then querying sqlite)
-    - Implement jetty handler Graceful
-    - Add/remove contexts on the fly
-TODO Jackson
-TODO Metrics
-TODO look for //??? as unresolved migration code
-      
-DEPRIORITISED nexus proxying (used to fail prior to jetty)
-DEPRIORITISED implement keep-alive connection (for svn proxying and other similar ones)
-
-TODO Tidy up context class
-FIXME JMS Subscription initailization doesn't invoke recovery thread
-TODO JMS Keep publishers alive with a session per some client request attribute (probably remote ip?) 
-TODO Authenticator .. send some Forbidden html with the http status
-TODO JMS HTTP GET to operate as non-durable retrospective subscriber and only use it as list for url base topic and queue
-TODO make an internal function to read header by case-insensitive header name key
-TODO process multiple subrequest responses in a streaming fashion 
-TODO INIT insert into settings(name,value) VALUES('router.log','topic://gridport.log.router');
-TODO INIT insert into settings(name,value) VALUES('httpPort,'8040');
-TODO INIT insert into settings(name,value) VALUES('generalTimeout,'30');
-FIXME Win-64 wrapper native missing
-TODO PASSWORDS
-TODO JMS POSTListenerQueue
-TODO ROUTER log all jms publish messages with internal jms publisher co.gridport.jms.publish("gridport.log.jms","{..}");
-FIXME ROUTER Set-Cookie passes only last cookie instruction
-TOCO ROUTER 504 Gateway Timeout in mergeTasks()
-TODO ROUTER X-Forwarded-For 
-TODO JMS Test setup with HornetQ
-TODO BUILD - distro publisher ( into the AOS3 downloads or an sourceforge/freshmeat api) 
-TODO CODE STRUCTURE - Module Interface ( initialize(), close(), cliCommand(),... ) 
-FIXME ROUTER currently if nested URIs are used the more general must precede the general one if it need be routed to
-TODO ROUTER if any of the sub request of a multicast event responds with 4xx, ALL subrequests need to be cancelled with extra compensation for those that have already returned 2xx or 3xx 
-TODO ROUTER Compensate for pending Event Sub requests 		  
-TODO ROUTER review mergeTasks();  implement MATCH (200 ok if responses are identical); 
-TODO ROUTER review mergeTasks();  review MERGE
-TODO ROUTER review mergeTasks();  implement MIX using multipart/mixed; 
-TODO ROUTER review OPTIONS and implement merging Allow headers with proxy settings
-TODO ROUTER SECONDARY employ user_agent routing variables if SLAs
- 
+* TODO create install script for linux 
+* TODO START THINKING OF TEST STRATEGY (ESP. EXPECTATIONS AND ASSUMPTIONS ABOUT ROUTING)
+* FIXME null base_uri throws exception in GridPortHandler:207
+* FIXME query string is missing from the REQUEST_URI after migration to jetty
+* TODO unit tests and performance benchmarks
+* TODO Create internal PolicyProvider to manage access to the sqlite config
+    * Insert default settings, user, contract and endpoints when initializing policy.db
+    * Prepare for .conf provider with dir.watcher (will be faster then querying sqlite)
+    * Implement jetty handler Graceful
+    * Add/remove contexts on the fly
+* TODO Jackson
+* TODO Metrics
+* TODO look for //??? as unresolved migration code    
+* TODO Tidy up context class
+* FIXME JMS Subscription initailization doesn't invoke recovery thread
+* TODO JMS Keep publishers alive with a session per some client request attribute (probably remote ip?) 
+* TODO Authenticator .. send some Forbidden html with the http status
+* TODO JMS HTTP GET to operate as non-durable retrospective subscriber and only use it as list for url base topic and queue
+* TODO make an internal function to read header by case-insensitive header name key
+* TODO process multiple subrequest responses in a streaming fashion 
+* TODO INIT insert into settings(name,value) VALUES('router.log','topic://gridport.log.router');
+* TODO INIT insert into settings(name,value) VALUES('httpPort,'8040');
+* TODO INIT insert into settings(name,value) VALUES('generalTimeout,'30');
+* FIXME Win-64 wrapper native missing
+* TODO PASSWORDS
+* TODO JMS POSTListenerQueue
+* TODO ROUTER log all jms publish messages with internal jms publisher co.gridport.jms.publish("gridport.log.jms","{..}");
+* FIXME ROUTER Set-Cookie passes only last cookie instruction
+* TOCO ROUTER 504 Gateway Timeout in mergeTasks()
+* TODO ROUTER X-Forwarded-For 
+* TODO JMS Test setup with HornetQ
+* TODO BUILD - distro publisher ( into the AOS3 downloads or an sourceforge/freshmeat api) 
+* TODO CODE STRUCTURE - Module Interface ( initialize(), close(), cliCommand(),... ) 
+* FIXME ROUTER currently if nested URIs are used the more general must precede the general one if it need be routed to
+* TODO ROUTER if any of the sub request of a multicast event responds with 4xx, ALL subrequests need to be cancelled with extra compensation for those that have already returned 2xx or 3xx 
+* TODO ROUTER Compensate for pending Event Sub requests 		  
+* TODO ROUTER review mergeTasks();  implement MATCH (200 ok if responses are identical); 
+* TODO ROUTER review mergeTasks();  review MERGE
+* TODO ROUTER review mergeTasks();  implement MIX using multipart/mixed; 
+* TODO ROUTER review OPTIONS and implement merging Allow headers with proxy settings
+* TODO ROUTER SECONDARY employ user_agent routing variables if SLAs
+  
 CHANGE LOG
 ========================================================================
 26 Jan 2013 - moved to github (dwrapper was removed and will be optional)
