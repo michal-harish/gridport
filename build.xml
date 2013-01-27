@@ -28,7 +28,6 @@
 		<echo file="target/bin/run.sh">#!/bin/bash
 java -Djava.library.path=. -jar gridport-server.jar cli</echo>		
 		<copy todir="target/bin">			
-			<fileset dir="./target/classes" includes="policy.init.*"/>
 			<fileset dir="dwrapper" includes="wrapper.conf"/>
 			<fileset dir="dwrapper" includes="sh.daemon"/>			
 		</copy>		
@@ -57,7 +56,6 @@ java -Djava.library.path=. -jar gridport-server.jar cli</echo>
 			<element name="os-specific"/> 
 			<sequential>			
 				<zip destfile="@{destfile}">
-					<fileset dir="target/bin" includes="policy.init.*"/>
 					<fileset dir="./" includes="README.md"/>					
 					<!--
 					<fileset dir="c:/apache/bin" includes="keystore.jks"/>
