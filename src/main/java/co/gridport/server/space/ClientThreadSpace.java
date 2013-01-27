@@ -6,11 +6,11 @@ import java.io.StringWriter;
 import org.json.JSONWriter;
 
 import co.gridport.server.ClientThread;
-import co.gridport.server.GridPortContext;
+import co.gridport.server.domain.RequestContext;
 
 public class ClientThreadSpace extends ClientThread {
 	
-	public ClientThreadSpace(GridPortContext context) {
+	public ClientThreadSpace(RequestContext context) {
 		super(context);
 	}
 	protected void complete() {

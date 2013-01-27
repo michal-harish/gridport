@@ -13,6 +13,9 @@ import org.json.JSONObject;
 import org.json.JSONWriter;
 
 import co.gridport.GridPortServer;
+import co.gridport.server.domain.RequestContext;
+import co.gridport.server.domain.Route;
+import co.gridport.server.handler.RequestHandler;
 import co.gridport.server.space.Space2;
 import co.gridport.server.space.Subscription;
 import co.gridport.server.utils.Utils;
@@ -20,7 +23,7 @@ import co.gridport.server.utils.Utils;
 
 public class ClientThreadManager extends ClientThread {
 	
-	public ClientThreadManager(GridPortContext context) {
+	public ClientThreadManager(RequestContext context) {
 		super(context);
 	}
 	
@@ -40,7 +43,7 @@ public class ClientThreadManager extends ClientThread {
 			
 		//create json string 			
 		try {
-			
+
 			//OutputStreamWriter writer = new OutputStreamWriter(manager.conn.getOutputStream());
 			StringWriter writer = new StringWriter(0); 								
 			JSONWriter json = new JSONWriter(writer);
@@ -51,7 +54,15 @@ public class ClientThreadManager extends ClientThread {
 					json.array();					
 					synchronized (RequestHandler.threads) {
 						for(ClientThread T:RequestHandler.threads) {				
-							json.value(T.received + ": " + T.context.consumer_ip + " " + T.context.method + " " +T.request.getRequestURI() + " "  + (T.context.gateway_host!=null ? " VIA " + T.context.gateway_host : "") + " (" + ((System.currentTimeMillis() - T.receivedMillisec)/1000) + "sec) \n");
+							json.value(
+							    T.received + ": " + 
+							    T.context.consumer_ip + " " + 
+							    T.context.method + " " + 
+							    T.request.getRequestURI() + " "  
+							    + (T.context.gateway_host!=null ? " VIA " + T.context.gateway_host : "") 
+							    + " (" + ((System.currentTimeMillis() - T.receivedMillisec)/1000) 
+							    + "sec) \n"
+						    );
 							if (T instanceof ClientThreadRouter) {
 								ClientThreadRouter TR = (ClientThreadRouter) T;
 								synchronized (TR.events) {

@@ -19,6 +19,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import co.gridport.GridPortServer;
+import co.gridport.server.domain.Contract;
+import co.gridport.server.domain.RequestContext;
+import co.gridport.server.domain.Route;
+import co.gridport.server.handler.RequestHandler;
 import co.gridport.server.utils.Utils;
 
 
@@ -28,7 +32,7 @@ abstract public class ClientThread extends Thread {
     
 	protected HttpServletRequest request;
 	protected HttpServletResponse response;
-	protected GridPortContext context;
+	protected RequestContext context;
 	protected byte[] body;	
 	protected int body_len;
 	protected Date received;
@@ -46,11 +50,13 @@ abstract public class ClientThread extends Thread {
 	abstract protected void complete();
 		
 	public ClientThread(
-        GridPortContext context
+        RequestContext context
     ) {
 		this.request = context.request;
 		this.response = context.response;
 		this.context = context;
+		receivedMillisec = context.receivedTimestampMs;
+        received = new Date(receivedMillisec);
 	}	
 	
 	protected void log(String message) {
@@ -109,8 +115,8 @@ abstract public class ClientThread extends Thread {
 			for(Route E:context.routes) {	
 				for(Contract C:E.contracts) synchronized(C) {
 					String found = null;
-					if (C.auth_group.length>0) { // contract is only for some auth groups										
-						for(String gC:C.auth_group) {
+					if (C.getAuthGroup().length>0) { // contract is only for some auth groups										
+						for(String gC:C.getAuthGroup()) {
 							for(String g:groups) if (g.trim().equals(gC.trim())) {
 								found = g.trim(); 
 								break;
@@ -122,10 +128,10 @@ abstract public class ClientThread extends Thread {
 					if (contract == null) { 
 						contract = C;
 						if (found!=null) group = found;
-					} else if (C.intervalms<contract.intervalms) {
+					} else if (C.getIntervalMs()<contract.getIntervalMs()) {
 						contract = C;
 						if (found!=null) group = found;
-					} else if (C.frequency-C.counter>contract.frequency-contract.counter) {
+					} else if (C.getFrequency()-C.getCounter()>contract.getFrequency()-contract.getCounter()) {
 						contract = C;
 						if (found!=null) group = found;
 					}
@@ -140,8 +146,8 @@ abstract public class ClientThread extends Thread {
 		
 			try {				
 				//process and update shared contract
-				log("USING " + contract.name);
-				contract.consume(this);
+				log("USING " + contract.getName());
+				consume(contract);
 				
 				// execute implemented behaviour
 				execute();	
@@ -215,7 +221,31 @@ abstract public class ClientThread extends Thread {
 		
 	}
 		
-	protected List<SubRequest> tasks = new ArrayList<SubRequest>();	
+	private void consume(Contract contract) throws InterruptedException {
+        long sleep_ms = 0;
+        while (true) {      
+            if (sleep_ms>0) {
+                log.warn("WAITING FOR SLA SLOT");
+                synchronized(contract) {
+                    log("Waiting "+sleep_ms+" ms ("+contract.getName()+": FQ = "+contract.getFrequency()+"/"+contract.getIntervalMs()+" ms )");
+                }
+                Thread.sleep(sleep_ms);             
+            }
+            synchronized(contract) {
+                sleep_ms = contract.getIntervalMs() - (System.currentTimeMillis() - contract.getLastRequest());                          
+                if (contract.getFrequency()>0 && contract.getCounter()<contract.getFrequency()) {
+                    contract.markCounter();
+                } else {
+                    if (sleep_ms>0) continue;
+                    contract.resetCounter();
+                }
+                
+                break;
+            }
+        }
+    }
+
+    protected List<SubRequest> tasks = new ArrayList<SubRequest>();	
 	protected List<SubRequest> events = new ArrayList<SubRequest>();
 	
 	public void notifyEvents()

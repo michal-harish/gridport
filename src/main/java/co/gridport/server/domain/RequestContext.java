@@ -1,4 +1,4 @@
-package co.gridport.server;
+package co.gridport.server.domain;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -10,9 +10,10 @@ import javax.servlet.http.HttpServletResponse;
 
 
 
-public class GridPortContext {
+
+public class RequestContext {
     
-    public long received;
+    public long receivedTimestampMs;
     public HttpServletRequest request;
     public HttpServletResponse response;
     
@@ -33,8 +34,8 @@ public class GridPortContext {
 	
 	
 
-	public GridPortContext(HttpServletRequest request, HttpServletResponse response) {
-	    received = System.currentTimeMillis();		
+	public RequestContext(HttpServletRequest request, HttpServletResponse response) {
+	    receivedTimestampMs = System.currentTimeMillis();		
 	    this.request = request;
 	    this.response = response;
 	    port = request.getLocalPort();

@@ -83,11 +83,13 @@ Anatomy
 * All server activity is logged into the ./logs/gridportd.log
 * Server is started with and all http/https are handled by a chain of serial handlers:
     1. Firewall 
-        * only looks at SLA Contracts
-        * if none available rejects the request
-        * otherwise creates GridPortContext for the request and initializes contracts property 
+        * first it looks at SLA Contracts by IP Address range - if none available the request is rejected with 403 Forbidden
+        * if there are available contracts it checks available routes by combination of request attributes and contracts
+        * if the routes are ambiguous the more specific ones are preferred 
+        * if there are no available routes the request is rejected with 404 Not Found
+        * otherwise the RequestContext is created with available contracts and routes
+        * context is attached to the request object for availability in the next handler 
     2. Authenticator 
-        * filters all endpoints that match the request and available contracts and chooses the most specific matches 
         * if there is option that doesn't require authentication, selects and passes on
         * if there are only routes requiring authentication it checks if there's existing user
         * if the current user doesn't match any of the route contracts' groups, authentication is requested

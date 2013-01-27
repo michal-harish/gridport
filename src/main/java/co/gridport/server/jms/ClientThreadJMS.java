@@ -7,12 +7,12 @@ import java.util.HashMap;
 import javax.jms.JMSException;
 
 import co.gridport.server.ClientThread;
-import co.gridport.server.GridPortContext;
-import co.gridport.server.Route;
+import co.gridport.server.domain.RequestContext;
+import co.gridport.server.domain.Route;
 
 public class ClientThreadJMS extends ClientThread {
 	
-	public ClientThreadJMS(GridPortContext context) {
+	public ClientThreadJMS(RequestContext context) {
 		super(context);
 	}
 	

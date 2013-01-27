@@ -23,11 +23,11 @@ import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.gridport.server.Authenticator;
 import co.gridport.server.ClientThread;
 import co.gridport.server.ClientThreadRouter;
-import co.gridport.server.Firewall;
-import co.gridport.server.RequestHandler;
+import co.gridport.server.handler.Authenticator;
+import co.gridport.server.handler.Firewall;
+import co.gridport.server.handler.RequestHandler;
 import co.gridport.server.utils.Utils;
 
 public class GridPortServer {

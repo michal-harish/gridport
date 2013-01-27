@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import co.gridport.server.utils.Utils;
 
-abstract class SubRequest extends Thread { 
+public abstract class SubRequest extends Thread { 
     static protected Logger log = LoggerFactory.getLogger("subrequest");
     
 	protected ClientThread income;	

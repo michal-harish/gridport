@@ -1,9 +1,10 @@
-package co.gridport.server;
+package co.gridport.server.handler;
 
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -15,35 +16,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import co.gridport.GridPortServer;
+import co.gridport.server.domain.Contract;
+import co.gridport.server.domain.RequestContext;
+import co.gridport.server.domain.Route;
 import co.gridport.server.utils.Crypt;
 import co.gridport.server.utils.Utils;
 
 
 public class Authenticator extends AbstractHandler
 {
-    private static Logger log = LoggerFactory.getLogger("authenticator");
+    static private Logger log = LoggerFactory.getLogger("authenticator");
+    private ArrayList<String> sessions = new ArrayList<String>();  
     
     public void handle(String target,
         Request baseRequest,
         HttpServletRequest request,
         HttpServletResponse response) 
         throws IOException, ServletException
-    {		
-        //Firewall handler passed at this point - retrieve the context
-		GridPortContext context = (GridPortContext) request.getAttribute("context");
-		
-	    //initialize Request to get available routes
-		context.routes = RequestHandler.route(context);
-		if (context.routes.size() ==0) {
-			log.debug("no routes available for authenticator");
-			response.setStatus(404);
-            baseRequest.setHandled(true);
-            return;
-		}
+    {
+		RequestContext context = (RequestContext) request.getAttribute("context");		
 		
 		try {
 			
-			//aggregate auth groups for all routes 
+			//aggregate auth groups for all available routes 
 			String auth_require = "default";
 			boolean hasDefaultContracts = false; 
 			for(Route E:context.routes) {
@@ -55,11 +50,11 @@ public class Authenticator extends AbstractHandler
 		            return;
 				}
 				for(Contract C:E.contracts) {
-					if (C.auth_group.length==0) {
+					if (C.getAuthGroup().length==0) {
 						hasDefaultContracts = true;
-					} else for(String g:C.auth_group) {
+					} else for(String g:C.getAuthGroup()) {
 						if (auth_require.equals("default")) auth_require="";
-						if(Utils.blank(g)) log.warn(C.name);
+						if(Utils.blank(g)) log.warn(C.getName());
 						auth_require += (auth_require.equals("") ? "" : ",")+g;
 					}
 				}	
@@ -116,8 +111,8 @@ public class Authenticator extends AbstractHandler
 					}
 				}
 				if (nonce !=null)  {
-					synchronized(RequestHandler.sessions) {
-						session_index = RequestHandler.sessions.indexOf(nonce);
+					synchronized(sessions) {
+						session_index = sessions.indexOf(nonce);
 					}
 					
 					String[] LOGOUT = URI.split("\\?");
@@ -125,10 +120,10 @@ public class Authenticator extends AbstractHandler
 					String logout_nonce = null;
 					if (LOGOUT.length==2 && LOGOUT[1].length()>7 && LOGOUT[1].substring(0,7).equals("logout=")) {
 						logout_nonce = LOGOUT[1].substring(7);				
-						synchronized(RequestHandler.sessions) {
-							logout_index = RequestHandler.sessions.indexOf(logout_nonce);							
+						synchronized(sessions) {
+							logout_index = sessions.indexOf(logout_nonce);							
 							if (logout_index>=0) {						
-								RequestHandler.sessions.remove(logout_index);
+								sessions.remove(logout_index);
 								if (session_index>logout_index) session_index--;
 								else if (session_index == logout_index) session_index = -1;
 								nonce=null;
@@ -147,7 +142,6 @@ public class Authenticator extends AbstractHandler
 								for(String g:auth_require.split("[\\s\\,\\;]"))
 									qry += (qry.equals("") ? "" : " OR ") + "groups LIKE '%"+g+"%'";
 								qry = "SELECT * FROM users WHERE username='"+username+"' AND ("+qry+")";
-								//log(qry);
 								ResultSet rs = sql.executeQuery(qry);			
 								if (rs.next()) {
 									groups = rs.getString("groups");
@@ -190,17 +184,17 @@ public class Authenticator extends AbstractHandler
 						if (context.routes.size()==0) break;
 					}
 				}
-				//??? context.username = "guest";
+				context.username = "guest";
 				context.groups = "default";
 				return;
 			}
 			
 			nonce = Crypt.uniqid(); 
-			synchronized(RequestHandler.sessions) {
+			synchronized(sessions) {
 				if (session_index<0) 
-					RequestHandler.sessions.add(nonce);
+					sessions.add(nonce);
 				else
-					RequestHandler.sessions.set(session_index, nonce);
+					sessions.set(session_index, nonce);
 			}
 			log.info("DIGEST MD5 CHALLENGE: nonce="+nonce);
 			response.setHeader(
@@ -217,8 +211,6 @@ public class Authenticator extends AbstractHandler
             baseRequest.setHandled(true);
             return; 
 		}
-	}
-	
-	
+	}    	
 	
 }

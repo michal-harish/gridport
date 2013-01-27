@@ -9,12 +9,14 @@ import java.util.List;
 import javax.jms.JMSException;
 
 import co.gridport.GridPortServer;
+import co.gridport.server.domain.RequestContext;
+import co.gridport.server.domain.Route;
 import co.gridport.server.utils.Utils;
 
 public class ClientThreadRouter extends ClientThread {
 	public static String logTopic = null; //settings/router.log
 	
-	public ClientThreadRouter(GridPortContext context) {
+	public ClientThreadRouter(RequestContext context) {
 		super(context);
 	}
 	
@@ -105,7 +107,7 @@ public class ClientThreadRouter extends ClientThread {
 				log_payload += "port="+context.port+"\r\n";
 				log_payload += "request=" +  context.URI+context.QUERY_STRING+"\r\n";
 				log_payload += "received=" + GridPortServer.date.format(received.getTime() ) +"\r\n";
-				log_payload += "contract=" + contract.name +"\r\n";
+				log_payload += "contract=" + contract.getName() +"\r\n";
 				log_payload += "consumer.ip=" + this.context.consumer_ip +"\r\n";				
 				log_payload += "consumer.id=" + this.context.username +"@" + group + "\r\n";				
 				log_payload += "duration=" + String.valueOf( (double) ( System.currentTimeMillis() - received.getTime() ) / 1000 )+"\r\n";

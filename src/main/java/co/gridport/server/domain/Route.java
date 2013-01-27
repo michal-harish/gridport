@@ -1,6 +1,8 @@
-package co.gridport.server;
+package co.gridport.server.domain;
 
 import java.util.ArrayList;
+
+import co.gridport.server.SubRequest;
 
 public class Route {
 	public boolean wildcard;
