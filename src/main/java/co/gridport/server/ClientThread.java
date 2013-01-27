@@ -203,8 +203,8 @@ abstract public class ClientThread extends Thread {
 			
 			complete();
 			
-			synchronized(GridPortHandler.threads) {
-				GridPortHandler.threads.remove(this);
+			synchronized(RequestHandler.threads) {
+				RequestHandler.threads.remove(this);
 			}			
 			if (response.getStatus() == 404) {				
 				log("TODO compensate for 4xx responses");

@@ -21,7 +21,7 @@ import co.gridport.server.jms.ClientThreadJMS;
 import co.gridport.server.space.ClientThreadSpace;
 import co.gridport.server.utils.Utils;
 
-public class GridPortHandler extends AbstractHandler {
+public class RequestHandler extends AbstractHandler {
 	static private Logger log = LoggerFactory.getLogger("request");	
 	static protected ArrayList<String> sessions = new ArrayList<String>();	
 	static public ArrayList<ClientThread> threads = new ArrayList<ClientThread>();
@@ -41,19 +41,19 @@ public class GridPortHandler extends AbstractHandler {
     	//create Client Thread of appropriate type
 		ClientThread thread;		
 		if (context.routes.get(0).endpoint.equals("module://manager")) {
-		    log.debug("GridPortHandler -> ClientThreadManager " + request.getRequestURI());
+		    log.info("GridPortHandler -> ClientThreadManager " + request.getRequestURI());
     		thread = new ClientThreadManager(context);  
 
     	} else if (context.routes.get(0).endpoint.equals("module://space")) {    		
-    	    log.debug("GridPortHandler -> ClientThreadSpace " + request.getRequestURI());
+    	    log.info("GridPortHandler -> ClientThreadSpace " + request.getRequestURI());
     		thread = new ClientThreadSpace(context);
 
     	} else if (context.routes.get(0).endpoint.equals("module://jms")) {
-    	    log.debug("GridPortHandler -> ClientThreadJMS " + request.getRequestURI());
+    	    log.info("GridPortHandler -> ClientThreadJMS " + request.getRequestURI());
     		thread = new ClientThreadJMS(context);
 
     	} else {
-    	    log.debug("GridPortHandler -> ClientThreadRouter " + request.getRequestURI());
+    	    log.info("GridPortHandler -> ClientThreadRouter " + request.getRequestURI());
     		thread = new ClientThreadRouter(context);
 
     	}
@@ -84,15 +84,15 @@ public class GridPortHandler extends AbstractHandler {
     	ArrayList<Route> routes = new ArrayList<Route>();
     	
 		Statement sql;
+        String qry = "SELECT * FROM endpoints" +
+            " WHERE (gateway IS NULL OR gateway='' OR gateway='"+request.gateway+"')" +
+            " AND (gateway_host IS NULL OR gateway_host='' OR gateway_host='"+request.gateway_host+"')" +       
+            " AND (http_method IS NULL OR http_method='' OR http_method LIKE '%"+request.method+"%')" +
+            " AND (ssl='"+(request.ssl ? "1" : "0")+"' OR ssl IS NULL OR ssl='')";                              
 		try {
 			sql = GridPortServer.policydb.createStatement();			
-			try {	
-				log.debug("REQUEST ROUTING: host="+request.gateway_host+", method="+request.method+", ssl="+(request.ssl ? "1" : "0")+", request="+request.URI+request.QUERY_STRING);
-				String qry = "SELECT * FROM endpoints" +
-						" WHERE (gateway IS NULL OR gateway='' OR gateway='"+request.gateway+"')" +
-						" AND (gateway_host IS NULL OR gateway_host='' OR gateway_host='"+request.gateway_host+"')" +		
-						" AND (http_method IS NULL OR http_method='' OR http_method LIKE '%"+request.method+"%')" +
-						" AND (ssl='"+(request.ssl ? "1" : "0")+"' OR ssl IS NULL OR ssl='')";								
+			log.debug("REQUEST ROUTING: host="+request.gateway_host+", method="+request.method+", ssl="+(request.ssl ? "1" : "0")+", request="+request.URI+request.QUERY_STRING);
+            try {   
 				ResultSet rs = sql.executeQuery(qry);
 				routes = filterRoutes(rs,request.URI,request.QUERY_STRING,request.ssl);
 
@@ -126,14 +126,15 @@ public class GridPortHandler extends AbstractHandler {
 				sql.close();
 			}
 		} catch (SQLException e) {			
-			log.error("routing table sql error ",e);			
-		}		
+			log.error("routing table sql error " + qry,e);			
+		} catch (Exception e2) {
+		    log.error("routing table error " + qry,e2);
+		}
 		return routes; 
     }
     
     private static ArrayList<Route> filterRoutes(ResultSet rs,String URI,String QUERY_STRING,boolean ssl) throws SQLException {
-    	
-    	
+    		
     	if (!URI.matches("^.*?\\.[^/]+$")) URI += "/";    	  	
     	ArrayList<Route> result = new ArrayList<Route>();
     	boolean removeAllWildCards = false;
@@ -195,7 +196,7 @@ public class GridPortHandler extends AbstractHandler {
         			URI.substring(base.length()).replaceFirst("^([^/]{1})","/$1"), //target URI
         			rs.getString("service_endpoint").replaceFirst("/$",""),
         			QUERY_STRING,
-        			rs.getString("uri_base"),
+        			rs.getString("uri_base") == null ? "" : rs.getString("uri_base"),
         			base
         		);
         	result.add(E);
@@ -205,7 +206,8 @@ public class GridPortHandler extends AbstractHandler {
         	}
         }    	
     	for(Route E:wildCards) if (E.wildcard) {
-    		if (removeAllWildCards || E.base_uri.length()<longestWildCard.length()) {    			
+    		if (removeAllWildCards
+    		    || E.base_uri.length()<longestWildCard.length()) {    			
     			result.remove(E);
     		}
     	}

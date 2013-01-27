@@ -65,7 +65,7 @@ public class Module {
 					if (rs.next()) {
 						provider = rs.getString("value");
 					} else {
-						provider = "failover:(tcp://localhost:61616)?randomize=false";
+						provider = "failover:(tcp://localhost:61616)?randomize=falsee&startupMaxReconnectAttempts=3";
 						GridPortServer.policydb.createStatement().execute("INSERT INTO settings(name,value) VALUES('java.naming.provider.url','"+provider+"')");
 					}
 					rs.close();
@@ -75,7 +75,7 @@ public class Module {
 					log.info("*** Initializing JMS Module");
 					Hashtable<String,String> env = new Hashtable<String,String>();
 					env.put(Context.INITIAL_CONTEXT_FACTORY,factory);
-					env.put(Context.PROVIDER_URL, provider);			
+					env.put(Context.PROVIDER_URL, provider);
 					ctx = new InitialContext(env);
 				} catch (Exception e) {
 					log.error("*** JMS Module Initialization Failure",e);
@@ -277,7 +277,7 @@ public class Module {
 		synchronized(pubs) {
 			if (publishConnection == null) {
 				try {
-					javax.jms.TopicConnectionFactory f  = (javax.jms.TopicConnectionFactory)ctx.lookup("ConnectionFactory");				
+					javax.jms.TopicConnectionFactory f  = (javax.jms.TopicConnectionFactory)ctx.lookup("ConnectionFactory");
 					publishConnection = f.createConnection();
 				} catch (NamingException e) {
 					return "Internal naming error (see error log)";

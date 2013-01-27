@@ -32,6 +32,7 @@ public class GridPortContext {
 	public String nonce;
 	
 	
+
 	public GridPortContext(HttpServletRequest request, HttpServletResponse response) {
 	    received = System.currentTimeMillis();		
 	    this.request = request;
@@ -51,12 +52,11 @@ public class GridPortContext {
 			gateway_host = request.getHeader("X-forwarded-host");					
 		}    
     	method = request.getMethod();
-		String QUERY = request.getRequestURI().toString();
-    	String[] Q = QUERY.split("\\?",2);
-    	URI = Q[0];
-    	QUERY_STRING = "";
-    	if (Q.length>1) {
-    		QUERY_STRING = "?" + Q[1];
+    	URI = request.getRequestURI();
+		QUERY_STRING = request.getQueryString();
+		if (QUERY_STRING == null) QUERY_STRING = ""; 
+		else if (QUERY_STRING.length()>0) {
+    		QUERY_STRING = "?" + QUERY_STRING;
     	}    	
     	params = new HashMap<String,String>();
     	if (QUERY_STRING.length()>1) {

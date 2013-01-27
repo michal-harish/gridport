@@ -27,7 +27,7 @@ import co.gridport.server.Authenticator;
 import co.gridport.server.ClientThread;
 import co.gridport.server.ClientThreadRouter;
 import co.gridport.server.Firewall;
-import co.gridport.server.GridPortHandler;
+import co.gridport.server.RequestHandler;
 import co.gridport.server.utils.Utils;
 
 public class GridPortServer {
@@ -123,7 +123,7 @@ public class GridPortServer {
 	        serialHandlers.addHandler(new Firewall());
 	        serialHandlers.addHandler(new Authenticator());
 	        serialHandlers.addHandler(parallelHandlers);        
-	        parallelHandlers.addHandler(new GridPortHandler());
+	        parallelHandlers.addHandler(new RequestHandler());
 	        server.setHandler(serialHandlers);
 	        
 	        
@@ -156,8 +156,8 @@ public class GridPortServer {
 					//??? GridPortHandler.close();
 				}				
 				if (cli.equals("flush")) { 
-					synchronized(GridPortHandler.threads) {
-						for(ClientThread T:GridPortHandler.threads) {
+					synchronized(RequestHandler.threads) {
+						for(ClientThread T:RequestHandler.threads) {
 							T.notifyEvents();
 						}
 					}

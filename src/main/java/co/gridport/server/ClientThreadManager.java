@@ -49,8 +49,8 @@ public class ClientThreadManager extends ClientThread {
 				json.object();	
 					json.key("processes");
 					json.array();					
-					synchronized (GridPortHandler.threads) {
-						for(ClientThread T:GridPortHandler.threads) {				
+					synchronized (RequestHandler.threads) {
+						for(ClientThread T:RequestHandler.threads) {				
 							json.value(T.received + ": " + T.context.consumer_ip + " " + T.context.method + " " +T.request.getRequestURI() + " "  + (T.context.gateway_host!=null ? " VIA " + T.context.gateway_host : "") + " (" + ((System.currentTimeMillis() - T.receivedMillisec)/1000) + "sec) \n");
 							if (T instanceof ClientThreadRouter) {
 								ClientThreadRouter TR = (ClientThreadRouter) T;

@@ -33,7 +33,7 @@ public class Authenticator extends AbstractHandler
 		GridPortContext context = (GridPortContext) request.getAttribute("context");
 		
 	    //initialize Request to get available routes
-		context.routes = GridPortHandler.route(context);
+		context.routes = RequestHandler.route(context);
 		if (context.routes.size() ==0) {
 			log.debug("no routes available for authenticator");
 			response.setStatus(404);
@@ -116,8 +116,8 @@ public class Authenticator extends AbstractHandler
 					}
 				}
 				if (nonce !=null)  {
-					synchronized(GridPortHandler.sessions) {
-						session_index = GridPortHandler.sessions.indexOf(nonce);
+					synchronized(RequestHandler.sessions) {
+						session_index = RequestHandler.sessions.indexOf(nonce);
 					}
 					
 					String[] LOGOUT = URI.split("\\?");
@@ -125,10 +125,10 @@ public class Authenticator extends AbstractHandler
 					String logout_nonce = null;
 					if (LOGOUT.length==2 && LOGOUT[1].length()>7 && LOGOUT[1].substring(0,7).equals("logout=")) {
 						logout_nonce = LOGOUT[1].substring(7);				
-						synchronized(GridPortHandler.sessions) {
-							logout_index = GridPortHandler.sessions.indexOf(logout_nonce);							
+						synchronized(RequestHandler.sessions) {
+							logout_index = RequestHandler.sessions.indexOf(logout_nonce);							
 							if (logout_index>=0) {						
-								GridPortHandler.sessions.remove(logout_index);
+								RequestHandler.sessions.remove(logout_index);
 								if (session_index>logout_index) session_index--;
 								else if (session_index == logout_index) session_index = -1;
 								nonce=null;
@@ -196,11 +196,11 @@ public class Authenticator extends AbstractHandler
 			}
 			
 			nonce = Crypt.uniqid(); 
-			synchronized(GridPortHandler.sessions) {
+			synchronized(RequestHandler.sessions) {
 				if (session_index<0) 
-					GridPortHandler.sessions.add(nonce);
+					RequestHandler.sessions.add(nonce);
 				else
-					GridPortHandler.sessions.set(session_index, nonce);
+					RequestHandler.sessions.set(session_index, nonce);
 			}
 			log.info("DIGEST MD5 CHALLENGE: nonce="+nonce);
 			response.setHeader(

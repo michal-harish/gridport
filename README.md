@@ -2,9 +2,9 @@ Motivation and Objectives
 ========================================================================
  The motivation is to have a standalone http component that can be placed 
  in the http request path which can intercept, filter, throttle and route
- http requests to various deployed http service endpoints without any implementation
- or awareness requirement on the part of the service endpoints based 
- on SLA Contracts, ACL Rules and Routing Definitions.
+ http requests to various deployed http service and API endpoints 
+ without any implementationor awareness requirement on the part of the endpoint
+ based on SLA Contracts, ACL Rules and Routing Definitions.
    
  **Objective 1**: To be a Service Registry for Http/RESTful Services 
     * ACL Rules & SLA Contracts for authentication, authorisation, throttling and routing
@@ -73,24 +73,36 @@ ssl service_endpoint        http_method                 gateway_host    auth_gro
 
 
 
-Anatomy - TODO Update as per firewall-authenticator-handler design after threading done
+Anatomy 
 ========================================================================
-* Service starts by looking first looking at arguments
-* Then a policy sqlite database is attempted and created anew if first run 
+* Service starts by looking first at arguments
+* Then a policy sqlite database is attempted and created anew if can't be located 
+* Shutdown hook is registered that will capture kill command  
 * Then, depending on settings, http and/or https listeners are initialized 
-* After that all requests received on http/https are received by the main thread
-* Authenticator receives all incoming requeusts ( still in the main thread)
-* Authenticator decides whether to consider the requests at all or reject
-* Authetnicator looks for required authentication and parks the request
-* If the request is finally authenticated it is forked into a thread by Request Handler
-* Request Handler decides what kind of Client Thread to fork based on routing table
-* A separate thread listens on standardInput to receive commands (if cli is enabled)
-* Currently there is no scheduler or garbage collector running in the background
-* Modules are initialized on demand (only if there is actual Client Request)
-* All server activity is logged into the gridportd.log
-* On shutdown server first closes request listeners and calls all modules to cleanup 
-
-
+* A separate thread is started which linstens on standardInput to receive control commands 
+* All server activity is logged into the ./logs/gridportd.log
+* Server is started with and all http/https are handled by a chain of serial handlers:
+    1. Firewall 
+        * only looks at SLA Contracts
+        * if none available rejects the request
+        * otherwise creates GridPortContext for the request and initializes contracts property 
+    2. Authenticator 
+        * filters all endpoints that match the request and available contracts and chooses the most specific matches 
+        * if there is option that doesn't require authentication, selects and passes on
+        * if there are only routes requiring authentication it checks if there's existing user
+        * if the current user doesn't match any of the route contracts' groups, authentication is requested
+        * if the there is a user match the routes are reduced to the ones available for the user
+    3. RequestHandler
+        * only if the request passed Firewall and Authenticator 
+        * module is chosen and a ClientThread of that module is invoked 
+        * (?) modules are initialized on demand (only if there is actual Client Request)
+        * for control panel requests it will be a ClientThreadMangaer
+        * for jms bridge it will be ClientThreadJMS and so on
+        * for most of the request it will be a ClientThreadRouter which is the main http proxy
+            * execute() - fire subrequests for 1 or more endpoints in parallel
+            * evaluate() - merge sync and async responses
+            * complete() - complete responses, publish log message to jms, close the request channels
+            
 SSL CERTIFICATE & KEY STORES 
 ======================================================================== 
 Both inbound and outbound certificates are stored in single keystore file.
@@ -125,6 +137,10 @@ EXAMPLE CONFIGURATON AT PORT 8040 BEHIND APACHE PROXY
         ProxyPreserveHost On
         ProxyVia On
         ProxyPass / http://127.0.0.1:8040/
+        <Location />
+          Order allow,deny
+          Allow from all
+        </Location>        
     </VirtualHost>
 
 JMS Receiver Example (php)
@@ -148,10 +164,10 @@ JMS Receiver Example (php)
 
 Backlog
 ========================================================================
+* TODO detect client disconnect and terminate ClientThread
 * TODO create install script for linux 
 * TODO START THINKING OF TEST STRATEGY (ESP. EXPECTATIONS AND ASSUMPTIONS ABOUT ROUTING)
 * FIXME null base_uri throws exception in GridPortHandler:207
-* FIXME query string is missing from the REQUEST_URI after migration to jetty
 * TODO unit tests and performance benchmarks
 * TODO Create internal PolicyProvider to manage access to the sqlite config
     * Insert default settings, user, contract and endpoints when initializing policy.db
@@ -192,6 +208,10 @@ Backlog
   
 CHANGE LOG
 ========================================================================
+27 Jan 2013 
+ * added default jms settings for maximum connection attempt in case of activemq
+ * fixed query strings that were missing in the subrequest URLs
+ 
 26 Jan 2013 - moved to github (dwrapper was removed and will be optional)
 
 22 Oct 2012
