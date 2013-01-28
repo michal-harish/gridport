@@ -7,17 +7,17 @@ Motivation and Objectives
  based on SLA Contracts, ACL Rules and Routing Definitions.
    
  **Objective 1**: To be a Service Registry for Http/RESTful Services 
-    * ACL Rules & SLA Contracts for authentication, authorisation, throttling and routing
-    * Monitoring and statistics
-    * SSL proxy
-    * Http Caching (not implemented yet)
+ * ACL Rules & SLA Contracts for authentication, authorisation, throttling and routing
+ * Monitoring and statistics
+ * SSL proxy
+ * Http Caching (not implemented yet)
 
  **Objective 2**: To be a gateway to the Event-Driven world 
-    * option for completing http requests asynchronously       
-    * to be a Http interface to publish-subscribe systems
-        * JMS Module - working
-        * Tuple Space Module - experimental
-        * Kafka Module - not implemented yet   
+ * option for completing http requests asynchronously       
+ * to be a Http interface to publish-subscribe systems
+   * JMS Module - working
+   * Tuple Space Module - experimental
+   * Kafka Module - not implemented yet   
 
 Quick Start Instructions
 ========================================================================
@@ -32,7 +32,7 @@ Installation
  3. Start the server 
     * $> java -jar ./target/gridport-server.jar
     * default policy.db should be generated with the following settings
-        * only http port set to 8040
+        * http port set to 8040
         * ssl port disabled
         * localAdmin contract created for any requests from localhost without authorisation        
         * default endpoint for managing the server created at the uri /manage/
@@ -52,7 +52,8 @@ Installation
  5. Add some test rules to newly generated policy.db  
     * edit the ./policy.db sqlite database (with something like http://sqlitebrowser.sourceforge.net)
     * see SLA Contracs & ACL Rules reference below
- 6. Optionally, generate gzip distros with service wrapper $> ant distrobuild
+ 6. Optionally, generate gzip distros with service wrapper 
+    * $> ant distrobuild
     * this should generate different packages in ./target/dist
 
 SLA Contracts
@@ -64,18 +65,10 @@ ACL Rules reference
 ------------------------------------------------------------------------
 ACL Rules define groups and users who can be added to contracts for authorisation
 
-WEB INTERFACE /manage
-------------------------------------------------------------------------
-ssl service_endpoint        http_method                 gateway_host    auth_group  uri_base
-1   module://manager        GET POST DELETE             -               admin root  /manage/*
-0   module://space          GET POST OPTIONS MOVE PUT   -                           /space/ 
-1   module://jms            POST PUT DELETE OPTIONS     -                           /jms/*
 
-
-
-Anatomy 
+Anatomy and The Request Path
 ========================================================================
-* Service starts by looking first at arguments
+* Service starts by looking for a 'cli' argument whether to run in interactive console mode
 * Then a policy sqlite database is attempted and created anew if can't be located 
 * Shutdown hook is registered that will capture kill command  
 * Then, depending on settings, http and/or https listeners are initialized 
@@ -118,18 +111,6 @@ For accessing individual endpoints via ssl, all certificates needed must be adde
 ** keytool -genkey -alias ... -dname "cn=..." -keystore keystore.jks
 ** keytool -import -trustcacerts -alias ... -file \\192.168....\xampp\apache\conf\ssl.crt\server.crt -keystore ...jks
 ** keytool -list -v -keystore keystore.jks
-
-REQUEST PROCESSING PATH
-========================================================================
- * Server(s) listen with implicit GridPortAuthenticator and ClientRequestHandler
- * Every request is first intercepted by the GridPortAuthenticator
- ** here the contract is looked up and validated and results in the list of allowed endpoints (their IDs)
- ** then ClientRequestHandler.route() is called and merged with routes allowed by contract 
- ** if there is no authentication free route, a digest md5 authentication is invoked
- ** Authentication.Success is issued when there is at least one route and authentication has been satisfied
- * ClientRequestHandler.handle() takes over authenticated request
- ** First the paritcular type of ClientThread is selected, initialized and started
- * ClientThreadXXX.run() takes over
  
 EXAMPLE CONFIGURATON AT PORT 8040 BEHIND APACHE PROXY
 ========================================================================
@@ -165,54 +146,54 @@ JMS Receiver Example (php)
     ?>
 
 Backlog
-========================================================================
-* TODO detect client disconnect and terminate ClientThread
-* TODO create install script for linux 
-* TODO START THINKING OF TEST STRATEGY (ESP. EXPECTATIONS AND ASSUMPTIONS ABOUT ROUTING)
-* FIXME null base_uri throws exception in GridPortHandler:207
-* TODO unit tests and performance benchmarks
-* TODO Create internal PolicyProvider to manage access to the sqlite config
+========================================================================    
+* BUG broken pipe/client disconnect do not terminate the ClientThread
+* CHORE move log to /var/log/gridport.log, add log4j configurator and create install script for linux 
+* CHORE Win-64 wrapper native missing
+* CHORE add jms module to the default policy.db initializtor
+* FEATURE send some Forbidden html with the http status when Authenticator rejects the request
+
+* REFACTOR look for //??? as unresolved migration code
+* REFACTOR domain.RequestContext, domain.Route
+* REFACTOR handler.RequestHandler
+* REFACTOR add interface Module ( initialize(), close(), cliCommand(),... )
+* REFACTOR make an internal function to read header by case-insensitive header name key
+* REFACTOR Create internal PolicyProvider to manage access to the sqlite config
     * Insert default settings, user, contract and endpoints when initializing policy.db
     * Prepare for .conf provider with dir.watcher (will be faster then querying sqlite)
     * Implement jetty handler Graceful
     * Add/remove contexts on the fly
-* TODO Jackson
-* TODO Metrics
-* TODO look for //??? as unresolved migration code    
-* TODO Tidy up context class
-* FIXME JMS Subscription initailization doesn't invoke recovery thread
-* TODO JMS Keep publishers alive with a session per some client request attribute (probably remote ip?) 
-* TODO Authenticator .. send some Forbidden html with the http status
-* TODO JMS HTTP GET to operate as non-durable retrospective subscriber and only use it as list for url base topic and queue
-* TODO make an internal function to read header by case-insensitive header name key
-* TODO process multiple subrequest responses in a streaming fashion 
-* TODO INIT insert into settings(name,value) VALUES('router.log','topic://gridport.log.router');
-* TODO INIT insert into settings(name,value) VALUES('httpPort,'8040');
-* TODO INIT insert into settings(name,value) VALUES('generalTimeout,'30');
-* FIXME Win-64 wrapper native missing
-* TODO PASSWORDS
-* TODO JMS POSTListenerQueue
-* TODO ROUTER log all jms publish messages with internal jms publisher co.gridport.jms.publish("gridport.log.jms","{..}");
+
+* DESIGN password management
+* DESIGN manager interface (options are cli, web, api)
+* DESIGN review default jms auditing
+* DESIGN review OPTIONS usage and implement merging Allow headers with proxy settings
+* DESIGN review mergeTasks();  implement MATCH (200 ok if responses are identical); 
+* DESIGN ROUTER review mergeTasks();  review MERGE
+* DESIGN ROUTER review mergeTasks();  implement MIX using multipart/mixed; 
+* DESIGN testing strategy (ESP. EXPECTATIONS AND ASSUMPTIONS ABOUT ROUTING)
+* DESIGN performance benchmarking strategy
+
+* FIXME process multiple subrequest responses in a streaming fashion 
 * FIXME ROUTER Set-Cookie passes only last cookie instruction
-* TOCO ROUTER 504 Gateway Timeout in mergeTasks()
-* TODO ROUTER X-Forwarded-For 
-* TODO JMS Test setup with HornetQ
-* TODO BUILD - distro publisher ( into the AOS3 downloads or an sourceforge/freshmeat api) 
-* TODO CODE STRUCTURE - Module Interface ( initialize(), close(), cliCommand(),... ) 
-* FIXME ROUTER currently if nested URIs are used the more general must precede the general one if it need be routed to
-* TODO ROUTER if any of the sub request of a multicast event responds with 4xx, ALL subrequests need to be cancelled with extra compensation for those that have already returned 2xx or 3xx 
-* TODO ROUTER Compensate for pending Event Sub requests 		  
-* TODO ROUTER review mergeTasks();  implement MATCH (200 ok if responses are identical); 
-* TODO ROUTER review mergeTasks();  review MERGE
-* TODO ROUTER review mergeTasks();  implement MIX using multipart/mixed; 
-* TODO ROUTER review OPTIONS and implement merging Allow headers with proxy settings
-* TODO ROUTER SECONDARY employ user_agent routing variables if SLAs
-  
+* FEATURE ROUTER if any of the sub request of a multicast event responds with 4xx, ALL subrequests need to be cancelled with extra compensation for those that have already returned 2xx or 3xx 
+* FEATURE ROUTER Compensate for pending Event Sub requests           
+* FEATURE ROUTER SECONDARY employ user_agent routing variables if SLAs 
+* FEATURE ROUTER currently if nested URIs are used the more general must precede the general one if it need be routed to
+* FEATURE ROUTER 504 Gateway Timeout in mergeTasks()
+    
+* BUG JMS Subscription initailization doesn't invoke recovery thread
+* FEATUER JMS Keep publishers alive with a session per some client request attribute (probably remote ip?) 
+* FEATURE JMS HTTP GET to operate as non-durable retrospective subscriber and only use it as list for url base topic and queue
+* FEATURE JMS POSTListenerQueue
+* TEST JMS setup with HornetQ
+
 CHANGE LOG
 ========================================================================
 27 Jan 2013 
  * added default jms settings for maximum connection attempt in case of activemq
  * fixed query strings that were missing in the subrequest URLs
+ * started separating stable from unstable code into packages and refactoring
  
 26 Jan 2013 - moved to github (dwrapper was removed and will be optional)
 

@@ -54,7 +54,6 @@ public class GridPortServer {
 		if (args.length>0) {
 			for(String A:args) {
 				if (A.equals("cli")) cliEnabled=true;
-				if (A.equals("init.co")) policyDbFile="./policy.init.co.db";
 			}			
 		}	
 		try {
