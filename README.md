@@ -2,8 +2,8 @@ Motivation and Objectives
 ========================================================================
  The motivation is to have a standalone http component that can be placed 
  in the http request path which can intercept, filter, throttle and route
- http requests to various deployed http service and API endpoints 
- without any implementationor awareness requirement on the part of the endpoint
+ requests to various deployed http service and API endpoints without any 
+ implementation or awareness requirement on the part of the endpoint
  based on SLA Contracts, ACL Rules and Routing Definitions.
    
 **Objective 1** : To be a Service Registry for Http/RESTful Services 
@@ -39,15 +39,15 @@ Installation
 Configuration
 -------------
  1. default ./policy.db should be generated with the following settings
-        * http port set to 8040
-        * ssl port disabled
-        * localAdmin contract created for any requests from localhost without authorisation        
-        * default endpoint for managing the server created at the uri /manage/
-        * example settings were also generated:
-            * '/example' endpoint was added pointing to 'http://localhost:80/'  
-            * 'examplegroup' with one user 'exampleuser' were added
-            * 'examplecontract' was created requiring authenticated user from 'examplegroup'
-                through which '/example' endpoint can be accessed at most once every second   
+    * http port set to 8040
+    * ssl port disabled
+    * localAdmin contract created for any requests from localhost without authorisation        
+    * default endpoint for managing the server created at the uri /manage/
+    * example settings were also generated:
+        * '/example' endpoint was added pointing to 'http://localhost:80/'  
+        * 'examplegroup' with one user 'exampleuser' were added
+        * 'examplecontract' was created requiring authenticated user from 'examplegroup'
+            through which '/example' endpoint can be accessed at most once every second   
  2. Try http://localhost:8040/manage/ from your browser 
     * you should see some rudimentary information about the server - this will become
         the console for managing the policy.db but until then we have to edit it manually
