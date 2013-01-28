@@ -6,13 +6,13 @@ Motivation and Objectives
  without any implementationor awareness requirement on the part of the endpoint
  based on SLA Contracts, ACL Rules and Routing Definitions.
    
- **Objective 1**: To be a Service Registry for Http/RESTful Services 
+**Objective 1** : To be a Service Registry for Http/RESTful Services 
  * ACL Rules & SLA Contracts for authentication, authorisation, throttling and routing
  * Monitoring and statistics
  * SSL proxy
  * Http Caching (not implemented yet)
 
- **Objective 2**: To be a gateway to the Event-Driven world 
+**Objective 2** : To be a gateway to the Event-Driven world 
  * option for completing http requests asynchronously       
  * to be a Http interface to publish-subscribe systems
    * JMS Module - working
@@ -31,7 +31,14 @@ Installation
     * $> mvn package assembly:single
  3. Start the server 
     * $> java -jar ./target/gridport-server.jar
-    * default policy.db should be generated with the following settings
+ 4. Optionally you can generate gzip distro and deploy as service 
+    * $> ant distrobuild
+    * this should generate different packages in ./target/dist
+    * deploy unzip and run ./bin/sh.daemon start
+    
+Configuration
+-------------
+ 1. default ./policy.db should be generated with the following settings
         * http port set to 8040
         * ssl port disabled
         * localAdmin contract created for any requests from localhost without authorisation        
@@ -41,20 +48,17 @@ Installation
             * 'examplegroup' with one user 'exampleuser' were added
             * 'examplecontract' was created requiring authenticated user from 'examplegroup'
                 through which '/example' endpoint can be accessed at most once every second   
- 4. Try http://localhost:8040/manage/ from your browser 
+ 2. Try http://localhost:8040/manage/ from your browser 
     * you should see some rudimentary information about the server - this will become
         the console for managing the policy.db but until then we have to edit it manually
- 5. Now try http://localhost:8040/example/
+ 3. Now try http://localhost:8040/example/
     * as per example configuration this endpoint requires authenticated user so a http login box should pop up
     * note: the authentication is actually digest-md5 not a basic http one 
     * the user must be from the 'exampleuser' group so use 'exampleuser' as username and no password
     * if you have apache or another http server running on port 80 you should see now its default page
- 5. Add some test rules to newly generated policy.db  
+ 4. Add some test rules to newly generated policy.db  
     * edit the ./policy.db sqlite database (with something like http://sqlitebrowser.sourceforge.net)
     * see SLA Contracs & ACL Rules reference below
- 6. Optionally, generate gzip distros with service wrapper 
-    * $> ant distrobuild
-    * this should generate different packages in ./target/dist
 
 SLA Contracts
 ------------------------------------------------------------------------
@@ -98,22 +102,22 @@ Anatomy and The Request Path
             * evaluate() - merge sync and async responses
             * complete() - complete responses, publish log message to jms, close the request channels
             
-SSL CERTIFICATE & KEY STORES 
-======================================================================== 
+SSL Certificate and Key Store Shortcuts 
+------------------------------------------------------------------------
 Both inbound and outbound certificates are stored in single keystore file.
 (Config table will then contain  KeyStoreFile and KeyStorePass.) 
 For incoming ssl connections, a certificate must be added for each gateway.
 For accessing individual endpoints via ssl, all certificates needed must be added to a single keystore.jks file.
 * self signed certificates with openssl
-** openssl genrsa -des3 -out privkey.pem 2048
-** openssl req -new -x509 -nodes -sha1 -days 365 -key privkey.pem > certificate.pem -config ../conf/openssl.cnf
+    * openssl genrsa -des3 -out privkey.pem 2048
+    * openssl req -new -x509 -nodes -sha1 -days 365 -key privkey.pem > certificate.pem -config ../conf/openssl.cnf
 * SSL KeyStores
-** keytool -genkey -alias ... -dname "cn=..." -keystore keystore.jks
-** keytool -import -trustcacerts -alias ... -file \\192.168....\xampp\apache\conf\ssl.crt\server.crt -keystore ...jks
-** keytool -list -v -keystore keystore.jks
+    * keytool -genkey -alias ... -dname "cn=..." -keystore keystore.jks
+    * keytool -import -trustcacerts -alias ... -file \\192.168....\xampp\apache\conf\ssl.crt\server.crt -keystore ...jks
+    * keytool -list -v -keystore keystore.jks
  
-EXAMPLE CONFIGURATON AT PORT 8040 BEHIND APACHE PROXY
-========================================================================
+Example Configuration Behind Apache
+------------------------------------------------------------------------
     <VirtualHost *:80>
         ServerName gridport.co 
         #ServerAlias someservice.gridport.co
@@ -127,7 +131,7 @@ EXAMPLE CONFIGURATON AT PORT 8040 BEHIND APACHE PROXY
     </VirtualHost>
 
 JMS Receiver Example (php)
-========================================================================
+------------------------------------------------------------------------
     <?php 
     if ($_SERVER['REQUEST_METHOD']=='PUT') { //subscribe acknowledge
         header("HTTP/1.1 201 Created"); 
@@ -174,8 +178,8 @@ Backlog
 * DESIGN testing strategy (ESP. EXPECTATIONS AND ASSUMPTIONS ABOUT ROUTING)
 * DESIGN performance benchmarking strategy
 
-* FIXME process multiple subrequest responses in a streaming fashion 
-* FIXME ROUTER Set-Cookie passes only last cookie instruction
+* BUG process multiple subrequest responses in a streaming fashion 
+* BUG ROUTER Set-Cookie passes only last cookie instruction
 * FEATURE ROUTER if any of the sub request of a multicast event responds with 4xx, ALL subrequests need to be cancelled with extra compensation for those that have already returned 2xx or 3xx 
 * FEATURE ROUTER Compensate for pending Event Sub requests           
 * FEATURE ROUTER SECONDARY employ user_agent routing variables if SLAs 
@@ -188,7 +192,7 @@ Backlog
 * FEATURE JMS POSTListenerQueue
 * TEST JMS setup with HornetQ
 
-CHANGE LOG
+Change Log
 ========================================================================
 27 Jan 2013 
  * added default jms settings for maximum connection attempt in case of activemq
