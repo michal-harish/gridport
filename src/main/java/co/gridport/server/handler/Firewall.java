@@ -60,20 +60,18 @@ public class Firewall extends AbstractHandler
             return; 
         }
         RequestContext context = new RequestContext(request, response);        
-        context.contracts = availableContracts;
         
         //Check available routes and reject if none available
-        ArrayList<Route> availableRoutes = filterRoutesByRequest(context);
+        ArrayList<Route> availableRoutes = filterRoutesByRequest(context, availableContracts);
         if (availableRoutes.size() ==0) {
             log.debug("no routes available for authenticator");
             response.setStatus(404);
             baseRequest.setHandled(true);
             return;
-        }        
+        }
+        context.setRoutes(availableRoutes);
         
-        //Passed both contract and route availability
-        
-        context.routes = availableRoutes;
+        //Passed both contract and route availability               
         request.setAttribute("context", context);
     }
 
@@ -170,34 +168,34 @@ public class Firewall extends AbstractHandler
         return result;
     }
 
-    private ArrayList<Route> filterRoutesByRequest(RequestContext context) {
+    private ArrayList<Route> filterRoutesByRequest(RequestContext context, List<Contract> availableContracts) {
         ArrayList<Route> routes = new ArrayList<Route>();
         
         Statement sql;
         String qry = "SELECT * FROM endpoints" +
-            " WHERE (gateway IS NULL OR gateway='' OR gateway='"+context.gateway+"')" +
-            " AND (gateway_host IS NULL OR gateway_host='' OR gateway_host='"+context.gateway_host+"')" +       
-            " AND (http_method IS NULL OR http_method='' OR http_method LIKE '%"+context.method+"%')" +
-            " AND (ssl='"+(context.ssl ? "1" : "0")+"' OR ssl IS NULL OR ssl='')";                              
+            " WHERE (gateway IS NULL OR gateway='' OR gateway='"+context.getGateway()+"')" +
+            " AND (gateway_host IS NULL OR gateway_host='' OR gateway_host='"+context.getHost()+"')" +       
+            " AND (http_method IS NULL OR http_method='' OR http_method LIKE '%"+context.getMethod()+"%')" +
+            " AND (ssl='"+(context.isHttps() ? "1" : "0")+"' OR ssl IS NULL OR ssl='')";                              
         try {
             sql = GridPortServer.policydb.createStatement();            
-            log.debug("REQUEST ROUTING: host="+context.gateway_host+", method="+context.method+", ssl="+(context.ssl ? "1" : "0")+", request="+context.URI+context.QUERY_STRING);
+            log.debug("REQUEST ROUTING: host="+context.getHost()+", method="+context.getMethod()+", ssl="+(context.isHttps() ? "1" : "0")+", request="+context.getURI()+context.getQueryString());
             try {   
                 ResultSet rs = sql.executeQuery(qry);
-                routes = filterRoutes(rs,context.URI,context.QUERY_STRING,context.ssl);
+                routes = filterRoutes(rs, context.getURI(), context.getQueryString(), context.isHttps());
 
                 for(Route E:routes) {   
                     E.defaultRoute = false;
                     //remove routes with unmatching gateway_host
                     if (!Utils.blank(E.gateway_host)) {                                 
-                        if (!context.gateway_host.equals(E.gateway_host)) {
+                        if (!context.getHost().equals(E.gateway_host)) {
                             routes.remove(E);
                             if (routes.size()==0) break; else continue;
                         }
                     }
                     //remove route if it doesn't have available contract
                     boolean hasContract = false;
-                    for(Contract C:context.contracts) {                     
+                    for(Contract C: availableContracts) {                     
                         if (!C.hasEndpoint(E.ID)) continue;                                             
                         //if (!C.hasEitherGroup(E.auth_group)) continue;
                         E.contracts.add(C);

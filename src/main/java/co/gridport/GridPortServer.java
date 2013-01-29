@@ -94,14 +94,12 @@ public class GridPortServer {
                 new QueuedThreadPool(50)
             );
 			server.setGracefulShutdown(1000);
-						
-			//start listening for client requests
+
 			if (httpPort > 0 )
 			{
 			    SelectChannelConnector connector1 = new SelectChannelConnector();
 		        connector1.setPort(httpPort);
-		        connector1.setMaxIdleTime(30000);
-		        //??? connector1.setRequestHeaderSize(8192);		        		       		                 
+		        connector1.setMaxIdleTime(30000);	        		       		                 
 		        server.addConnector(connector1);
 		        log.info("*** HTTP CONNECTOR PORT " + httpPort);			    
 			}
@@ -124,10 +122,7 @@ public class GridPortServer {
 	        serialHandlers.addHandler(parallelHandlers);        
 	        parallelHandlers.addHandler(new RequestHandler());
 	        server.setHandler(serialHandlers);
-	        
-	        
 
-			
 			server.start();
 	
 		} catch (Exception e) {
@@ -138,9 +133,6 @@ public class GridPortServer {
 		log.info("***************************************");			
 		
 		if (cliEnabled) {
-			//??? Logger.getLogger("request").removeAppender("stdout");
-			//??? Logger.getLogger("mod_jms").removeAppender("stdout");
-			//??? Logger.getLogger("mod_space").removeAppender("stdout");
 			log.info("(to install as service execute ./sh.daemon start)"); 
 			String charsetName = "UTF-8";			
 			Scanner scanner = new Scanner(new BufferedInputStream(System.in), charsetName);
@@ -150,26 +142,10 @@ public class GridPortServer {
 				String cli = scanner.next();				
 				if (cli.equals("exit")) {
 					System.exit(0);
-				}
-				if (cli.equals("reset")) { 
-					//??? GridPortHandler.close();
 				}				
 				if (cli.equals("flush")) { 
-					synchronized(RequestHandler.threads) {
-						for(ClientThread T:RequestHandler.threads) {
-							T.notifyEvents();
-						}
-					}
-				}
-				/*
-				if (cli.equals("restart")) {
-				    //TODO look into the old tuple space for launcher
-					httpServer.stop(0);
-					sslServer.stop(0);
-					Process p = Runtime.getRuntime().exec("java -Djava.library.path=. -jar serviceRouter.jar");					
-					
-				}
-				*/					
+				    RequestHandler.notifyEventThreads();
+				}				
 			} while (true);
 		} else {
 			do {
@@ -194,9 +170,6 @@ public class GridPortServer {
                 e.printStackTrace();
             }
 	    }
-	    
-		//try gracefully closing pending client threads
-		//??? GridPortHandler.close(); - this needs impelemnting Graceful
 		
 		//close modules
 		co.gridport.server.jms.Module.close();

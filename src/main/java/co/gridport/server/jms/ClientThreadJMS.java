@@ -31,13 +31,14 @@ public class ClientThreadJMS extends ClientThread {
 			return;
 		}
 		
-		Route E = context.routes.get(0);
+		Route E = context.getRoutes().get(0);
 		log.debug("Router context: " + E.context);
-		if (context.URI.length()<E.context.length())
+		String URI = context.getURI(); 
+		if (context.getURI().length()<E.context.length())
 		{
-		    context.URI = E.context;
+		    URI = E.context;
 		}
-		String urc = context.URI.substring(E.context.length());
+		String urc = URI.substring(E.context.length());
 		if (urc.matches("^/?$"))
 		{
 			response.setHeader("Content-type", "text/html");
@@ -99,7 +100,7 @@ public class ClientThreadJMS extends ClientThread {
 		
 		//load incoming request
 		try {
-			load();
+			loadIncomingContentEntity();
 		} catch (IOException e1) {
 			log.error(e1.getMessage(), e1);			
 			return;

@@ -24,7 +24,7 @@ public class ClientThreadRouter extends ClientThread {
 		try {	
 			
 			//1. initialize all subrequests within client thread
-			for(Route E:context.routes) {	        	
+			for(Route E:context.getRoutes()) {	        	
 		    	//TODO ROUTING SECONDARY consider compensation settings for each executed method after finding out failure;
 				String URL = E.endpoint + E.uri + E.query_stirng;				
 				try {			
@@ -37,9 +37,9 @@ public class ClientThreadRouter extends ClientThread {
 				}
 			}
 			//combine all tasks and events into a single list
-			List<SubRequest> subrequests = new ArrayList<SubRequest>();	
-			subrequests.addAll(tasks);
-			subrequests.addAll(events);			
+			List<SubRequest> newSubrequests = new ArrayList<SubRequest>();	
+			newSubrequests.addAll(this.subrequests);
+			newSubrequests.addAll(this.asyncSubrequests);			
 
 			//2.stream client request to all subrequests in parallel 
 			if (request.getHeader("Content-Type") != null) {        	
@@ -55,7 +55,7 @@ public class ClientThreadRouter extends ClientThread {
 					do {
 						int block_size = Math.min(body_size-read_offset, buffer.length);
 						read = is.read(buffer, 0, block_size);
-						for(SubRequest subrequest:subrequests)
+						for(SubRequest subrequest:newSubrequests)
 						{
 							if (read > 0
 								&& !subrequest.conn.getRequestMethod().equals("OPTIONS")
@@ -86,7 +86,7 @@ public class ClientThreadRouter extends ClientThread {
 			}
 			
 			//3. start() all tasks and events to complete within their own thread space
-			for(SubRequest subrequest:subrequests)
+			for(SubRequest subrequest:newSubrequests)
 			{
 				subrequest.start();
 			}
@@ -102,19 +102,19 @@ public class ClientThreadRouter extends ClientThread {
 				HashMap<String,String> log_properties = new HashMap<String,String>();
 				log_properties.put("gridport-log-version", "1");													
 				log_properties.put("gridport-log-date", GridPortServer.date.format(System.currentTimeMillis()));
-				String log_payload = "gateway="+context.gateway_host+"\r\n";
-				log_payload += "protocol="+(context.ssl ? "https":"http" ) + "\r\n";
-				log_payload += "port="+context.port+"\r\n";
-				log_payload += "request=" +  context.URI+context.QUERY_STRING+"\r\n";
+				String log_payload = "gateway="+context.getHost()+"\r\n";
+				log_payload += "protocol="+(context.isHttps() ? "https":"http" ) + "\r\n";
+				log_payload += "port="+ request.getLocalPort() +"\r\n";
+				log_payload += "url=" +  request.getRequestURL()+"\r\n";
 				log_payload += "received=" + GridPortServer.date.format(received.getTime() ) +"\r\n";
 				log_payload += "contract=" + contract.getName() +"\r\n";
-				log_payload += "consumer.ip=" + this.context.consumer_ip +"\r\n";				
-				log_payload += "consumer.id=" + this.context.username +"@" + group + "\r\n";				
+				log_payload += "consumer.ip=" + context.getConsumerAddr() +"\r\n";				
+				log_payload += "consumer.id=" + context.getUsername() +"@" + group + "\r\n";				
 				log_payload += "duration=" + String.valueOf( (double) ( System.currentTimeMillis() - received.getTime() ) / 1000 )+"\r\n";
 				log_payload += "input="+body_len+"\r\n";
 				log_payload += "output="+merge_size+"\r\n";
 				log_payload += "volume="+(body_len+merge_size)+"\r\n";
-				for(Route E:context.routes) {
+				for(Route E:context.getRoutes()) {
 					log_payload += "endpoint="+E.endpoint+"\r\n";
 				}
 				try {

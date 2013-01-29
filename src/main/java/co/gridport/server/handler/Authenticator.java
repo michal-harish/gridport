@@ -41,7 +41,7 @@ public class Authenticator extends AbstractHandler
 			//aggregate auth groups for all available routes 
 			String auth_require = "default";
 			boolean hasDefaultContracts = false; 
-			for(Route E:context.routes) {
+			for(Route E:context.getRoutes()) {
 				log.debug("availble route "+E.endpoint);
 				if (E.contracts.size()==0) {
 					log.debug("route without contract: "+E.endpoint);
@@ -67,7 +67,7 @@ public class Authenticator extends AbstractHandler
 	            return;
 			} else if (auth_require.equals("default")) {
 				log.debug("auth not required");
-				context.groups = "default";				
+				context.setGroups("default");				
 				return;
 			} else {
 				log.debug("auth group aggregate: "+auth_require);
@@ -164,9 +164,9 @@ public class Authenticator extends AbstractHandler
 							if (!reply.equals(response_match))
 								nonce = null;
 							else {
-								context.username = username;
-								context.groups = groups;
-								context.nonce = nonce;
+								context.setUsername(username);
+								context.setGroups(groups);
+								context.setSessionToken(nonce);
 								return;
 							}
 						}
@@ -178,14 +178,14 @@ public class Authenticator extends AbstractHandler
 			//if not an authenticated request then look for default contracts
 			if (hasDefaultContracts) {
 				log.debug("default contract(s) available - removing non-default routes and using default guest");
-				for(Route E:context.routes) {
+				for(Route E:context.getRoutes()) {
 					if (!E.defaultRoute) {
-						context.routes.remove(E);
-						if (context.routes.size()==0) break;
+						context.getRoutes().remove(E);
+						if (context.getRoutes().size()==0) break;
 					}
 				}
-				context.username = "guest";
-				context.groups = "default";
+				context.setUsername("guest");
+				context.setGroups("default");
 				return;
 			}
 			

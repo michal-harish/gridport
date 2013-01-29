@@ -52,11 +52,20 @@ public abstract class SubRequest extends Thread {
 		
 		conn.setRequestProperty("Host", conn.getURL().getHost());	
 		log.debug("FORCED HEADER Host = " + conn.getURL().getHost());
-		if (income.context.username!=null && !Utils.blank(income.context.username)) {
-    		conn.setRequestProperty("Authorization-user",income.context.username);
-    		conn.setRequestProperty("Authorization-realm",income.context.groups);
+		if (income.context.getUsername()!=null && !Utils.blank(income.context.getUsername())) {
+    		conn.setRequestProperty("Authorization-user",income.context.getUsername());
+    		conn.setRequestProperty("Authorization-realm",income.context.getRealm());
     	}		
 	}
+	
+    public String getURL() {
+        return conn.getURL().toString();
+    }
+
+    public String getRequestMethod() {
+        return conn.getRequestMethod();
+    }
+
 	
 	protected void writeOut(byte[] buffer, int len) throws IOException
 	{
@@ -108,6 +117,6 @@ public abstract class SubRequest extends Thread {
 		}
 	}
 	
-	abstract protected void execute() throws IOException;
+	abstract protected void execute() throws IOException;    
 	
 }

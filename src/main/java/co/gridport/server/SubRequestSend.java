@@ -10,7 +10,7 @@ public class SubRequestSend extends SubRequest {
 	public SubRequestSend(ClientThread t, String url, String method, String entity) throws MalformedURLException, IOException {
 		super(t, url, null);
 		conn.setRequestMethod(method);					
-		conn.setRequestProperty("X-forwarded-host", income.context.gateway_host );
+		conn.setRequestProperty("X-forwarded-host", income.context.getHost() );
 		conn.setDoInput(true);
 		body = entity;
 	}

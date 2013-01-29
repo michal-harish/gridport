@@ -11,10 +11,10 @@ public class SubRequestMerge extends SubRequest {
 		super(t, url, async_status);
 		conn.setRequestMethod(t.request.getMethod());			
 		if (async_status == null || async_status.equals(""))
-			synchronized(income.tasks) { income.tasks.add(this); }
+			synchronized(income.subrequests) { income.subrequests.add(this); }
 		else {
 			async_statusCode = Integer.valueOf(async_status);
-			synchronized(income.events) { income.events.add(this); }
+			synchronized(income.asyncSubrequests) { income.asyncSubrequests.add(this); }
 		}
 		log.debug(conn.getRequestMethod() + " " + conn.getURL().toString() );
 		conn.setDoInput(true);

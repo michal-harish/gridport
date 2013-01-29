@@ -35,7 +35,7 @@ public class ClientThreadManager extends ClientThread {
 		
 		//load incoming request
 		try {
-			load();
+			loadIncomingContentEntity();
 		} catch (IOException e1) {
 			log.error(e1.getMessage(), e1);
 			return;
@@ -52,27 +52,11 @@ public class ClientThreadManager extends ClientThread {
 				json.object();	
 					json.key("processes");
 					json.array();					
-					synchronized (RequestHandler.threads) {
-						for(ClientThread T:RequestHandler.threads) {				
-							json.value(
-							    T.received + ": " + 
-							    T.context.consumer_ip + " " + 
-							    T.context.method + " " + 
-							    T.request.getRequestURI() + " "  
-							    + (T.context.gateway_host!=null ? " VIA " + T.context.gateway_host : "") 
-							    + " (" + ((System.currentTimeMillis() - T.receivedMillisec)/1000) 
-							    + "sec) \n"
-						    );
-							if (T instanceof ClientThreadRouter) {
-								ClientThreadRouter TR = (ClientThreadRouter) T;
-								synchronized (TR.events) {
-									for(SubRequest S:TR.events) {
-										json.value(" + EVENT " + S.conn.getRequestMethod() + " " +S.conn.getURL() + " ; "+ (S.error!=null ? S.error : "") +"\n");
-									}
-								}
-							}
-						}
+					
+					for(String threadInfo: RequestHandler.getActiveThreadsInfo()) {				
+						json.value(threadInfo);						
 					}
+
 					synchronized(Space2.subs) {
 						for(Subscription T:Space2.subs) {	
 							json.value("SPACE SUBSCRIPTION " + T.pattern + " TO " + T.target + " "+ ((System.currentTimeMillis() - T.started )/1000) + "sec) \n");
@@ -101,7 +85,7 @@ public class ClientThreadManager extends ClientThread {
 					rs = sql.executeQuery(qry);			
 					while (rs.next()) {
 						try {								
-							String location = ( "http"+(rs.getBoolean("ssl") ? "s" : "") +"://"+ (Utils.blank(rs.getString("gateway_host")) ? context.gateway_host : rs.getString("gateway_host")));
+							String location = ( "http"+(rs.getBoolean("ssl") ? "s" : "") +"://"+ (Utils.blank(rs.getString("gateway_host")) ? context.getHost() : rs.getString("gateway_host")));
 							if (!Utils.blank(rs.getString("uri_base"))) location += rs.getString("uri_base");							
 							SubRequest t = new SubRequestSend(this,rs.getString("service_endpoint"),"OPTIONS");
 							t.async_statusCode = rs.getInt("async");
@@ -109,7 +93,7 @@ public class ClientThreadManager extends ClientThread {
 							t.name = String.valueOf(rs.getInt("ID")); 										
 							t.conn.setRequestProperty("X-forwarded-host", location );
 							t.conn.setRequestProperty("Accept-method",rs.getString("http_method").replaceFirst("(\\sOPTIONS|OPTIONS\\s)", ""));
-							tasks.add(t);
+							subrequests.add(t);
 							t.start();
 						} catch (Exception e) {
 							continue;
@@ -120,7 +104,7 @@ public class ClientThreadManager extends ClientThread {
 					json.key("services");
 					json.object();
 						//first join and add all responses to OPTIONS 
-						for(SubRequest t: tasks) {
+						for(SubRequest t: subrequests) {
 				        	try {	        		
 				        		t.join();
 				        		//TODO ssl on|off must be somehow passed     			
@@ -168,7 +152,7 @@ public class ClientThreadManager extends ClientThread {
 						
 						ArrayList<Route> routes = new ArrayList<Route>();
 						while (rs.next()) {
-							String url = ( "http"+(rs.getBoolean("ssl") ? "s" : "") +"://"+ (Utils.blank(rs.getString("gateway_host")) ? context.gateway_host : rs.getString("gateway_host")));								
+							String url = ( "http"+(rs.getBoolean("ssl") ? "s" : "") +"://"+ (Utils.blank(rs.getString("gateway_host")) ? context.getHost() : rs.getString("gateway_host")));								
 							if (!Utils.blank(rs.getString("uri_base"))) url += rs.getString("uri_base");
 							String id = url +":"+ rs.getString("http_method") + ( rs.getString("async")!=null ? ":Notify": ":Request");
 							Route R = null;
@@ -208,7 +192,7 @@ public class ClientThreadManager extends ClientThread {
 			} catch(JSONException e) {
 				log.error(e.getMessage(), e);
 			} finally {
-				tasks.clear();
+				subrequests.clear();
 				sql.close();
 			}		
 			writer.close();
@@ -233,8 +217,8 @@ public class ClientThreadManager extends ClientThread {
 
 	private void doManager(String json) throws IOException,JSONException {
 				
-		String User = (String) context.username;	
-		String Nonce = (String) context.nonce;
+		String user = context.getUsername();	
+		String session = context.getSessionToken();
 		String reply = "<html>" +
 		"<head>" +
 			"<link rel=\"stylesheet\" type=\"text/css\" href=\"//media.gridport.co/aos/grid.css\" />" +
@@ -253,8 +237,8 @@ public class ClientThreadManager extends ClientThread {
 		"</head>" +
 		"<body>" +
 		"<div id=\"header\">" +
-		"GridPort @ <b>"+context.gateway_host+"</b>" +
-		" - connection: <b>"+User+"</b> "+context.consumer_ip + " " +  (Nonce!=null ? " <a href='/manage/?logout="+Nonce+"'>[logout]</a>"  : "") +
+		"GridPort @ <b>"+context.getHost()+"</b>" +
+		" - connection: <b>"+user+"</b> "+context.getConsumerAddr() + " " +  (session!=null ? " <a href='/manage/?logout="+session+"'>[logout]</a>"  : "") +
 		"</div><table id=\"gridinfo\">";
 		
 		JSONObject obj = new JSONObject(json);

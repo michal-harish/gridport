@@ -151,15 +151,11 @@ JMS Receiver Example (php)
 
 Backlog
 ========================================================================    
-* BUG broken pipe/client disconnect do not terminate the ClientThread
+* REFACTOR domain.Route as immutable POJO
 * CHORE move log to /var/log/gridport.log, add log4j configurator and create install script for linux 
 * CHORE Win-64 wrapper native missing
 * CHORE add jms module to the default policy.db initializtor
-* FEATURE send some Forbidden html with the http status when Authenticator rejects the request
 
-* REFACTOR look for //??? as unresolved migration code
-* REFACTOR domain.RequestContext, domain.Route
-* REFACTOR handler.RequestHandler
 * REFACTOR add interface Module ( initialize(), close(), cliCommand(),... )
 * REFACTOR make an internal function to read header by case-insensitive header name key
 * REFACTOR Create internal PolicyProvider to manage access to the sqlite config
@@ -167,25 +163,27 @@ Backlog
     * Prepare for .conf provider with dir.watcher (will be faster then querying sqlite)
     * Implement jetty handler Graceful
     * Add/remove contexts on the fly
-
+    * This will be a good stimul to refactor handler.Firewall and handler.Authenticator 
+    
+* DESIGN exception handling and propagation
 * DESIGN password management
 * DESIGN manager interface (options are cli, web, api)
 * DESIGN review default jms auditing
 * DESIGN review OPTIONS usage and implement merging Allow headers with proxy settings
-* DESIGN review mergeTasks();  implement MATCH (200 ok if responses are identical); 
-* DESIGN ROUTER review mergeTasks();  review MERGE
-* DESIGN ROUTER review mergeTasks();  implement MIX using multipart/mixed; 
+* DESIGN proxyMulticast() - implement MATCH (200 ok if responses are identical); 
 * DESIGN testing strategy (ESP. EXPECTATIONS AND ASSUMPTIONS ABOUT ROUTING)
 * DESIGN performance benchmarking strategy
 
-* BUG process multiple subrequest responses in a streaming fashion 
 * BUG ROUTER Set-Cookie passes only last cookie instruction
+* FEATURE ClientThread.loadIncomingContentEntity() should not exist, streaming should be impelemented
+* FEATURE process multiple subrequest responses in a streaming fashion 
 * FEATURE ROUTER if any of the sub request of a multicast event responds with 4xx, ALL subrequests need to be cancelled with extra compensation for those that have already returned 2xx or 3xx 
 * FEATURE ROUTER Compensate for pending Event Sub requests           
 * FEATURE ROUTER SECONDARY employ user_agent routing variables if SLAs 
 * FEATURE ROUTER currently if nested URIs are used the more general must precede the general one if it need be routed to
-* FEATURE ROUTER 504 Gateway Timeout in mergeTasks()
-    
+* FEATURE ROUTER 504 Gateway Timeout in mergeTasks()    
+* FEATURE send some default html with 400,403,404,500; also from Authenticator
+
 * BUG JMS Subscription initailization doesn't invoke recovery thread
 * FEATUER JMS Keep publishers alive with a session per some client request attribute (probably remote ip?) 
 * FEATURE JMS HTTP GET to operate as non-durable retrospective subscriber and only use it as list for url base topic and queue
@@ -194,6 +192,10 @@ Backlog
 
 Change Log
 ========================================================================
+28 Jan 2013
+ * ClientThread separation of logic proxyPassthrough() proxyMulticast() proxyFulfilment()
+ * Refactored interface of domain.RequestContext
+
 27 Jan 2013 
  * added default jms settings for maximum connection attempt in case of activemq
  * fixed query strings that were missing in the subrequest URLs

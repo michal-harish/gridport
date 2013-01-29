@@ -20,7 +20,7 @@ public class ClientThreadSpace extends ClientThread {
 	public void execute() throws InterruptedException {			
 		//load incoming request
 		try {
-			load();
+			loadIncomingContentEntity();
 		} catch (IOException e1) {
 			log.error(e1.getMessage(), e1);
 			return;
@@ -30,21 +30,21 @@ public class ClientThreadSpace extends ClientThread {
 			// space must be unaware of the http wrapper
 			// but the thread context must be kept for the transaction isolation
 			// also how can the sequence of commands be kept in context of a http request
-			if (context.QUERY_STRING.equals("")) throw new SpaceError(1,"No tuple name given in the query string");
+			if (context.getQueryString().equals("")) throw new SpaceError(1,"No tuple name given in the query string");
 			//Space2.initialize(MediumMemory.class);			
 			Space2.initialize(MediumSQLite.class);
 			if (request.getMethod().equals("POST")) { // WRITE				 
 				String data = new String(body);
-				log("SPACE WRITE " + context.QUERY_STRING+" "+body_len+" Bytes");
+				log("SPACE WRITE " + context.getQueryString()+" "+body_len+" Bytes");
 				Space2.BEGIN();
-				Space2.WRITE(context.QUERY_STRING, data);				
+				Space2.WRITE(context.getQueryString(), data);				
 				response.setStatus(202);
 				response.setContentLength(-1);
 				Space2.COMMIT();
 			} else if (request.getMethod().equals("MOVE")) { //TAKE
-				log("SPACE TAKE " + context.QUERY_STRING);
+				log("SPACE TAKE " + context.getQueryString());
 				Space2.BEGIN();
-				SimpleTuple T = Space2.TAKE(context.QUERY_STRING,10000); //give up after second
+				SimpleTuple T = Space2.TAKE(context.getQueryString(),10000); //give up after second
 				//exchange.getResponseHeaders().set("Content-Type", "data");					
 				try {
 					serveText(200,T.getData());
@@ -54,8 +54,8 @@ public class ClientThreadSpace extends ClientThread {
 				}
 				
 			} else if (request.getMethod().equals("GET")) { //READ - topmost match
-				log("SPACE READ " + context.QUERY_STRING);
-				SimpleTuple T = Space2.READ(context.QUERY_STRING,10000); //give up after second
+				log("SPACE READ " + context.getQueryString());
+				SimpleTuple T = Space2.READ(context.getQueryString(),10000); //give up after second
 				//exchange.getResponseHeaders().set("Content-Type", "data");					
 				try {
 					serveText(200,T.getData());
@@ -64,14 +64,14 @@ public class ClientThreadSpace extends ClientThread {
 				}		
 			} else if (request.getMethod().equals("PUT")) { //NOTIFY (either url or email address)
 				String target = new String(body);
-				log("SPACE NOTIFY " + context.QUERY_STRING + " TO " + target);
-				SubsNotify.Subscribe(context.QUERY_STRING,target);				
+				log("SPACE NOTIFY " + context.getQueryString() + " TO " + target);
+				SubsNotify.Subscribe(context.getQueryString(),target);				
 				response.setStatus(202);
                 response.setContentLength(-1);
 			} else if (request.getMethod().equals("DELETE")) { //DONT'T NOTIFY (either url or email address)
 				String target = new String(body);
-				log("SPACE DON'T NOTIFY" + context.QUERY_STRING + " FROM " + target);
-				SubsNotify.Unsubscribe(context.QUERY_STRING,target);	
+				log("SPACE DON'T NOTIFY" + context.getQueryString() + " FROM " + target);
+				SubsNotify.Unsubscribe(context.getQueryString(),target);	
 			    response.setStatus(202);
                 response.setContentLength(-1);
 			} else if (request.getMethod().equals("OPTIONS")) { //READ[]
@@ -81,9 +81,9 @@ public class ClientThreadSpace extends ClientThread {
 					log("Accept: "+Accept);
 					if (Accept.indexOf("/xml",0)>0) type = 1;//xml
 				}
-				log("SPACE READ[] " + context.QUERY_STRING);
+				log("SPACE READ[] " + context.getQueryString());
 				Space2.BEGIN();
-				SimpleTuple[] tuples = Space2.READ(context.QUERY_STRING);								
+				SimpleTuple[] tuples = Space2.READ(context.getQueryString());								
 				String data = null;
 				switch(type) {
 					case 0: //stream the json;
