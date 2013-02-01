@@ -62,7 +62,7 @@ public class RequestHandler extends AbstractHandler {
             log.error(e.getMessage());
         } finally {
             synchronized(threads) {
-                threads.remove(this);
+                threads.remove(thread);
             }
         }
     }

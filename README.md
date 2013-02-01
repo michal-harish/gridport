@@ -49,16 +49,16 @@ Configuration
         * 'examplecontract' was created requiring authenticated user from 'examplegroup'
             through which '/example' endpoint can be accessed at most once every second   
  2. Try http://localhost:8040/manage/ from your browser 
-    * you should see some rudimentary information about the server - this will become
-        the console for managing the policy.db but until then we have to edit it manually
+    You should see some rudimentary information about the server - this will become
+    the console for managing the policy.db but until then we have to edit it manually
+    with something like http://sqlitebrowser.sourceforge.net
  3. Now try http://localhost:8040/example/
     * as per example configuration this endpoint requires authenticated user so a http login box should pop up
     * note: the authentication is actually digest-md5 not a basic http one 
     * the user must be from the 'exampleuser' group so use 'exampleuser' as username and no password
     * if you have apache or another http server running on port 80 you should see now its default page
  4. Add some test rules to newly generated policy.db  
-    * edit the ./policy.db sqlite database (with something like http://sqlitebrowser.sourceforge.net)
-    * see SLA Contracs & ACL Rules reference below
+    * edit the ./policy.db and see SLA Contracs & ACL Rules reference below
 
 SLA Contracts
 ------------------------------------------------------------------------
@@ -98,6 +98,7 @@ Anatomy and The Request Path
         * for control panel requests it will be a ClientThreadMangaer
         * for jms bridge it will be ClientThreadJMS and so on
         * for most of the request it will be a ClientThreadRouter which is the main http proxy
+            * consume() - rate limiting behaviour and contract-based routing
             * execute() - fire subrequests for 1 or more endpoints in parallel
             * evaluate() - merge sync and async responses
             * complete() - complete responses, publish log message to jms, close the request channels

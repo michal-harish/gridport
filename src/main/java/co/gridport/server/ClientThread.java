@@ -118,9 +118,7 @@ abstract public class ClientThread extends Thread {
                     proxyMulticast();
                 } else if (asyncSubrequests.size() > 0) {
                     proxyFulfilment();
-                }
-                
-                response.getOutputStream().close(); //??? do we need to do this        
+                }                        
                 
                 joinAsyncSubrequests();
 
@@ -255,7 +253,8 @@ abstract public class ClientThread extends Thread {
                 log.debug("RESPONSE STATUS " + response.getStatus());
                 merge_size += serveTaskStream(subrequest, content_length);
                 merge_duration = String.valueOf( (double) ( System.currentTimeMillis() - received.getTime() ) / 1000 );
-                log("= "+merge_duration+ " PASSTHROUGH " + subrequest.statusCode + " " + subrequest.conn.getURL().toString()+ " RESPONSE LENGTH " + merge_size);                            
+                log("= "+merge_duration+ " PASSTHROUGH " + subrequest.statusCode + " " + subrequest.conn.getURL().toString()+ " RESPONSE LENGTH " + merge_size);
+                response.getOutputStream().close();
             }
         } catch (Exception e) {
             response.setStatus(0);
@@ -314,6 +313,7 @@ abstract public class ClientThread extends Thread {
         }
         
         merge_duration = String.valueOf( (double) ( System.currentTimeMillis() - received.getTime() ) / 1000 );
+        response.getOutputStream().close();
         log("= " + merge_duration + " MERGE COMPLETE " + 200);
         */          
     }
