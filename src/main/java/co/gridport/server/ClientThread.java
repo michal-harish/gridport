@@ -123,7 +123,7 @@ abstract public class ClientThread extends Thread {
                 joinAsyncSubrequests();
 
             } catch (IOException e1) {
-                serveInternalError(e1);
+                serverError(e1);
             } catch (InterruptedException e2) {
                 serveGone();
             }
@@ -229,11 +229,10 @@ abstract public class ClientThread extends Thread {
         try { 
             subrequest.join();                      
             if (subrequest.error != null) {
-                
                 if (subrequest.error != null) {
                     log("= PASSTHROUGH " + subrequest.getURL() + " ERROR " + subrequest.error);
                 }
-                serveInternalError(new Exception(subrequest.error));
+                serverError(subrequest.error);
             } else {
                 int content_length = replicateResponseHeaders(subrequest);                          
                 if (subrequest.statusCode == 301
@@ -508,10 +507,15 @@ abstract public class ClientThread extends Thread {
         response.setContentLength(-1);
     }    
 
-    protected void serveInternalError(Throwable e) {
-        log.error("Internal Server Error", e);
-        response.setStatus(500);
-        response.setContentLength(-1);                              
+    protected void serverError(Throwable e) {
+        log.error("Server Error", e);
+        if (e instanceof java.net.ConnectException) {
+            response.setStatus(503);
+            response.setContentLength(-1);
+        } else {
+            response.setStatus(500);
+            response.setContentLength(-1);
+        }                              
     }
 
 }
