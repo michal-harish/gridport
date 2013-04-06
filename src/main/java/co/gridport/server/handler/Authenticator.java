@@ -25,7 +25,7 @@ public class Authenticator extends AbstractHandler
 {
     static private Logger log = LoggerFactory.getLogger("authenticator");
     private ArrayList<String> sessions = new ArrayList<String>();  
-    
+
     public void handle(String target,
         Request baseRequest,
         HttpServletRequest request,
@@ -33,9 +33,9 @@ public class Authenticator extends AbstractHandler
         throws IOException, ServletException
     {
         RequestContext context = (RequestContext) request.getAttribute("context");
-        
+
         try {
-            
+
             //aggregate auth groups for all available routes 
             String auth_require = "default";
             boolean hasDefaultContracts = false; 

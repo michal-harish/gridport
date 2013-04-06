@@ -14,14 +14,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import co.gridport.server.ClientThread;
-import co.gridport.server.ClientThreadManager;
 import co.gridport.server.ClientThreadRouter;
 import co.gridport.server.SubRequest;
 import co.gridport.server.domain.RequestContext;
 import co.gridport.server.jms.ClientThreadJMS;
 import co.gridport.server.space.ClientThreadSpace;
 
-public class ProxyHandler extends AbstractHandler {
+public class RequestHandler extends AbstractHandler {
     static private Logger log = LoggerFactory.getLogger("request");
 
     static private ArrayList<ClientThread> threads = new ArrayList<ClientThread>();
@@ -34,11 +33,8 @@ public class ProxyHandler extends AbstractHandler {
     {
         RequestContext context = (RequestContext) request.getAttribute("context");
 
-        ClientThread thread;        
-        if (context.getRoutes().get(0).endpoint.equals("module://manager")) {
-            log.info("GridPortHandler -> ClientThreadManager " + request.getRequestURI());
-            thread = new ClientThreadManager(context);  
-        } else if (context.getRoutes().get(0).endpoint.equals("module://space")) {
+        ClientThread thread;
+        if (context.getRoutes().get(0).endpoint.equals("module://space")) {
             log.info("GridPortHandler -> ClientThreadSpace " + request.getRequestURI());
             thread = new ClientThreadSpace(context);
         } else if (context.getRoutes().get(0).endpoint.equals("module://jms")) {
@@ -78,7 +74,7 @@ public class ProxyHandler extends AbstractHandler {
     public static List<String> getActiveThreadsInfo() {
         List<String> result = new ArrayList<String>();
         synchronized (threads) {
-            for(ClientThread T:ProxyHandler.threads) { 
+            for(ClientThread T:RequestHandler.threads) { 
                 result.add (T.getInfo());
                 if (T instanceof ClientThreadRouter) {
                     ClientThreadRouter TR = (ClientThreadRouter) T;

@@ -48,9 +48,11 @@ public class PolicyProviderSQLite implements PolicyProvider {
     @Override
     public String put(String settingsKey, String settingsValue) {
         try {
-            policydb.createStatement().execute(
-                "INSERT INTO settings(name,value) VALUES('"+settingsKey+"','"+settingsValue+"')"
-            );
+            Statement s = policydb.createStatement();
+            s.addBatch("DELETE FROM settings WHERE name='"+settingsKey+"'");
+            s.addBatch("INSERT INTO settings(name,value) VALUES('"+settingsKey+"','"+settingsValue+"')");
+            s.executeBatch();
+            s.close();
             return settings.put(settingsKey, settingsValue);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -176,6 +178,12 @@ public class PolicyProviderSQLite implements PolicyProvider {
                 s.executeBatch();
                 s.close(); 
                 version = 9; 
+            }
+            if (version <10 ) {
+                s.addBatch("DELETE FROM settings WHERE name='generalTimeout'");
+                s.executeBatch();
+                s.close(); 
+                version = 10; 
             }
         } finally {
             log.info("*** POLICY-DB Version: "+ version);

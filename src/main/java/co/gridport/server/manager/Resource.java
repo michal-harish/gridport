@@ -9,6 +9,7 @@ import javax.ws.rs.core.Response;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
+import org.apache.velocity.runtime.RuntimeConstants;
 
 public abstract class Resource extends VelocityContext {
 
@@ -16,6 +17,8 @@ public abstract class Resource extends VelocityContext {
         Properties p = new Properties();
         p.setProperty("resource.loader", "file");
         p.setProperty("file.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+        p.setProperty( RuntimeConstants.RUNTIME_LOG_LOGSYSTEM_CLASS, "org.apache.velocity.runtime.log.Log4JLogChute" );
+        p.setProperty("runtime.log.logsystem.log4j.logger", "velocity");
         Velocity.init(p);
     }
 

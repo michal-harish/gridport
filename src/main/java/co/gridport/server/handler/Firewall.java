@@ -10,6 +10,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.log4j.lf5.util.StreamUtils;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.slf4j.Logger;
@@ -32,20 +33,26 @@ public class Firewall extends AbstractHandler
         HttpServletRequest request,
         HttpServletResponse response) 
         throws IOException, ServletException
-    {        
+    {
+
+        if (request.getRequestURI().equals("/")) {
+            response.sendRedirect("/manage");
+            baseRequest.setHandled(true);
+            return;
+        }
         if (request.getRequestURI().equals("/favicon.ico"))
         {
-            log.debug("Firewall ignore(404) " + baseRequest.getRequestURI());
-            response.setStatus(404);
+            response.setStatus(200);
+            StreamUtils.copy(ClassLoader.class.getResourceAsStream("/favicon.ico"), response.getOutputStream());
             baseRequest.setHandled(true);
             return; 
         }
-        
+
         //Check available contracts first and reject if none available
         String remoteIP = request.getRemoteAddr();
         if (request.getHeader("X-forwarded-for") != null) {
             remoteIP  += "," + request.getHeader("X-forwarded-for");
-        }  
+        }
         ArrayList<Contract> availableContracts = filterContractsByIP(remoteIP.split(","));
         if (availableContracts.size()==0) {
             log.debug("Firewall reject(403) " + baseRequest.getRequestURI());
@@ -54,7 +61,7 @@ public class Firewall extends AbstractHandler
             baseRequest.setHandled(true);
             return; 
         }
-        RequestContext context = new RequestContext(request, response);        
+        RequestContext context = new RequestContext(request, response);
 
         //Check available routes and reject if none available
         List<Route> availableRoutes = routeByRequest(context, availableContracts);

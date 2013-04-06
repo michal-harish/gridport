@@ -1,5 +1,7 @@
 package co.gridport.server.domain;
 
+import org.apache.commons.lang.StringUtils;
+
 import co.gridport.server.utils.Utils;
 
 
@@ -31,8 +33,8 @@ public class Contract {
 	    this.frequency = frequency;
 	    this.auth_group = auth_group;
 	    this.endpoints = endpoints;
-		last_request = new Long(0);
-		counter = new Long(0);
+		last_request = 0L;
+		counter = 0L;
 	}
 	
 	public String getName() {
@@ -46,6 +48,9 @@ public class Contract {
 	public String[] getAuthGroup() {
 	    return auth_group;
 	}
+	public String getAuthGroupList() {
+        return StringUtils.join(auth_group,",");
+    }
 	
 	public long getIntervalMs() {
 	    return intervalms;
@@ -73,6 +78,10 @@ public class Contract {
     public void resetCounter() {
         counter = new Long(0);       
         last_request = System.currentTimeMillis();
+    }
+    
+    public String getEndpointList() {
+        return StringUtils.join(endpoints,",");
     }
     
 	

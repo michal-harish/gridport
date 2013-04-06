@@ -1,0 +1,84 @@
+<html>
+<head>
+    #include("manage/head.vm")
+</head>
+<body>
+    <h1>GridPort Server Instance - Management Console</h1>
+    $request.getRemoteHost() 
+    | $user 
+    | <a href="$logsUrl">logs</a> 
+    | <a href="$serverUrl">restart</a> 
+    <div>
+        <h2>Active Client Threads</h2>
+        <ul>
+            #foreach( $processInfo in $processes )
+                <li>$processInfo</li>
+            #end
+        </ul> 
+    </div>
+
+
+    <table><tr>
+        <td>
+            <h2>Contracts</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>IP Ranges</th>
+                        <th>Groups</th>
+                        <th>Endpoints</th>
+                        <th>Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                #foreach( $contract in $contracts )
+                    <tr>
+                    <td>$contract.getName()</td>
+                    <td>$contract.getIpRange()</td>
+                    <td>$contract.getAuthGroupList()</td>
+                    <td>$contract.getEndpointList()</td>
+                    <td>#if ($contract.getIntervalMs()>0) $contract.getFrequency()/$contract.getIntervalMs()ms #end</td>
+                    </tr>
+                #end
+                </tbody>
+            </table>
+        </td>
+        <td>&nbsp;&nbsp;</td>
+        <td>
+            <h2>Users and Groups</h2>
+            <table>
+                <thead>
+                    <tr><th>Username</th><th>Group</th></tr>
+                </thead>
+                <tbody>
+                #foreach( $user in $users )
+                    <tr><td>$user.getUsername()</td><td>$user.getGroups()</td></tr>
+                #end
+                </tbody>
+            </table>
+         </td>
+    </tr></table>
+
+    <div>
+        <h2>Endpoints</h2>
+        <table>
+            <thead>
+                <th>ID</id>
+                <th>URI-BASE</th>
+                <th>ENDPOINT-BASE</th>
+            </thead>
+            <tbody>
+            #foreach( $endpoint in $endpoints )
+                <tr>
+                    <td>$endpoint.getId()</td>
+                    <td>$endpoint.getUriBase()</td>
+                    <td>$endpoint.getEndpoint()</td>
+                </tr>
+            #end
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>

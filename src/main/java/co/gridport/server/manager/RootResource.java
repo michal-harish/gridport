@@ -14,7 +14,7 @@ import javax.ws.rs.core.UriInfo;
 
 import co.gridport.GridPortServer;
 import co.gridport.server.domain.RequestContext;
-import co.gridport.server.handler.ProxyHandler;
+import co.gridport.server.handler.RequestHandler;
 import co.gridport.server.space.Space2;
 import co.gridport.server.space.Subscription;
 
@@ -30,28 +30,32 @@ public class RootResource extends Resource {
             throws IllegalArgumentException, SecurityException, NoSuchMethodException 
     {
         RequestContext context = (RequestContext) request.getAttribute("context");
-        put("processList", getProcessList());
-        put("userList", GridPortServer.policyProvider.getUsers());
-        put("user", context.getUsername());// equals(obj)request.getUserPrincipal() == null ? "anonymous" : request.getUserPrincipal().getName());
-        return view("manager/home/index.vm");
+        put("processes", getProcessList());
+        put("endpoints", GridPortServer.policyProvider.getEndpoints());
+        put("contracts", GridPortServer.policyProvider.getContracts());
+        put("users", GridPortServer.policyProvider.getUsers());
+        put("user", context.getUsername());
+        put("logsUrl", uriInfo.getBaseUriBuilder().path(LogsResource.class).build());
+        put("serverUrl", uriInfo.getBaseUriBuilder().path(ServerResource.class).build());
+        return view("manage/home/index.vm");
     }
 
     @GET
     @Path("/hello/{param}")
     public Response printMessage(@PathParam("param") String msg) {
         put("msg", msg);
-        return view("manager/home/hello.vm"); 
+        return view("manage/home/hello.vm"); 
     }
 
     public String getPrintLink(String arg) throws IllegalArgumentException, SecurityException, NoSuchMethodException {
-        UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(this.getClass().getMethod("printMessage",String.class));
+        UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(RootResource.class.getMethod("printMessage",String.class));
         return uriBuilder.build(arg).toString();
     }
 
     public String[] getProcessList() {
         List<String> processList = new ArrayList<String>();
 
-        for(String threadInfo: ProxyHandler.getActiveThreadsInfo()) {
+        for(String threadInfo: RequestHandler.getActiveThreadsInfo()) {
             processList.add(threadInfo);
         }
 

@@ -4,9 +4,9 @@ import java.io.BufferedInputStream;
 import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Scanner;
 
+import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
@@ -26,19 +26,15 @@ import co.gridport.server.PolicyProvider;
 import co.gridport.server.PolicyProviderSQLite;
 import co.gridport.server.handler.Authenticator;
 import co.gridport.server.handler.Firewall;
-import co.gridport.server.handler.ProxyHandler;
+import co.gridport.server.handler.RequestHandler;
+import co.gridport.server.manager.LogsResource;
 import co.gridport.server.manager.RootResource;
+import co.gridport.server.manager.ServerResource;
 import co.gridport.server.utils.Utils;
 
 public class GridPortServer {
 
     public static String instanceId;
-    public static int httpPort = 0;
-    public static int sslPort = 0;
-    public static String keyStoreFile = null;
-    public static String keyStorePass = null;
-    public static int generalTimeout = 3; //seconds
-
 
     public static SimpleDateFormat date = new SimpleDateFormat("EEE dd MMM yyyy HH:mm:ss.SSS zzz");
 
@@ -61,82 +57,10 @@ public class GridPortServer {
             instanceId = "GRIDPORT-"+InetAddress.getLocalHost().getHostName();
             log.info("*** " + instanceId);
 
-            policyProvider = new PolicyProviderSQLite();
-
-            Runtime.getRuntime().addShutdownHook(new Thread() {
-                @Override public void run() {
-                    shutdown();
-                }
-            });
-
-            Map<String,String> settings = policyProvider.getSettings();
-            if (settings.containsKey("httpPort")) httpPort = Integer.valueOf(settings.get("httpPort"));
-            if (settings.containsKey("sslPort")) sslPort = Integer.valueOf(settings.get("sslPort"));
-            if (settings.containsKey("keyStoreFile")) keyStoreFile = settings.get("keyStoreFile");
-            if (settings.containsKey("keyStorePass")) keyStorePass = settings.get("keyStorePass");
-            if (settings.containsKey("generalTimeout")) generalTimeout = Integer.valueOf(settings.get("generalTimeout"));
-            if (settings.containsKey("router.log")) ClientThreadRouter.logTopic = settings.get("router.log");
-
-            //open key store if configured
-            if (!Utils.blank(keyStoreFile)) {
-                System.setProperty("javax.net.ssl.trustStore", keyStoreFile);
-                System.setProperty("javax.net.ssl.trustStorePassword", keyStorePass);
-                log.info("*** TRUST KEYSTORE " +  keyStoreFile);
-            }
-
-            //initailize modules
-            co.gridport.server.jms.Module.initialize();
-
-            server = new Server();
-            server.setThreadPool(
-                new QueuedThreadPool(50)
-            );
-            server.setGracefulShutdown(1000);
-
-            if (httpPort > 0 )
-            {
-                SelectChannelConnector connector1 = new SelectChannelConnector();
-                connector1.setPort(httpPort);
-                connector1.setMaxIdleTime(30000);
-                server.addConnector(connector1);
-                log.info("*** HTTP CONNECTOR PORT " + httpPort);
-            }
-            if (sslPort > 0 ) {
-                SslContextFactory sslContextFactory = new SslContextFactory(keyStoreFile);
-                sslContextFactory.setKeyStorePassword(keyStorePass);
-                //sslContextFactory.setTrustStore(TRUSTSTORE_LOCATION);
-                //sslContextFactory.setTrustStorePassword(TRUSTSTORE_PASS);
-                //sslContextFactory.setNeedClientAuth(true);
-                SslSocketConnector connector2 = new SslSocketConnector(sslContextFactory);
-                connector2.setPort(sslPort);
-                server.addConnector(connector2);
-                log.info("*** SSL CONNECTOR PORT " + sslPort);
-            }
-
-            //competing context handlers
-            ContextHandlerCollection contextHandlers = new ContextHandlerCollection();
-
-            ContextHandler requestHandler = new ContextHandler("/");
-            requestHandler.setHandler(new ProxyHandler());
-            contextHandlers.addHandler(requestHandler);
-
-            ServletContextHandler managerContextHandler = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
-            managerContextHandler.setContextPath("/manage");
-            ServletHolder s = new ServletHolder(new HttpServletDispatcher());
-            s.setInitOrder(1);
-            s.setInitParameter("resteasy.scan", "false");
-            s.setInitParameter("resteasy.resources",RootResource.class.getName());
-            managerContextHandler.addServlet(s,"/*");
-            contextHandlers.addHandler(managerContextHandler);
-
-            //all requests pass through the following chain of handlers:
-            HandlerList serialHandlers = new HandlerList();
-            serialHandlers.addHandler(new Firewall());
-            serialHandlers.addHandler(new Authenticator());
-            serialHandlers.addHandler(contextHandlers);
-            server.setHandler(serialHandlers);
-
-            server.start();
+            createServer();
+            reloadServerConfig();
+            initializeModules();
+            startServer();
 
         } catch (Exception e) {
             log.error("initialization critical failure ",e);
@@ -146,7 +70,7 @@ public class GridPortServer {
         log.info("***************************************");
 
         if (cliEnabled) {
-            log.info("(to install as service execute ./sh.daemon start)"); 
+            log.info("(to install as service execute ./sh.daemon start)");
             String charsetName = "UTF-8";
             Scanner scanner = new Scanner(new BufferedInputStream(System.in), charsetName);
             scanner.useLocale(new Locale("en", "GB"));
@@ -157,7 +81,7 @@ public class GridPortServer {
                     System.exit(0);
                 }
                 if (cli.equals("flush")) { 
-                    ProxyHandler.notifyEventThreads();
+                    RequestHandler.notifyEventThreads();
                 }
             } while (true);
         } else {
@@ -169,20 +93,106 @@ public class GridPortServer {
                 }
             } while (true);
         }
+    }
 
+    private static void createServer() {
+        server = new Server();
+        server.setThreadPool(
+            new QueuedThreadPool(50)
+        );
+        server.setGracefulShutdown(1000);
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override public void run() {
+                shutdown();
+            }
+        });
+    }
 
+    public static void reloadServerConfig() throws Exception {
+        stopServer();
+
+        policyProvider = new PolicyProviderSQLite();
+
+        if (policyProvider.has("router.log")) ClientThreadRouter.logTopic = policyProvider.get("router.log");
+
+        if (policyProvider.has("keyStoreFile") && !Utils.blank(policyProvider.get("keyStoreFile"))) {
+            System.setProperty("javax.net.ssl.trustStore", policyProvider.get("keyStoreFile"));
+            System.setProperty("javax.net.ssl.trustStorePassword", policyProvider.get("keyStorePass"));
+            log.info("*** TRUST KEYSTORE " +  policyProvider.get("keyStoreFile"));
+        }
+
+        if (policyProvider.has("httpPort"))
+        {
+            SelectChannelConnector connector1 = new SelectChannelConnector();
+            connector1.setPort(Integer.valueOf(policyProvider.get("httpPort")));
+            connector1.setMaxIdleTime(30000);
+            server.addConnector(connector1);
+            log.info("*** HTTP CONNECTOR PORT " + connector1.getPort());
+        }
+        if (policyProvider.has("sslPort")) {
+            SslContextFactory sslContextFactory = new SslContextFactory(policyProvider.get("keyStoreFile"));
+            sslContextFactory.setKeyStorePassword(policyProvider.get("keyStorePass"));
+            //sslContextFactory.setTrustStore(TRUSTSTORE_LOCATION);
+            //sslContextFactory.setTrustStorePassword(TRUSTSTORE_PASS);
+            //sslContextFactory.setNeedClientAuth(true);
+
+            SslSocketConnector connector2 = new SslSocketConnector(sslContextFactory);
+            connector2.setPort(Integer.valueOf(policyProvider.get("sslPort")));
+            server.addConnector(connector2);
+            log.info("*** SSL CONNECTOR PORT " + connector2.getPort());
+        }
+
+        //competing context handlers
+        ContextHandlerCollection contextHandlers = new ContextHandlerCollection();
+
+        ContextHandler requestHandler = new ContextHandler("/");
+        requestHandler.setHandler(new RequestHandler());
+        contextHandlers.addHandler(requestHandler);
+
+        ServletContextHandler managerContextHandler = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
+        managerContextHandler.setContextPath("/manage");
+        ServletHolder s = new ServletHolder(new HttpServletDispatcher());
+        s.setInitOrder(1);
+        s.setInitParameter("resteasy.scan", "false");
+        s.setInitParameter("resteasy.resources",
+                 RootResource.class.getName()
+            +","+LogsResource.class.getName()
+            +","+ServerResource.class.getName()
+        );
+        managerContextHandler.addServlet(s,"/*");
+        contextHandlers.addHandler(managerContextHandler);
+
+        //all requests pass through the following chain of handlers:
+        HandlerList serialHandlers = new HandlerList();
+        serialHandlers.addHandler(new Firewall());
+        serialHandlers.addHandler(new Authenticator());
+        serialHandlers.addHandler(contextHandlers);
+        server.setHandler(serialHandlers);
+    }
+
+    private static void initializeModules() {
+        co.gridport.server.jms.Module.initialize();
+    }
+
+    private static void startServer() throws Exception {
+        server.start();
+    }
+
+    public static void restart() {
+        new Thread() {
+            @Override public void run() {
+                try {
+                    reloadServerConfig();
+                    server.start();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
     }
 
     public static void shutdown() {
-        if (server != null)
-        {
-            log.info("*** Shutting down GridPort server");
-            try {
-                server.stop();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+        stopServer();
 
         //close modules
         co.gridport.server.jms.Module.close();
@@ -191,7 +201,25 @@ public class GridPortServer {
         policyProvider.close();
 
         log.info("*** SHUT DOWN COMPLETE ***");
-        //Info(Thread.getAllStackTraces());        
+        //Info(Thread.getAllStackTraces());
+    }
+
+    private static void stopServer() {
+        if (server != null)
+        {
+            log.info("*** Stopping GridPort server");
+            try {
+                if (server.isRunning()) {
+                    server.stop();
+                    for(Connector c: server.getConnectors()) {
+                        server.removeConnector(c);
+                    }
+                    policyProvider.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 }

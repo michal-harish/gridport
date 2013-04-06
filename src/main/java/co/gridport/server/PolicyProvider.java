@@ -17,7 +17,7 @@ public interface PolicyProvider {
     List<Contract> getContracts();
 
     List<Endpoint> getEndpoints();
-    
+
     List<User> getUsers();
 
     void close();

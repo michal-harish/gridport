@@ -1,6 +1,6 @@
 <html>
 <head>
-    #include("manager/head.vm")
+    #include("manage/head.vm")
 </head>
 <body>
     <h1>Hello $msg</h1>

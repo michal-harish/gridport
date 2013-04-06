@@ -16,7 +16,7 @@ import org.json.JSONWriter;
 import co.gridport.GridPortServer;
 import co.gridport.server.domain.RequestContext;
 import co.gridport.server.domain.Route;
-import co.gridport.server.handler.ProxyHandler;
+import co.gridport.server.handler.RequestHandler;
 import co.gridport.server.space.Space2;
 import co.gridport.server.space.Subscription;
 import co.gridport.server.utils.Utils;
