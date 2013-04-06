@@ -151,7 +151,7 @@ JMS Receiver Example (php)
     ?>
 
 Backlog
-========================================================================    
+========================================================================
 * REFACTOR domain.Route as immutable POJO
 * CHORE move log to /var/log/gridport.log, add log4j configurator and create install script for linux 
 * CHORE Win-64 wrapper native missing
@@ -159,12 +159,6 @@ Backlog
 
 * REFACTOR add interface Module ( initialize(), close(), cliCommand(),... )
 * REFACTOR make an internal function to read header by case-insensitive header name key
-* REFACTOR Create internal PolicyProvider to manage access to the sqlite config
-    * Insert default settings, user, contract and endpoints when initializing policy.db
-    * Prepare for .conf provider with dir.watcher (will be faster then querying sqlite)
-    * Implement jetty handler Graceful
-    * Add/remove contexts on the fly
-    * This will be a good stimul to refactor handler.Firewall and handler.Authenticator 
     
 * DESIGN exception handling and propagation
 * DESIGN password management
@@ -193,6 +187,9 @@ Backlog
 
 Change Log
 ========================================================================
+06 Apr 2013
+ * Created interface PolicyProvider with SQLite implementation to abstract management procedures 
+
 28 Jan 2013
  * ClientThread separation of logic proxyPassthrough() proxyMulticast() proxyFulfilment()
  * Refactored interface of domain.RequestContext

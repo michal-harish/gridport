@@ -1,13 +1,10 @@
 package co.gridport.server.domain;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import co.gridport.server.utils.Utils;
 
 
 public class Contract {
-    private static Logger log = LoggerFactory.getLogger("request");	
+    //private static Logger log = LoggerFactory.getLogger("request");	
 
 	protected String name;
 	protected String[] endpoints = new String[0];

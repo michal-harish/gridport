@@ -23,7 +23,6 @@ import co.gridport.GridPortServer;
 import co.gridport.server.domain.Contract;
 import co.gridport.server.domain.RequestContext;
 import co.gridport.server.domain.Route;
-import co.gridport.server.handler.RequestHandler;
 import co.gridport.server.utils.Utils;
 
 

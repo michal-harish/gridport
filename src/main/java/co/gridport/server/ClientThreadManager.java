@@ -1,3 +1,4 @@
+
 package co.gridport.server;
 
 import java.io.IOException;
@@ -15,7 +16,7 @@ import org.json.JSONWriter;
 import co.gridport.GridPortServer;
 import co.gridport.server.domain.RequestContext;
 import co.gridport.server.domain.Route;
-import co.gridport.server.handler.RequestHandler;
+import co.gridport.server.handler.ProxyHandler;
 import co.gridport.server.space.Space2;
 import co.gridport.server.space.Subscription;
 import co.gridport.server.utils.Utils;
@@ -32,7 +33,7 @@ public class ClientThreadManager extends ClientThread {
 	}
 	
 	public void execute() throws InterruptedException {	
-		
+		/*
 		//load incoming request
 		try {
 			loadIncomingContentEntity();
@@ -53,7 +54,7 @@ public class ClientThreadManager extends ClientThread {
 					json.key("processes");
 					json.array();					
 					
-					for(String threadInfo: RequestHandler.getActiveThreadsInfo()) {				
+					for(String threadInfo: ProxyHandler.getActiveThreadsInfo()) {				
 						json.value(threadInfo);						
 					}
 
@@ -121,17 +122,7 @@ public class ClientThreadManager extends ClientThread {
 						        			json.value(null);
 						        			json.key("error");
 						        			json.value(t.error.getLocalizedMessage());
-					        			} /*else if (t.response_len==0 ) {
-				        					json.value( t.conn.getURL());
-				        					//json.value( t.conn.getHeaderFields().toString() );
-				        					//json.value("No response to OPTIONS from " + t.conn.getURL().toString());
-				        				} else {
-				        					String tContentType = t.conn.getHeaderField("Content-Type");
-				        					if (tContentType != null && tContentType.matches("^.*"+"/json$")) {					        							        			
-				        						json.value(new JSONObject(new String(t.response)));
-				        					} else
-				        						json.value(new String(t.response));
-				        				} */
+					        			} 
 			        					json.value(null);
 			        				json.endObject();
 			        			} catch( JSONException e) {
@@ -213,6 +204,7 @@ public class ClientThreadManager extends ClientThread {
 		} catch(Exception e){
 			log.error(e.getMessage(), e);
 		}
+		*/
 	}
 
 	private void doManager(String json) throws IOException,JSONException {

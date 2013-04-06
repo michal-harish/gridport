@@ -1,35 +1,35 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>co.gridport</groupId>
-	<artifactId>gridport-server</artifactId>
-	<version>1.0.1-SNAPSHOT</version>
-	<name>GridPort Reverse Proxy Server</name>
-	
-	<scm>
-	   <url>http://xp-dev.com/svn/gridport/branches/maven2</url>
-	</scm>
-	<developers>
-	   <developer>
-	       <name>Michal Harish</name>
-	       <email>michal.harish@gmail.com</email>
-	   </developer>
-	</developers>
-	
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>co.gridport</groupId>
+    <artifactId>gridport-server</artifactId>
+    <version>1.0.1-SNAPSHOT</version>
+    <name>GridPort Reverse Proxy Server</name>
+
+    <scm>
+       <url>http://xp-dev.com/svn/gridport/branches/maven2</url>
+    </scm>
+    <developers>
+       <developer>
+           <name>Michal Harish</name>
+           <email>michal.harish@gmail.com</email>
+       </developer>
+    </developers>
+
     <distributionManagement>
-	    <repository>
-	        <id>gridport.co-releases</id>
-	        <name>GridPort Snapshots Repository</name>
-	        <url>http://aos3.gridport.co:8081/nexus/content/repositories/releases</url>
-	        <layout>default</layout>        
-	    </repository> 
-	    <snapshotRepository>
-	        <id>gridport.co-snapshots</id>
-	        <name>GridPort Snapshots Repository</name>
-	        <url>http://aos3.gridport.co:8081/nexus/content/repositories/snapshots</url>
-	        <layout>default</layout>        
-	    </snapshotRepository>
+        <repository>
+            <id>gridport.co-releases</id>
+            <name>GridPort Snapshots Repository</name>
+            <url>http://aos3.gridport.co:8081/nexus/content/repositories/releases</url>
+            <layout>default</layout>
+        </repository> 
+        <snapshotRepository>
+            <id>gridport.co-snapshots</id>
+            <name>GridPort Snapshots Repository</name>
+            <url>http://aos3.gridport.co:8081/nexus/content/repositories/snapshots</url>
+            <layout>default</layout>
+        </snapshotRepository>
     </distributionManagement>
-  
+
     <dependencies>
         <!-- sqlite for config tables -->
         <dependency>
@@ -39,43 +39,61 @@
         </dependency>
         <!-- jetty -->
         <dependency>
-	      <groupId>org.eclipse.jetty</groupId>
-	      <artifactId>jetty-server</artifactId>
-	      <version>8.1.0.v20120127</version>
-	    </dependency>
-		<!-- ActiveMQ for JMSModule -->
+          <groupId>org.eclipse.jetty</groupId>
+          <artifactId>jetty-server</artifactId>
+          <version>8.1.0.v20120127</version>
+        </dependency>
         <dependency>
-		    <groupId>org.apache.activemq</groupId>
-		    <artifactId>activemq-core</artifactId>
-		    <version>5.5.0</version>
-		</dependency>
-		<!-- Automaton for TupleSpaceModule -->
-	    <dependency>
-	        <groupId>dk.brics.automaton</groupId>
-	        <artifactId>automaton</artifactId>
-	        <version>1.11-8</version>
-	        <scope>compile</scope>
-	    </dependency>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
-	    <!-- logging and general -->
-	    <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlet</artifactId>
+            <version>8.1.0.v20120127</version>
+        </dependency>
+
+        <!--  resteasy and velocity -->
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-jaxrs</artifactId>
+            <version>2.3.2.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.velocity</groupId>
+            <artifactId>velocity</artifactId>
+            <version>1.7</version>
+        </dependency>
+
+        <!-- ActiveMQ for JMSModule -->
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-core</artifactId>
+            <version>5.5.0</version>
+        </dependency>
+        <!-- Automaton for TupleSpaceModule -->
+        <dependency>
+            <groupId>dk.brics.automaton</groupId>
+            <artifactId>automaton</artifactId>
+            <version>1.11-8</version>
+            <scope>compile</scope>
+        </dependency>
+        <!-- logging and general -->
+        <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
             <version>20090211</version>
-        </dependency>	    
-	    <dependency>
-	        <groupId>org.slf4j</groupId>
-	        <artifactId>slf4j-api</artifactId>
-	        <version>1.6.6</version>
-	    </dependency>  
-	    <dependency>
-	        <groupId>org.slf4j</groupId>
-	        <artifactId>slf4j-log4j12</artifactId>
-	        <version>1.6.6</version>
-	        <scope>runtime</scope>
-	    </dependency>	              
-	       
+        </dependency>        
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.6.6</version>
+        </dependency>  
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.6.6</version>
+            <scope>runtime</scope>
+        </dependency>
+
     </dependencies>
-    
+
   <build>
     <plugins>
         <plugin>
@@ -90,17 +108,17 @@
           <artifactId>maven-assembly-plugin</artifactId>
           <configuration>
               <finalName>gridport-server</finalName>
-              <appendAssemblyId>false</appendAssemblyId>              
+              <appendAssemblyId>false</appendAssemblyId>
               <archive>
                   <manifest>
-                      <mainClass>co.gridport.GridPortServer</mainClass>                      
+                      <mainClass>co.gridport.GridPortServer</mainClass>
                   </manifest>
               </archive>
             <descriptorRefs>
               <descriptorRef>jar-with-dependencies</descriptorRef>
             </descriptorRefs>
           </configuration>
-      </plugin>        
+      </plugin>
      </plugins>
-  </build>    
+  </build>
 </project>

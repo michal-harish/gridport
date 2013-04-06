@@ -3,9 +3,6 @@ package co.gridport.server.handler;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import co.gridport.GridPortServer;
 import co.gridport.server.domain.Contract;
+import co.gridport.server.domain.Endpoint;
 import co.gridport.server.domain.RequestContext;
 import co.gridport.server.domain.Route;
 import co.gridport.server.utils.Utils;
@@ -27,8 +25,6 @@ import co.gridport.server.utils.Utils;
 public class Firewall extends AbstractHandler
 {
     static private Logger log = LoggerFactory.getLogger("firewall");
-    static private List<Contract> definedContracts;
-    static private List<Route> definedRoutes;     
     
     public void handle(
         String target,
@@ -46,10 +42,9 @@ public class Firewall extends AbstractHandler
         }
         
         //Check available contracts first and reject if none available
-        if (definedContracts == null) loadDefinedContracts();
         String remoteIP = request.getRemoteAddr();
         if (request.getHeader("X-forwarded-for") != null) {
-            remoteIP  += "," + request.getHeader("X-forwarded-for");                           
+            remoteIP  += "," + request.getHeader("X-forwarded-for");
         }  
         ArrayList<Contract> availableContracts = filterContractsByIP(remoteIP.split(","));
         if (availableContracts.size()==0) {
@@ -60,9 +55,9 @@ public class Firewall extends AbstractHandler
             return; 
         }
         RequestContext context = new RequestContext(request, response);        
-        
+
         //Check available routes and reject if none available
-        ArrayList<Route> availableRoutes = filterRoutesByRequest(context, availableContracts);
+        List<Route> availableRoutes = routeByRequest(context, availableContracts);
         if (availableRoutes.size() ==0) {
             log.debug("no routes available for authenticator");
             response.setStatus(404);
@@ -70,64 +65,23 @@ public class Firewall extends AbstractHandler
             return;
         }
         context.setRoutes(availableRoutes);
-        
-        //Passed both contract and route availability               
+
+        //Passed both contract and route availability
         request.setAttribute("context", context);
     }
 
-    private void loadDefinedContracts() {
-        definedContracts = new ArrayList<Contract>();
-        try {
-            Statement sql = GridPortServer.policydb.createStatement();
-            try {
-                ResultSet rs = sql.executeQuery("SELECT * FROM contracts");
-                while (rs.next()) {
-                    String name = rs.getString("name") == null ? "default" : rs.getString("name");
-                    synchronized(definedContracts) {
-                        ArrayList<String> groups = new ArrayList<String>();
-                        if (rs.getString("auth_group") != null && !rs.getString("auth_group").trim().equals("")) {
-                            
-                            for(String s:rs.getString("auth_group").trim().split("[\\s\\n\\r,]+")) {
-                                if (!Utils.blank(s.trim())) groups.add(s.trim());
-                            }                                
-                        }
-                        ArrayList<String> endpoints = new ArrayList<String>();
-                        if (rs.getString("content") != null  && !rs.getString("content").trim().equals("")) {                                
-                            for(String s:rs.getString("content").trim().split("[\\s\\n\\r,]+")) {
-                                if (!Utils.blank(s.trim())) endpoints.add(s.trim());                                    
-                            }                                
-                        }                            
-                        definedContracts.add(new Contract(
-                            name,
-                            rs.getString("ip_range"),
-                            new Long(Math.round(rs.getFloat("interval") * 1000)),
-                            rs.getLong("frequency"),
-                            groups.toArray( new String[groups.size()]),
-                            endpoints.toArray( new String[endpoints.size()])
-                            
-                        ));
-                    }
-                }
-            } finally {
-                sql.close();
-            }  
-        } catch (SQLException e) {          
-            log.error("Contract SQL error",e);  
-        }
-    }
-
     private ArrayList<Contract> filterContractsByIP(String[] remoteIP) {
-        
-        ArrayList<Contract> result = new ArrayList<Contract>();                                 
+        List<Contract> definedContracts = GridPortServer.policyProvider.getContracts();
+        ArrayList<Contract> result = new ArrayList<Contract>();
         for(Contract C: definedContracts) {
             boolean within = (C.getIpRange() == null || C.getIpRange().isEmpty());
             if (!within) {
-                for(String range:C.getIpRange().split("[,\n\r]")) {                           
+                for(String range:C.getIpRange().split("[,\n\r]")) {
                     if (range.contains("-")) {
                         String[] r = range.split("-",2);
                         try {
-                            byte[] ipLower = InetAddress.getByName(r[0].trim()).getAddress();                               
-                            byte[] ipUpper = InetAddress.getByName(r[1].trim()).getAddress();       
+                            byte[] ipLower = InetAddress.getByName(r[0].trim()).getAddress();
+                            byte[] ipUpper = InetAddress.getByName(r[1].trim()).getAddress();
                             for(String ip:remoteIP) {
                                 byte[] ipRemote = InetAddress.getByName(ip).getAddress();
                                 boolean w = true;
@@ -144,112 +98,92 @@ public class Firewall extends AbstractHandler
                                     break;
                                 }
                             }
-                            
                         } catch(UnknownHostException e) {
                             log.warn("Contract - unknown address ",e);
                             continue;
                         }
                     } else {
-                        //TODO wildcard matching                                
-                        for(String IP:remoteIP) if (IP.trim().equals(range)) {
-                            log.debug("available contract "+C.getName()+", EXACT MATCH="+IP);
-                            within = true;  
-                            break;
-                        }   
+                        for(String IP:remoteIP) {
+                            if (IP.trim().substring(0,range.length()).equals(range)) {
+                                log.debug("available contract "+C.getName()+", EXACT MATCH="+IP);
+                                within = true;  
+                                break;
+                            }
+                        }
                     }
                     if (within) break; 
                 }
             }
-            if (within) {                           
-                result.add(C);                      
+            if (within) {
+                result.add(C);
             }
         } 
 
         return result;
     }
 
-    private ArrayList<Route> filterRoutesByRequest(RequestContext context, List<Contract> availableContracts) {
-        ArrayList<Route> routes = new ArrayList<Route>();
-        
-        Statement sql;
-        String qry = "SELECT * FROM endpoints" +
-            " WHERE (gateway IS NULL OR gateway='' OR gateway='"+context.getGateway()+"')" +
-            " AND (gateway_host IS NULL OR gateway_host='' OR gateway_host='"+context.getHost()+"')" +       
-            " AND (http_method IS NULL OR http_method='' OR http_method LIKE '%"+context.getMethod()+"%')" +
-            " AND (ssl='"+(context.isHttps() ? "1" : "0")+"' OR ssl IS NULL OR ssl='')";                              
-        try {
-            sql = GridPortServer.policydb.createStatement();            
-            log.debug("REQUEST ROUTING: host="+context.getHost()+", method="+context.getMethod()+", ssl="+(context.isHttps() ? "1" : "0")+", request="+context.getURI()+context.getQueryString());
-            try {   
-                ResultSet rs = sql.executeQuery(qry);
-                routes = filterRoutes(rs, context.getURI(), context.getQueryString(), context.isHttps());
+    private List<Route> routeByRequest(RequestContext context, List<Contract> availableContracts) {
 
-                for(Route E:routes) {   
-                    E.defaultRoute = false;
-                    //remove routes with unmatching gateway_host
-                    if (!Utils.blank(E.gateway_host)) {                                 
-                        if (!context.getHost().equals(E.gateway_host)) {
-                            routes.remove(E);
-                            if (routes.size()==0) break; else continue;
-                        }
-                    }
-                    //remove route if it doesn't have available contract
-                    boolean hasContract = false;
-                    for(Contract C: availableContracts) {                     
-                        if (!C.hasEndpoint(E.ID)) continue;                                             
-                        //if (!C.hasEitherGroup(E.auth_group)) continue;
-                        E.contracts.add(C);
-                        if (C.getAuthGroup().length ==0) E.defaultRoute = true;
-                        log.debug("available contract "+C.getName());
-                        hasContract = true;
-                        
-                    }
-                    if (!hasContract) {
-                        routes.remove(E);
-                        if (routes.size()==0) break; else continue;
-                    }
-                }
-            
-            } finally {
-                sql.close();
+        log.debug("REQUEST ROUTING: host="+context.getHost()+", method="+context.getMethod()+", ssl="+(context.isHttps() ? "1" : "0")+", request="+context.getURI()+context.getQueryString());
+
+        //reduce defined endpoints to available routes
+        List<Route> routes = filterEndpointsByRequest(context);
+
+        //filter routes by available contracts
+        for(Route route:routes) {
+            route.defaultRoute = false;
+            //remove route if it doesn't have available contract
+            boolean hasContract = false;
+            for(Contract C: availableContracts) {
+                if (!C.hasEndpoint(route.ID)) continue;
+                //if (!C.hasEitherGroup(E.auth_group)) continue;
+                route.contracts.add(C);
+                if (C.getAuthGroup().length == 0) route.defaultRoute = true;
+                log.debug("available contract "+C.getName());
+                hasContract = true;
             }
-        } catch (SQLException e) {          
-            log.error("routing table sql error " + qry,e);          
-        } catch (Exception e2) {
-            log.error("routing table error " + qry,e2);
+            if (!hasContract) {
+                routes.remove(route);
+                if (routes.size()==0) break;
+            }
         }
         return routes; 
     }
 
-    private static ArrayList<Route> filterRoutes(ResultSet rs,String URI,String QUERY_STRING,boolean ssl) throws SQLException {
-        
-        if (!URI.matches("^.*?\\.[^/]+$")) URI += "/";          
-        ArrayList<Route> result = new ArrayList<Route>();
+    private static List<Route> filterEndpointsByRequest(RequestContext context) {
+
+        List<Endpoint> endpoints = new ArrayList<Endpoint>();
+        for(Endpoint e: GridPortServer.policyProvider.getEndpoints()) {
+            if (!Utils.blank(e.getGateway()) && !e.getGateway().equals(context.getGateway())) continue;
+            if (!Utils.blank(e.getGatewayHost()) && !e.getGatewayHost().equals(context.getHost())) continue;
+            if (!Utils.blank(e.getHttpMethod()) && !e.getHttpMethod().contains(context.getMethod())) continue;
+            if (e.getSsl()!=null && !e.getSsl().equals(context.isHttps())) continue;
+            endpoints.add(e);
+        }
+
+        String URI = context.getURI();
+        if (!URI.matches("^.*?\\.[^/]+$")) URI += "/";
+
+        List<Route> result = new ArrayList<Route>();
         boolean removeAllWildCards = false;
         ArrayList<Route> wildCards =new ArrayList<Route>();
         String longestWildCard = "";
-        while (rs.next()) {         
+        for (Endpoint e: endpoints) {
             String base  = "";  
-            Boolean wildcard = false;           
-            if (Utils.blank(rs.getString("uri_base"))) {
-                //route with no uri_base is an implicit wildcard that always matches
-                wildcard = true;
-            } else {
-                base = rs.getString("uri_base");         
+            if (!Utils.blank(e.getUriBase())) {
+                base = e.getUriBase();
                 if (Utils.blank(URI)) {
                     // empty query cannot match where uri_base is set
                     continue;
-                }               
+                }
                 if (base.substring(base.length()-1).equals("*")) { 
-                    //wildcard can match the query from right                   
-                    wildcard = true;                    
+                    //wildcard can match the query from right
                     base = base.substring(0,base.length()-1);
                 }
                 if (URI.length()<base.length()) {
                     //query shorter than uri_base won't match either
                     continue;
-                } 
-                else if (wildcard) { 
+                } else if (e.isWildcard()) { 
                     //wildcard must match the query from right
                     if (!URI.substring(0,base.length()).equals(base)) { 
                         continue; 
@@ -258,44 +192,41 @@ public class Firewall extends AbstractHandler
                     {
                         //ok - wildcard match
                         //keep only the most specific wild cards
-                        if (longestWildCard.length()<rs.getString("uri_base").length()) {
-                            longestWildCard = rs.getString("uri_base");
+                        if (longestWildCard.length()<e.getUriBase().length()) {
+                            longestWildCard = e.getUriBase();
                         }
-                    }                   
-                } 
-                else if (!URI.equals(base)) { 
+                    }
+                } else if (!URI.equals(base)) { 
                     continue; 
-                }
-                else
-                {
+                } else {
                     //ohterwise the uri_base must be an exact match
                     removeAllWildCards = true;
                 }
             }
-            
+
             // route has passed the uri filter
-            Route E = new Route(
-                    wildcard,
-                    rs.getString("ID"),
-                    rs.getString("gateway"),
-                    rs.getString("http_method"),
-                    rs.getString("gateway_host"),
-                    rs.getString("async"),
+            Route route = new Route(
+                    e.isWildcard(),
+                    e.getId(),
+                    e.getGateway(),
+                    context.getMethod(), //e.getHttpMethod(),
+                    context.getHost(), //e.getGatewayHost(),
+                    e.getAsync(),
                     URI.substring(base.length()).replaceFirst("^([^/]{1})","/$1"), //target URI
-                    rs.getString("service_endpoint").replaceFirst("/$",""),
-                    QUERY_STRING,
-                    rs.getString("uri_base") == null ? "" : rs.getString("uri_base"),
+                    e.getEndpoint().replaceFirst("/$",""),
+                    context.getQueryString(),
+                    e.getUriBase() == null ? "" : e.getUriBase(),
                     base
                 );
-            result.add(E);
-            if (wildcard) 
+            result.add(route);
+            if (e.isWildcard()) 
             {
-                wildCards.add(E);
+                wildCards.add(route);
             }
-        }       
+        }
         for(Route E:wildCards) if (E.wildcard) {
             if (removeAllWildCards
-                || E.base_uri.length()<longestWildCard.length()) {              
+                || E.base_uri.length()<longestWildCard.length()) {
                 result.remove(E);
             }
         }

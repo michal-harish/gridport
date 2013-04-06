@@ -21,41 +21,41 @@ import co.gridport.server.domain.RequestContext;
 import co.gridport.server.jms.ClientThreadJMS;
 import co.gridport.server.space.ClientThreadSpace;
 
-public class RequestHandler extends AbstractHandler {
-	static private Logger log = LoggerFactory.getLogger("request");	
-	
-	static private ArrayList<ClientThread> threads = new ArrayList<ClientThread>();
-    
+public class ProxyHandler extends AbstractHandler {
+    static private Logger log = LoggerFactory.getLogger("request");
+
+    static private ArrayList<ClientThread> threads = new ArrayList<ClientThread>();
+
     public void handle(String target,
         Request baseRequest,
         HttpServletRequest request,
         HttpServletResponse response
     ) throws IOException, ServletException
     {
-    	RequestContext context = (RequestContext) request.getAttribute("context");    	
+        RequestContext context = (RequestContext) request.getAttribute("context");
 
-		ClientThread thread;		
-		if (context.getRoutes().get(0).endpoint.equals("module://manager")) {
-		    log.info("GridPortHandler -> ClientThreadManager " + request.getRequestURI());
-    		thread = new ClientThreadManager(context);  
-    	} else if (context.getRoutes().get(0).endpoint.equals("module://space")) {    		
-    	    log.info("GridPortHandler -> ClientThreadSpace " + request.getRequestURI());
-    		thread = new ClientThreadSpace(context);
-    	} else if (context.getRoutes().get(0).endpoint.equals("module://jms")) {
-    	    log.info("GridPortHandler -> ClientThreadJMS " + request.getRequestURI());
-    		thread = new ClientThreadJMS(context);
-    	} else {
-    	    log.info("GridPortHandler -> ClientThreadRouter " + request.getRequestURI());
-    		thread = new ClientThreadRouter(context);
-    	}
-    	
-    	synchronized(threads) {
-    	    thread.setName("GridPort Client Request");
-    		threads.add(thread);    		        	    
-    	}
+        ClientThread thread;        
+        if (context.getRoutes().get(0).endpoint.equals("module://manager")) {
+            log.info("GridPortHandler -> ClientThreadManager " + request.getRequestURI());
+            thread = new ClientThreadManager(context);  
+        } else if (context.getRoutes().get(0).endpoint.equals("module://space")) {
+            log.info("GridPortHandler -> ClientThreadSpace " + request.getRequestURI());
+            thread = new ClientThreadSpace(context);
+        } else if (context.getRoutes().get(0).endpoint.equals("module://jms")) {
+            log.info("GridPortHandler -> ClientThreadJMS " + request.getRequestURI());
+            thread = new ClientThreadJMS(context);
+        } else {
+            log.info("GridPortHandler -> ClientThreadRouter " + request.getRequestURI());
+            thread = new ClientThreadRouter(context);
+        }
 
-    	thread.start();    	
-    	try {
+        synchronized(threads) {
+            thread.setName("GridPort Client Request");
+            threads.add(thread);
+        }
+
+        thread.start();
+        try {
             thread.join(); //TODO investigate the SelectChannel connector thread context
             baseRequest.setHandled(true);
         } catch (InterruptedException e) {
@@ -72,13 +72,13 @@ public class RequestHandler extends AbstractHandler {
             for(ClientThread T:threads) {
                 T.notifyAsyncSubrequests();
             }
-        }        
+        }
     }
-    
+
     public static List<String> getActiveThreadsInfo() {
         List<String> result = new ArrayList<String>();
         synchronized (threads) {
-            for(ClientThread T:RequestHandler.threads) { 
+            for(ClientThread T:ProxyHandler.threads) { 
                 result.add (T.getInfo());
                 if (T instanceof ClientThreadRouter) {
                     ClientThreadRouter TR = (ClientThreadRouter) T;
@@ -93,6 +93,6 @@ public class RequestHandler extends AbstractHandler {
         }
         return result;
     }
-    
+
 }
 

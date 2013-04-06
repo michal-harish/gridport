@@ -1,0 +1,30 @@
+<html>
+<head>
+    #include("manager/head.vm")
+</head>
+<body>
+    <h1>GridPort Server Instance - Management Console</h1>
+    $request.getRemoteHost() | $user | <a href="$this.getPrintLink("world")">hello world</a> | <a href="$this.getPrintLink("there")">hello there</a>
+    <div>
+        <h2>Users and Groups</h2>
+        <table>
+            <thead>
+                <tr><th>Username</th><th>Group</th></tr>
+            </thead>
+            <tbody>
+            #foreach( $user in $userList )
+                <tr><td>$user.getUsername()</td><td>$user.getGroups()</td></tr>
+            #end
+            </tbody>
+        </table> 
+    </div>
+    <div>
+        <h2>Active Threads</h2>
+        <ul>
+            #foreach( $processInfo in $processList )
+                <li>$processInfo</li>
+            #end
+        </ul> 
+    </div>
+</body>
+</html>

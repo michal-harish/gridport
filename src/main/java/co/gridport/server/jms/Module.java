@@ -48,27 +48,18 @@ public class Module {
 					initializeStorage();
 
 					//prepare factory
-					String factory = null;
-					String provider = null;				
-					ResultSet rs;
+					
 
-					rs = GridPortServer.policydb.createStatement().executeQuery("SELECT * FROM settings WHERE name LIKE 'java.naming.factory.initial'");
-				
-					if (rs.next()) {
-						factory = rs.getString("value");
-					} else {
-						factory = "org.apache.activemq.jndi.ActiveMQInitialContextFactory";
-						GridPortServer.policydb.createStatement().execute("INSERT INTO settings(name,value) VALUES('java.naming.factory.initial','"+factory+"')");
+					
+					if (!GridPortServer.policyProvider.has("java.naming.factory.initial")) {
+					    GridPortServer.policyProvider.put("java.naming.factory.initial","org.apache.activemq.jndi.ActiveMQInitialContextFactory");
 					}
-					rs.close();									
-					rs = GridPortServer.policydb.createStatement().executeQuery("SELECT * FROM settings WHERE name LIKE 'java.naming.provider.url'");
-					if (rs.next()) {
-						provider = rs.getString("value");
-					} else {
-						provider = "failover:(tcp://localhost:61616)?randomize=falsee&startupMaxReconnectAttempts=3";
-						GridPortServer.policydb.createStatement().execute("INSERT INTO settings(name,value) VALUES('java.naming.provider.url','"+provider+"')");
-					}
-					rs.close();
+                    if (!GridPortServer.policyProvider.has("java.naming.provider.url")) {
+                        GridPortServer.policyProvider.put("java.naming.provider.url","failover:(tcp://localhost:61616)?randomize=falsee&startupMaxReconnectAttempts=3");
+                    }
+					String factory = GridPortServer.policyProvider.get("java.naming.factory.initial");
+                    String provider = GridPortServer.policyProvider.get("jjava.naming.provider.url");
+					
 					if (Utils.blank(factory) || Utils.blank(provider)) {
 						return;
 					}
