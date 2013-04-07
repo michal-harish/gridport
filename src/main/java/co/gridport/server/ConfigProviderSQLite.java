@@ -8,7 +8,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -36,7 +35,7 @@ public class ConfigProviderSQLite implements ConfigProvider {
 
     private List<Contract> contracts;
 
-    private List<Endpoint> endpoints;
+    private Map<String,Endpoint> endpoints;
 
     @Override
     public Map<String, String> getSettings() {
@@ -103,8 +102,8 @@ public class ConfigProviderSQLite implements ConfigProvider {
     }
 
     @Override
-    public List<Endpoint> getEndpoints() {
-        return Collections.unmodifiableList(endpoints);
+    public Map<String,Endpoint>  getEndpoints() {
+        return Collections.unmodifiableMap(endpoints);
     }
 
     @Override
@@ -242,7 +241,7 @@ public class ConfigProviderSQLite implements ConfigProvider {
         while (rs.next()) {
             User user = new User(
                 rs.getString("username"),
-                Arrays.asList(rs.getString("groups").split("[\\s\\,\\;]")),
+                rs.getString("groups"),
                 rs.getString("passport")
             );
             users.put(user.getUsername(),user);
@@ -250,12 +249,12 @@ public class ConfigProviderSQLite implements ConfigProvider {
     }
 
     private void initializeEndpoints() throws SQLException {
-        endpoints = new ArrayList<Endpoint>();
+        endpoints = new HashMap<String,Endpoint>();
         String qry = "SELECT * FROM endpoints";
         Statement sql = policydb.createStatement();
         ResultSet rs = sql.executeQuery(qry);
         while (rs.next()) {
-            endpoints.add(new Endpoint(
+            Endpoint endpoint = new Endpoint(
                 rs.getString("ID"),
                 Utils.blank(rs.getString("ssl")) ? null : rs.getString("ssl").equals("1") ? true : false,
                 rs.getString("gateway"),
@@ -264,7 +263,8 @@ public class ConfigProviderSQLite implements ConfigProvider {
                 rs.getString("uri_base"),
                 rs.getString("service_endpoint").replaceFirst("/$",""),
                 rs.getString("async")
-            ));
+            );
+            endpoints.put(rs.getString("ID"), endpoint);
         }
     }
 

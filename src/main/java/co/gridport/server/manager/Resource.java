@@ -7,6 +7,7 @@ import java.util.Properties;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilderException;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.velocity.Template;
@@ -22,21 +23,16 @@ public abstract class Resource extends VelocityContext {
     @Context UriInfo uriInfo;
 
     public String getHomeUrl() {
-        return uriInfo.getBaseUriBuilder().path(HomeResource.class).build().toString();
+        return uriInfo.getBaseUriBuilder().path(HomeResource.class,"index").build().toString();
     }
-    public String getLogsUrl() {
-        return uriInfo.getBaseUriBuilder().path(LogsResource.class).build().toString();
+    public String getLogsUrl() throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
+        return uriInfo.getBaseUriBuilder().path(LogsResource.class).path(LogsResource.class.getMethod("index")).build().toString();
     }
-    public String getRestartUrl() {
-        try {
-            return uriInfo.getBaseUriBuilder().path(HomeResource.class).path(HomeResource.class.getMethod("restart")).build().toString();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        } 
+    public String getRestartUrl() throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
+        return uriInfo.getBaseUriBuilder().path(HomeResource.class).path(HomeResource.class.getMethod("restart")).build().toString();
     }
     public String getUsersUrl() {
-        return uriInfo.getBaseUriBuilder().path(HomeResource.class).path("/users").build().toString();
+        return uriInfo.getBaseUriBuilder().path(UsersResource.class).build().toString();
     }
     public String getCurrentUser() {
         RequestContext context = (RequestContext) request.getAttribute("context");

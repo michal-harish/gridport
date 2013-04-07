@@ -12,7 +12,7 @@ import javax.ws.rs.core.Response;
 public class LogsResource extends Resource {
 
     @GET
-    @Path("")
+    @Path("/")
     @Produces({MediaType.TEXT_PLAIN})
     public Response index()
     {

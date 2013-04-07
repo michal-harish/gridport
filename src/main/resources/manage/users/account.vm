@@ -16,13 +16,32 @@
   }
  </script>
 
- <em>GridPort Server Instance</em> | $request.getRemoteHost() | $this.getCurrentUser() | <a href="$this.getHomeUrl()">home</a> | <a href="$this.getLogsUrl()">logs</a> | <a href="$this.getRestartUrl()">restart</a>
+<header>
+ <em>GridPort Server Instance</em> | $request.getRemoteHost() | $this.getCurrentUser()
+ | <a href="$this.getHomeUrl()">home</a>   
+ | <a href="$this.getLogsUrl()">logs</a> 
+ | <form style="display:inline;" method="POST" action="$this.getRestartUrl()" onsubmit='return confirm("Reload configuration and restart the server ?");'><input type="submit" name="restart" value="RESTART"/></form>
+</header>
  
  <h2>User: $user.getUsername() </h2>
  <form method="POST" onsubmit="return checkForm(this);">
-    <p><label>Password:</label><input name="password" type="password" value=""/></p>
-    <p><label>Retype Password:</label><input name="password2" type="password2" value=""/></p>
-    <p><input type="submit"/></p>
+    <p>
+        <label>Password:</label><input name="password" type="password" value=""/> 
+        <label>Retype:</label><input name="password2" type="password2" value=""/>
+        <input type="submit" value="Change Password"/>
+    </p>
+ </form>
+ 
+ <h2>Group memberships</h2>
+ 
+ <table>
+ #foreach ( $group in $user.getGroups() )
+    <tr><td>$group</td><td><form method="POST" action="$groupsUri/$group"><input type="submit" value="remove"/></form></td></tr>
+ #end
+ 
+ <form method="POST" action="$groupsUri">
+    <tr><td><input name="group"/></td><td><input type="submit" value="add group"/></td></tr>
+    </table>
  </form>
 
  #include("manage/footer.vm")

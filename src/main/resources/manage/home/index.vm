@@ -1,83 +1,97 @@
 #include("manage/header.vm")
-    <script>
-        var contracts = [];
-        $.ajax({url: '/manage/contracts.json',dataType: 'json',type: 'GET'})
-            .done(function(data) { contracts = data;})
-            .fail(function(data) { $('.error').text($.parseJSON(data.responseText).message);});
-    </script>
 
-    <em>GridPort Server Instance</em> | $request.getRemoteHost() | $this.getCurrentUser()  | <a href="$this.getLogsUrl()">logs</a> | <a href="$this.getRestartUrl()">restart</a>
+<script>
+    var contracts = [];
+    $.ajax({url: '/manage/contracts.json',dataType: 'json',type: 'GET'})
+        .done(function(data) { contracts = data;})
+        .fail(function(data) { $('.error').text($.parseJSON(data.responseText).message);});
+</script>
 
-    <div>
-        <h2>Active Client Threads</h2>
-        <ul>
-            #foreach( $processInfo in $processes )
-                <li>$processInfo</li>
-            #end
-        </ul> 
-    </div>
+<div id="header">
+<em>GridPort Server Instance</em> | $request.getRemoteHost() | $this.getCurrentUser()  
+| <a href="$this.getLogsUrl()">logs</a> 
+| <form style="display:inline;" method="POST" action="$this.getRestartUrl()" onsubmit='return confirm("Reload configuration and restart the server ?");'><input type="submit" name="restart" value="RESTART"/></form>
+</div>
 
-
-    <table><tr>
+#if ($msg != "")
+<a class="error">$msg</a> 
+#end
+<section>
+<h2>SLA Contracts</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>IP Ranges</th>
+            <th>Groups</th>
+            <th>Rate</th>
+            <th>Endpoints</th>
+        </tr>
+    </thead>
+    <tbody>
+    #foreach( $contract in $contracts )
+        <tr>
+        <td>$contract.getName()</td>
+        <td>$contract.getIpRange()</td>
+        <td>$contract.getAuthGroupList()</td>
+        <td>#if ($contract.getIntervalMs()>0) $contract.getFrequency()/$contract.getIntervalMs()ms #end</td>
         <td>
-            <h2>Contracts</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>IP Ranges</th>
-                        <th>Groups</th>
-                        <th>Endpoints</th>
-                        <th>Rate</th>
-                    </tr>
-                </thead>
-                <tbody>
-                #foreach( $contract in $contracts )
-                    <tr>
-                    <td>$contract.getName()</td>
-                    <td>$contract.getIpRange()</td>
-                    <td>$contract.getAuthGroupList()</td>
-                    <td>$contract.getEndpointList()</td>
-                    <td>#if ($contract.getIntervalMs()>0) $contract.getFrequency()/$contract.getIntervalMs()ms #end</td>
-                    </tr>
-                #end
-                </tbody>
-            </table>
+            #foreach ( $endpointId in $contract.getEndpoints() )
+                #set( $e =  $endpoints.get($endpointId) )
+                [$e.getId()] $e.getUriBase() &rarr; $e.getEndpoint() <br/>
+            #end
         </td>
-        <td>&nbsp;&nbsp;</td>
-        <td>
-            <h2>Users and Groups</h2>
-            <table>
-                <thead>
-                    <tr><th>Username</th><th>Group</th></tr>
-                </thead>
-                <tbody>
-                #foreach( $user in $users )
-                    <tr><td><a href="$this.getUsersUrl()/$user.getUsername()">$user.getUsername()</a></td><td>$user.getGroups()</td></tr>
-                #end
-                </tbody>
-            </table>
-         </td>
-    </tr></table>
+        </tr>
+    #end
+    </tbody>
+</table>
+</section>
 
-    <div>
-        <h2>Endpoints</h2>
-        <table>
-            <thead>
-                <th>ID</id>
-                <th>URI-BASE</th>
-                <th>ENDPOINT-BASE</th>
-            </thead>
-            <tbody>
-            #foreach( $endpoint in $endpoints )
-                <tr>
-                    <td>$endpoint.getId()</td>
-                    <td>$endpoint.getUriBase()</td>
-                    <td>$endpoint.getEndpoint()</td>
-                </tr>
-            #end
-            </tbody>
-        </table>
-    </div>
+<section>
+<h2>Users & Groups</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Groups</th>
+            <th><form style="display:inline;" method="POST" action="$this.getUsersUrl()" onsubmit='this.username.value=prompt("New username:"); return this.username.value ? true : false;'><input type="hidden" name="username"/><input type="submit" name="newuser" value="ADD"/></form></th>
+        </tr>
+    </thead>
+    <tbody>
+    #foreach( $user in $users )
+        <tr><td><a href="$this.getUsersUrl()/$user.getUsername()">$user.getUsername()</a></td><td>$user.getGroups()</td></tr>
+    #end
+    </tbody>
+</table>
+</section>
+<div>
+    <h2>Endpoints</h2>
+    <table>
+        <thead>
+            <th>ID</id>
+            <th>URI-BASE</th>
+            <th>ENDPOINT-BASE</th>
+        </thead>
+        <tbody>
+        #foreach( $endpoint in $endpoints.values() )
+            <tr>
+                <td>$endpoint.getId()</td>
+                <td>$endpoint.getUriBase()</td>
+                <td>$endpoint.getEndpoint()</td>
+            </tr>
+        #end
+        </tbody>
+    </table>
+</div>
+
+<div>
+    <h2>Active Client Threads</h2>
+    <ul>
+        #foreach( $processInfo in $processes )
+            <li>$processInfo</li>
+        #end
+    </ul> 
+</div>
+
 
 #include("manage/footer.vm")

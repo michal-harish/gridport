@@ -160,7 +160,7 @@ public class Firewall extends AbstractHandler
     private static List<Route> filterEndpointsByRequest(RequestContext context) {
 
         List<Endpoint> endpoints = new ArrayList<Endpoint>();
-        for(Endpoint e: GridPortServer.policyProvider.getEndpoints()) {
+        for(Endpoint e: GridPortServer.policyProvider.getEndpoints().values()) {
             if (!Utils.blank(e.getGateway()) && !e.getGateway().equals(context.getGateway())) continue;
             if (!Utils.blank(e.getGatewayHost()) && !e.getGatewayHost().equals(context.getHost())) continue;
             if (!Utils.blank(e.getHttpMethod()) && !e.getHttpMethod().contains(context.getMethod())) continue;

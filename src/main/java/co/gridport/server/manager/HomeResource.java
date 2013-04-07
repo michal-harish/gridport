@@ -2,26 +2,24 @@ package co.gridport.server.manager;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.FormParam;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriBuilderException;
 import javax.ws.rs.core.UriInfo;
 
 import co.gridport.GridPortServer;
 import co.gridport.server.domain.Contract;
 import co.gridport.server.domain.Endpoint;
-import co.gridport.server.domain.User;
 import co.gridport.server.handler.RequestHandler;
 import co.gridport.server.space.Space2;
 import co.gridport.server.space.Subscription;
@@ -35,41 +33,18 @@ public class HomeResource extends Resource {
 
     @GET
     @Path("")
-    public Response index() 
+    public Response index(@QueryParam("msg") @DefaultValue("") String msg) 
             throws IllegalArgumentException, SecurityException, NoSuchMethodException 
     {
         put("processes", getProcessList());
         put("endpoints", GridPortServer.policyProvider.getEndpoints());
         put("contracts", GridPortServer.policyProvider.getContracts());
         put("users", GridPortServer.policyProvider.getUsers());
+        put("msg", msg);
 
         return view("manage/home/index.vm");
     }
 
-    @GET
-    @Path("/users.json")
-    @Produces("application/json")
-    public Collection<User> getUsers() {
-        return GridPortServer.policyProvider.getUsers();
-    }
-
-    @GET
-    @Path("/users/{username}")
-    public Response userAccount(@PathParam("username") String username) {
-        put("user", GridPortServer.policyProvider.getUser(username));
-        return view("manage/users/account.vm");
-    }
-
-    @POST
-    @Path("/users/{username}")
-    public Response updateUserAccount(@PathParam("username") String username, @FormParam("password") String password) 
-            throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException 
-    {
-        User user = GridPortServer.policyProvider.getUser(username);
-        user.createPassport("", password);
-        GridPortServer.policyProvider.updateUser(user);
-        return Response.seeOther(uriInfo.getBaseUriBuilder().path(HomeResource.class).build()).build();
-    }
 
     @GET
     @Path("/contracts.json")
@@ -81,26 +56,16 @@ public class HomeResource extends Resource {
     @GET
     @Path("/endpoints.json")
     @Produces("application/json")
-    public List<Endpoint> getEndpoints() {
+    public Map<String,Endpoint> getEndpoints() {
         return GridPortServer.policyProvider.getEndpoints();
     }
 
-    @GET
-    @Path("/restart")
-    public Response restart() {
-        return view("manage/home/restart.vm");
-    }
     @POST
     @Path("/restart")
-    public Response doRestart(@FormParam("restart") String restart ) {
+    public Response restart() throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
         GridPortServer.restart();
-        URI uri = uriInfo.getBaseUriBuilder().path(HomeResource.class).build();
+        URI uri = uriInfo.getBaseUriBuilder().path(HomeResource.class).path(HomeResource.class.getMethod("index", String.class)).build();
         return Response.ok().header("Refresh", "2;url="+uri.toString()).build();
-    }
-
-    public String getPrintLink(String arg) throws IllegalArgumentException, SecurityException, NoSuchMethodException {
-        UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(HomeResource.class.getMethod("printMessage",String.class));
-        return uriBuilder.build(arg).toString();
     }
 
     public String[] getProcessList() {

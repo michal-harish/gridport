@@ -1,5 +1,6 @@
 package co.gridport.server.domain;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang.NotImplementedException;
@@ -15,9 +16,9 @@ public class User {
     private List<String> groups;
     private String passport;
 
-    public User(String username, List<String> groups, String passport) {
+    public User(String username, String groups, String passport) {
         this.username = username;
-        this.groups = groups;
+        setGroups(groups);
         this.passport = passport;
     }
 
@@ -27,6 +28,12 @@ public class User {
 
     public List<String> getGroups() {
         return groups;
+    }
+    public void setGroups(String groups) {
+        this.groups = new ArrayList<String>();
+        for(String group:groups.split("[\\s\\,\\;]")) {
+            if (!Utils.blank(group)) this.groups.add(group);
+        }
     }
 
     @JsonProperty("hasPassword")
@@ -41,7 +48,7 @@ public class User {
        } else throw new NotImplementedException();
     }
 
-    public void createPassport(String realm, String password) {
+    public void setPassword(String realm, String password) {
         if (Utils.blank(realm)) {
             passport = Crypt.md5(username +":" + realm + ":" + password);
         } else throw new NotImplementedException();

@@ -27,8 +27,9 @@ import co.gridport.server.ConfigProviderSQLite;
 import co.gridport.server.handler.Authenticator;
 import co.gridport.server.handler.Firewall;
 import co.gridport.server.handler.RequestHandler;
-import co.gridport.server.manager.LogsResource;
 import co.gridport.server.manager.HomeResource;
+import co.gridport.server.manager.LogsResource;
+import co.gridport.server.manager.UsersResource;
 import co.gridport.server.utils.Utils;
 
 public class GridPortServer {
@@ -155,6 +156,7 @@ public class GridPortServer {
         s.setInitParameter("resteasy.scan", "false");
         s.setInitParameter("resteasy.resources",
                  HomeResource.class.getName()
+            +","+UsersResource.class.getName()
             +","+LogsResource.class.getName()
         );
         managerContextHandler.addServlet(s,"/*");

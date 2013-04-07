@@ -17,7 +17,7 @@ public interface ConfigProvider {
 
     List<Contract> getContracts();
 
-    List<Endpoint> getEndpoints();
+    Map<String,Endpoint> getEndpoints();
 
     Collection<User> getUsers();
     User getUser(String username);
