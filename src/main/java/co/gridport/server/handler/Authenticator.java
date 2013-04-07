@@ -75,6 +75,7 @@ public class Authenticator extends AbstractHandler
 
             List<String> groups = null;
             String URI = request.getRequestURI().toString();
+            if (!Utils.blank(request.getQueryString())) URI+="?"+request.getQueryString();
             String nonce = null;
             String realm = "";
             String qop = "auth";
