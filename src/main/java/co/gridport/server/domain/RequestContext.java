@@ -8,42 +8,44 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
+
 public class RequestContext {
-    
+
     private Long receivedTimestampMs;
     private HttpServletRequest request;
     private HttpServletResponse response;
-	private String host;	
-	private String consumerAddr;
-	private String queryString;
+    private String host;
+    private String consumerAddr;
+    private String queryString;
     private HashMap<String,String> params;
-	private List<Route> routes;		
-	private String groups;
-	private String username;
-	private String sessionToken;
+    private List<Route> routes;
+    private List<String> groups;
+    private String username;
+    private String sessionToken;
 
-	public RequestContext(
-	    HttpServletRequest request, 
-	    HttpServletResponse response
+    public RequestContext(
+        HttpServletRequest request, 
+        HttpServletResponse response
     ) {
-	    receivedTimestampMs = System.currentTimeMillis();
-	    
-	    this.request = request;
-	    this.response = response;
-		
-    	if (request.getHeader("Host") != null) {	
-    	    host = request.getHeader("Host").split(":",2)[0];
-    	}
-        if (request.getHeader("X-forwarded-host") != null) {            
-            host = request.getHeader("X-forwarded-host");                   
+        receivedTimestampMs = System.currentTimeMillis();
+
+        this.request = request;
+        this.response = response;
+
+        if (request.getHeader("Host") != null) {
+            host = request.getHeader("Host").split(":",2)[0];
         }
-        
+        if (request.getHeader("X-forwarded-host") != null) {
+            host = request.getHeader("X-forwarded-host");
+        }
+
         consumerAddr = request.getRemoteAddr();
-    	if (request.getHeader("X-forwarded-for") != null) {
-    	    consumerAddr  += "," + request.getHeader("X-forwarded-for");							
-		}
-    	
-    	params = new HashMap<String,String>();
+        if (request.getHeader("X-forwarded-for") != null) {
+            consumerAddr  += "," + request.getHeader("X-forwarded-for");
+        }
+
+        params = new HashMap<String,String>();
         if (request.getQueryString()!=null) {
             for(String nv:request.getQueryString().split("\\&")) {
                 String[] nv2 = nv.split("\\=",2);
@@ -58,30 +60,30 @@ public class RequestContext {
                 params.put(nv2[0], value);
             }
         }
-    	
-    	queryString = request.getQueryString();
-		if (queryString == null) queryString = ""; 
-		else if (queryString.length()>0) {
-		    queryString = "?" + queryString;
-    	}
-	}
-	
-    public void setRoutes(List<Route> availableRoutes) {
-        routes = availableRoutes;        
+
+        queryString = request.getQueryString();
+        if (queryString == null) queryString = ""; 
+        else if (queryString.length()>0) {
+            queryString = "?" + queryString;
+        }
     }
-    
-    public List<Route> getRoutes() {        
+
+    public void setRoutes(List<Route> availableRoutes) {
+        routes = availableRoutes;
+    }
+
+    public List<Route> getRoutes() {
         return routes;
     }
-    
-    public void setGroups(String groups) {
+
+    public void setGroups(List<String> groups) {
         this.groups = groups;
     }
-    public String[] getGroups() {
-        return (groups == null ? "" : groups).split("[\\s\\n\\r,]");
+    public List<String> getGroups() {
+        return groups;
     }
     public String getRealm() {
-        return groups;
+        return StringUtils.join(groups,",");
     }
 
     public void setUsername(String username) {
@@ -90,24 +92,24 @@ public class RequestContext {
     public String getUsername() {
         return username;
     }
-    
+
     public void setSessionToken(String sessionToken) {
         this.sessionToken = sessionToken;
     }
-    
-    public String getSessionToken() {        
+
+    public String getSessionToken() {
         return sessionToken;
-    }    
-    
-	public boolean isHttps() {
-	    return request.getScheme().equals("https");
-	}
+    }
+
+    public boolean isHttps() {
+        return request.getScheme().equals("https");
+    }
 
     public String getMethod() {
         return request.getMethod();
     }
 
-    public HttpServletRequest getRequest() {        
+    public HttpServletRequest getRequest() {
         return request;
     }
 
@@ -123,15 +125,15 @@ public class RequestContext {
         return request.getServerName();
     }
 
-    public String getHost() {        
+    public String getHost() {
         return host;
     }
-    
+
     public String getURI() {
         return request.getRequestURI();
     }
 
-    public String getConsumerAddr() {        
+    public String getConsumerAddr() {
         return consumerAddr;
     }
 

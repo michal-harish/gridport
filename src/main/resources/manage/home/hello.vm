@@ -1,8 +1,0 @@
-<html>
-<head>
-    #include("manage/head.vm")
-</head>
-<body>
-    <h1>Hello $msg</h1>
-</body>
-</html>

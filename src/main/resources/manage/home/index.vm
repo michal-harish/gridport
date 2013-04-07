@@ -1,13 +1,13 @@
-<html>
-<head>
-    #include("manage/head.vm")
-</head>
-<body>
-    <h1>GridPort Server Instance - Management Console</h1>
-    $request.getRemoteHost() 
-    | $user 
-    | <a href="$logsUrl">logs</a> 
-    | <a href="$serverUrl">restart</a> 
+#include("manage/header.vm")
+    <script>
+        var contracts = [];
+        $.ajax({url: '/manage/contracts.json',dataType: 'json',type: 'GET'})
+            .done(function(data) { contracts = data;})
+            .fail(function(data) { $('.error').text($.parseJSON(data.responseText).message);});
+    </script>
+
+    <em>GridPort Server Instance</em> | $request.getRemoteHost() | $this.getCurrentUser()  | <a href="$this.getLogsUrl()">logs</a> | <a href="$this.getRestartUrl()">restart</a>
+
     <div>
         <h2>Active Client Threads</h2>
         <ul>
@@ -53,7 +53,7 @@
                 </thead>
                 <tbody>
                 #foreach( $user in $users )
-                    <tr><td>$user.getUsername()</td><td>$user.getGroups()</td></tr>
+                    <tr><td><a href="$this.getUsersUrl()/$user.getUsername()">$user.getUsername()</a></td><td>$user.getGroups()</td></tr>
                 #end
                 </tbody>
             </table>
@@ -80,5 +80,4 @@
         </table>
     </div>
 
-</body>
-</html>
+#include("manage/footer.vm")

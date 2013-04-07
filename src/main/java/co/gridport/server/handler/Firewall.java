@@ -145,7 +145,7 @@ public class Firewall extends AbstractHandler
                 if (!C.hasEndpoint(route.ID)) continue;
                 //if (!C.hasEitherGroup(E.auth_group)) continue;
                 route.contracts.add(C);
-                if (C.getAuthGroup().length == 0) route.defaultRoute = true;
+                if (C.getGroups().size() == 0) route.defaultRoute = true;
                 log.debug("available contract "+C.getName());
                 hasContract = true;
             }

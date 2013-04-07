@@ -192,14 +192,14 @@ abstract public class ClientThread extends Thread {
 
     private boolean selectNextAvailableContract() {
         contract = null; 
-        String[] groups = context.getGroups();
-        if (groups.length==0 || Utils.blank(groups[0])) group=null; 
-        else group = groups[0];
+        List<String> groups = context.getGroups();
+        if (groups.size()==0 || Utils.blank(groups.get(0))) group=null; 
+        else group = groups.get(0);
         for(Route E:context.getRoutes()) {   
             for(Contract C:E.contracts) synchronized(C) {
                 String found = null;
-                if (C.getAuthGroup().length>0) { // contract is only for some auth groups
-                    for(String gC:C.getAuthGroup()) {
+                if (C.getGroups().size()>0) { // contract is only for some auth groups
+                    for(String gC:C.getGroups()) {
                         for(String g:groups) if (g.trim().equals(gC.trim())) {
                             found = g.trim(); 
                             break;

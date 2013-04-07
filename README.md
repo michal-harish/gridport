@@ -152,16 +152,15 @@ JMS Receiver Example (php)
 
 Backlog
 ========================================================================
-* REFACTOR domain.Route as immutable POJO
-* CHORE move log to /var/log/gridport.log, add log4j configurator and create install script for linux 
-* CHORE Win-64 wrapper native missing
-* CHORE add jms module to the default policy.db initializtor
 
+* BUG Win-64 wrapper native missing
+* REFACTOR move log to /var/log/gridport.log, add log4j configurator and create install script for linux 
+* REFACTOR domain.Route as immutable POJO with reference to Endpoint
 * REFACTOR add interface Module ( initialize(), close(), cliCommand(),... )
 * REFACTOR make an internal function to read header by case-insensitive header name key
     
 * DESIGN exception handling and propagation
-* DESIGN password management
+* DESIGN account management (registration, password change, ...)
 * DESIGN manager interface (options are cli, web, api)
 * DESIGN review default jms auditing
 * DESIGN review OPTIONS usage and implement merging Allow headers with proxy settings
@@ -187,6 +186,10 @@ Backlog
 
 Change Log
 ========================================================================
+07 Apr 2013
+ * Started work on web management console
+ * Creating user passwords (digest md5 way)
+ 
 06 Apr 2013
  * Created interface PolicyProvider with SQLite implementation to abstract management procedures 
 

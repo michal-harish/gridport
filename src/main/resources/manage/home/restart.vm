@@ -1,0 +1,10 @@
+#include("manage/header.vm")
+
+<em>GridPort Server Instance</em> | $request.getRemoteHost() | $this.getCurrentUser() | <a href="$this.getHomeUrl()">home</a> | <a href="$this.getLogsUrl()">logs</a> | <a href="$this.getRestartUrl()">restart</a>
+
+<form method="POST">
+    <h2>Reload configuration and restart the server:</h2>
+    <input type="submit" name="restart" value="restart now"/>
+</form>
+
+#include("manage/footer.vm")

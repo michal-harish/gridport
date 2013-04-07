@@ -1,8 +1,0 @@
-<html>
-<body>
-<form method="POST">
-    Click the button to confirm you wont to restart:
-    <input type="submit" name="restart" value="restart"/>
-</form>
-</body>
-</html>

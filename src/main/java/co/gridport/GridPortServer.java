@@ -22,14 +22,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import co.gridport.server.ClientThreadRouter;
-import co.gridport.server.PolicyProvider;
-import co.gridport.server.PolicyProviderSQLite;
+import co.gridport.server.ConfigProvider;
+import co.gridport.server.ConfigProviderSQLite;
 import co.gridport.server.handler.Authenticator;
 import co.gridport.server.handler.Firewall;
 import co.gridport.server.handler.RequestHandler;
 import co.gridport.server.manager.LogsResource;
-import co.gridport.server.manager.RootResource;
-import co.gridport.server.manager.ServerResource;
+import co.gridport.server.manager.HomeResource;
 import co.gridport.server.utils.Utils;
 
 public class GridPortServer {
@@ -39,7 +38,7 @@ public class GridPortServer {
     public static SimpleDateFormat date = new SimpleDateFormat("EEE dd MMM yyyy HH:mm:ss.SSS zzz");
 
     private static Server server;
-    public static PolicyProvider policyProvider;
+    public static ConfigProvider policyProvider;
 
     private static boolean cliEnabled = false;
 
@@ -111,7 +110,7 @@ public class GridPortServer {
     public static void reloadServerConfig() throws Exception {
         stopServer();
 
-        policyProvider = new PolicyProviderSQLite();
+        policyProvider = new ConfigProviderSQLite();
 
         if (policyProvider.has("router.log")) ClientThreadRouter.logTopic = policyProvider.get("router.log");
 
@@ -155,9 +154,8 @@ public class GridPortServer {
         s.setInitOrder(1);
         s.setInitParameter("resteasy.scan", "false");
         s.setInitParameter("resteasy.resources",
-                 RootResource.class.getName()
+                 HomeResource.class.getName()
             +","+LogsResource.class.getName()
-            +","+ServerResource.class.getName()
         );
         managerContextHandler.addServlet(s,"/*");
         contextHandlers.addHandler(managerContextHandler);

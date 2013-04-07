@@ -2,6 +2,8 @@ package co.gridport.server.handler;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -48,14 +50,14 @@ public class Authenticator extends AbstractHandler
                     return;
                 }
                 for(Contract C:E.contracts) {
-                    if (C.getAuthGroup().length==0) {
+                    if (C.getGroups().size()==0) {
                         hasDefaultContracts = true;
-                    } else for(String g:C.getAuthGroup()) {
+                    } else for(String g:C.getGroups()) {
                         if (auth_require.equals("default")) auth_require="";
                         if(Utils.blank(g)) log.warn(C.getName());
                         auth_require += (auth_require.equals("") ? "" : ",")+g;
                     }
-                }    
+                }
             }
 
             if (Utils.blank(auth_require)) {
@@ -65,13 +67,13 @@ public class Authenticator extends AbstractHandler
                 return;
             } else if (auth_require.equals("default")) {
                 log.debug("auth not required");
-                context.setGroups("default");
+                context.setGroups(Arrays.asList("default"));
                 return;
             } else {
                 log.debug("auth group aggregate: "+auth_require);
             }
 
-            String groups = null;
+            List<String> groups = null;
             String URI = request.getRequestURI().toString();
             String nonce = null;
             String realm = "";
@@ -80,7 +82,7 @@ public class Authenticator extends AbstractHandler
             int session_index = -1;
 
             //FIXME shared identity does not work between ( login to manager does require another login to /content etc.)
-            if (request.getHeader("Authorization") != null) {            
+            if (request.getHeader("Authorization") != null) {
                 String[] a = request.getHeader("Authorization").split(",|\\s");
                 String cnonce = null;
                 String username = null;
@@ -131,14 +133,14 @@ public class Authenticator extends AbstractHandler
                     }
 
                     if (nonce!=null && qop.equals("auth")) {
-                        String passport = null;
+                        String passport = null; //=md5(username +":" + realm + ":" + password)
                         groups = null;
                         for(User definedUser: GridPortServer.policyProvider.getUsers()) {
                             if (definedUser.getUsername().equals(username)) {
                                 for(String g:auth_require.split("[\\s\\,\\;]")) {
                                     if (definedUser.getGroups().contains(g)) {
                                         groups = definedUser.getGroups();
-                                        passport = Crypt.md5(username +":" + realm + ":" + ""); //FIXME create a /manage operation to issue passports, perhaps even use the apache user and group files format
+                                        passport = definedUser.getPassport(realm);
                                     }
                                 }
                             }
@@ -177,7 +179,7 @@ public class Authenticator extends AbstractHandler
                     }
                 }
                 context.setUsername("guest");
-                context.setGroups("default");
+                context.setGroups(Arrays.asList("default"));
                 return;
             }
 
@@ -188,7 +190,7 @@ public class Authenticator extends AbstractHandler
                 else
                     sessions.set(session_index, nonce);
             }
-            log.info("DIGEST MD5 CHALLENGE: nonce="+nonce);
+            log.info("DIGEST MD5 CHALLENGE: nonce="+nonce + ", realm=" + realm);
             response.setHeader(
                 "WWW-Authenticate", 
                 "Digest realm=\""+realm+"\", algorithm="+algo+", qop=\""+qop+"\", nonce=\""+nonce+"\""

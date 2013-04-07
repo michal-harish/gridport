@@ -8,11 +8,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +24,7 @@ import co.gridport.server.domain.Endpoint;
 import co.gridport.server.domain.User;
 import co.gridport.server.utils.Utils;
 
-public class PolicyProviderSQLite implements PolicyProvider {
+public class ConfigProviderSQLite implements ConfigProvider {
 
     private static Logger log = LoggerFactory.getLogger("server");
 
@@ -29,7 +32,7 @@ public class PolicyProviderSQLite implements PolicyProvider {
 
     private Map<String, String> settings;
 
-    private List<User> users;
+    private Map<String,User> users;
 
     private List<Contract> contracts;
 
@@ -67,8 +70,31 @@ public class PolicyProviderSQLite implements PolicyProvider {
 
 
     @Override
-    public List<User> getUsers() {
-        return Collections.unmodifiableList(users);
+    public Collection<User> getUsers() {
+        return Collections.unmodifiableCollection(users.values());
+    }
+
+    @Override
+    public User getUser(String username) {
+        return users.get(username);
+    }
+
+    @Override
+    public User updateUser(User user) {
+        try {
+            Statement s = policydb.createStatement();
+            s.addBatch("REPLACE INTO users(groups,username,passport) VALUES(" +
+                "'"+StringUtils.join(user.getGroups(),",")+"'" +
+                ",'"+user.getUsername()+"'" +
+                ",'"+user.getPassport("")+"'" +
+            ")");
+            s.executeBatch();
+            s.close();
+            return users.put(user.getUsername(),user);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override
@@ -92,7 +118,7 @@ public class PolicyProviderSQLite implements PolicyProvider {
         }
     }
 
-    public PolicyProviderSQLite() throws SQLException,IOException,ClassNotFoundException   {
+    public ConfigProviderSQLite() throws SQLException,IOException,ClassNotFoundException   {
         String policyDbFile = "./policy.db";
         Class.forName("org.sqlite.JDBC");
 
@@ -159,7 +185,7 @@ public class PolicyProviderSQLite implements PolicyProvider {
                 version = 7;
             }
             if (version <8 ) {
-                s.addBatch("ALTER TABLE contracts ADD auth_group TEXT "); s.close();
+                s.addBatch("ALTER TABLE contracts ADD auth_group TEXT ");
                 s.addBatch("INSERT INTO users(groups,username) VALUES('examplegroup','exampleuser')");
                 s.addBatch("INSERT INTO contracts(name,content,ip_range) VALUES('localAdmin','1,2','127.0.0.1,0:0:0:0:0:0:0:1')");
                 s.addBatch("INSERT INTO contracts(name,content,interval,frequency,auth_group) VALUES('examplecontract','3',1.0,1,'examplegroup')");
@@ -185,6 +211,13 @@ public class PolicyProviderSQLite implements PolicyProvider {
                 s.close(); 
                 version = 10; 
             }
+            if (version <11 ) {
+                s.addBatch("ALTER TABLE users ADD passport TEXT ");
+                s.executeBatch();
+                s.close(); 
+                version = 11; 
+            }
+
         } finally {
             log.info("*** POLICY-DB Version: "+ version);
             s = policydb.createStatement();
@@ -202,15 +235,17 @@ public class PolicyProviderSQLite implements PolicyProvider {
     }
 
     private void initializeUsers() throws SQLException {
-        users = new ArrayList<User>();
+        users = new HashMap<String,User>();
         String qry = "SELECT * FROM users";
         Statement sql = policydb.createStatement();
         ResultSet rs = sql.executeQuery(qry);
         while (rs.next()) {
-            users.add(new User(
+            User user = new User(
                 rs.getString("username"),
-                rs.getString("groups")
-            ));
+                Arrays.asList(rs.getString("groups").split("[\\s\\,\\;]")),
+                rs.getString("passport")
+            );
+            users.put(user.getUsername(),user);
         }
     }
 
@@ -269,7 +304,7 @@ public class PolicyProviderSQLite implements PolicyProvider {
                             rs.getString("ip_range"),
                             new Long(Math.round(rs.getFloat("interval") * 1000)),
                             rs.getLong("frequency"),
-                            groups.toArray( new String[groups.size()]),
+                            groups,
                             endpoints.toArray( new String[endpoints.size()])
                         ));
                     }

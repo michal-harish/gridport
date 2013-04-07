@@ -1,0 +1,28 @@
+ #include("manage/header.vm")
+
+ <script>
+  function checkForm(form)
+  {
+    if(form.password.value == "") {
+      alert("Error: Password cannot be blank!");
+      form.password.focus();
+      return false;
+    }
+    if (form.password.value != form.password2.value) {
+      alert("Error: Password did not match!");
+      form.password2.focus();
+      return false;
+    }
+  }
+ </script>
+
+ <em>GridPort Server Instance</em> | $request.getRemoteHost() | $this.getCurrentUser() | <a href="$this.getHomeUrl()">home</a> | <a href="$this.getLogsUrl()">logs</a> | <a href="$this.getRestartUrl()">restart</a>
+ 
+ <h2>User: $user.getUsername() </h2>
+ <form method="POST" onsubmit="return checkForm(this);">
+    <p><label>Password:</label><input name="password" type="password" value=""/></p>
+    <p><label>Retype Password:</label><input name="password2" type="password2" value=""/></p>
+    <p><input type="submit"/></p>
+ </form>
+
+ #include("manage/footer.vm")
