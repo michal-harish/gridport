@@ -143,8 +143,8 @@ public class ConfigProviderSQLite implements ConfigProvider {
             s.addBatch("INSERT INTO settings(name,value) VALUES('keyStoreFile','')");
             s.addBatch("INSERT INTO settings(name,value) VALUES('keyStorePass','')");
             s.addBatch("INSERT INTO settings(name,value) VALUES('generalTimeout','')");
-            s.addBatch("INSERT INTO endpoints(ID,http_method,uri_base,service_endpoint) VALUES(1,'GET','/manage/*','module://manager')");
-            s.addBatch("INSERT INTO endpoints(ID,http_method,uri_base,service_endpoint) VALUES(2,'GET POST MOVE PUT OPTIONS','/space/*','module://space')");            
+            s.addBatch("INSERT INTO endpoints(ID,http_method,uri_base,service_endpoint) VALUES(1,'GET POST DELETE','/manage/*','module://manager')");
+            s.addBatch("INSERT INTO endpoints(ID,http_method,uri_base,service_endpoint) VALUES(2,'GET POST MOVE PUT OPTIONS','/space/*','module://space')");
             s.addBatch("INSERT INTO endpoints(ID,http_method,uri_base,service_endpoint) VALUES(3,'GET POST','/example/*','http://localhost:80/')");
             s.executeBatch();
             s.close();

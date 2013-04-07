@@ -11,6 +11,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilderException;
 
@@ -24,13 +25,14 @@ public class UsersResource extends Resource {
 
     @GET
     @Path("")
-    @Produces("application/json")
+    @Produces(MediaType.APPLICATION_JSON)
     public Collection<User> getUsers() {
         return GridPortServer.policyProvider.getUsers();
     }
 
     @POST
     @Path("")
+    @Produces(MediaType.TEXT_HTML)
     public Response addUser(@FormParam("username") String username) throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
         try {
             if (GridPortServer.policyProvider.getUser(username) != null) {
@@ -47,6 +49,7 @@ public class UsersResource extends Resource {
 
     @GET
     @Path("/{username}")
+    @Produces(MediaType.TEXT_HTML)
     public Response userAccount(@PathParam("username") String username) throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
         put("user", GridPortServer.policyProvider.getUser(username));
         put("groupsUri", uriInfo.getBaseUriBuilder().path(this.getClass()).path(this.getClass().getMethod("getGroups",String.class)).build(username));
@@ -55,6 +58,7 @@ public class UsersResource extends Resource {
 
     @POST
     @Path("/{username}")
+    @Produces(MediaType.TEXT_HTML)
     public Response updateUserPassword(@PathParam("username") String username, @FormParam("password") String password) 
             throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException 
     {
@@ -67,13 +71,14 @@ public class UsersResource extends Resource {
 
     @POST
     @Path("/{username}/groups")
-    @Produces("application/json")
+    @Produces(MediaType.APPLICATION_JSON)
     public List<String> getGroups(@PathParam("username") String username) {
         return GridPortServer.policyProvider.getUser(username).getGroups();
     }
  
     @POST
     @Path("/{username}/groups")
+    @Produces(MediaType.TEXT_HTML)
     public Response addUserGroup(@PathParam("username") String username, @FormParam("group") String group) 
             throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException 
     {
@@ -87,6 +92,7 @@ public class UsersResource extends Resource {
 
     @POST
     @Path("/{username}/groups/{group}")
+    @Produces(MediaType.TEXT_HTML)
     public Response removeUserGroup(@PathParam("username") String username, @PathParam("group") String group) 
         throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException 
     {

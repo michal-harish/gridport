@@ -27,7 +27,7 @@
  <form method="POST" onsubmit="return checkForm(this);">
     <p>
         <label>Password:</label><input name="password" type="password" value=""/> 
-        <label>Retype:</label><input name="password2" type="password2" value=""/>
+        <label>Retype:</label><input name="password2" type="password" value=""/>
         <input type="submit" value="Change Password"/>
     </p>
  </form>

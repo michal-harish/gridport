@@ -5,6 +5,7 @@ import java.lang.reflect.Field;
 import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilderException;
@@ -19,8 +20,10 @@ import co.gridport.server.domain.RequestContext;
 
 public abstract class Resource extends VelocityContext {
 
-    @Context HttpServletRequest request;
     @Context UriInfo uriInfo;
+    @Context HttpServletRequest request;
+    @Context HttpServletResponse response;
+
 
     public String getHomeUrl() {
         return uriInfo.getBaseUriBuilder().path(HomeResource.class,"index").build().toString();
@@ -51,8 +54,8 @@ public abstract class Resource extends VelocityContext {
     protected Response view(String templateName) {
         Template template = Velocity.getTemplate(templateName);
         StringWriter sw = new StringWriter();
-        template.merge( this, sw);
-        return Response.status(200).entity(sw).build();
+        template.merge(this, sw);
+        return Response.status(200).entity(sw.toString()).build();
     }
 
     @Override

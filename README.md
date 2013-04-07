@@ -111,10 +111,10 @@ For incoming ssl connections, a certificate must be added for each gateway.
 For accessing individual endpoints via ssl, all certificates needed must be added to a single keystore.jks file.
 * self signed certificates with openssl
     * openssl genrsa -des3 -out privkey.pem 2048
-    * openssl req -new -x509 -nodes -sha1 -days 365 -key privkey.pem > certificate.pem -config ../conf/openssl.cnf
+    * openssl req -new -x509 -nodes -sha1 -days 365 -key privkey.pem > certificate.pem 
 * SSL KeyStores
     * keytool -genkey -alias ... -dname "cn=..." -keystore keystore.jks
-    * keytool -import -trustcacerts -alias ... -file \\192.168....\xampp\apache\conf\ssl.crt\server.crt -keystore ...jks
+    * keytool -import -trustcacerts -alias ... -file certificate.pem -keystore keystore.jks
     * keytool -list -v -keystore keystore.jks
  
 Example Configuration Behind Apache

@@ -13,7 +13,7 @@ public class LogsResource extends Resource {
 
     @GET
     @Path("/")
-    @Produces({MediaType.TEXT_PLAIN})
+    @Produces(MediaType.TEXT_PLAIN)
     public Response index()
     {
         return Response.ok().entity(new File("./logs/gridport.log")).build();

@@ -13,6 +13,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilderException;
 import javax.ws.rs.core.UriInfo;
@@ -33,6 +34,7 @@ public class HomeResource extends Resource {
 
     @GET
     @Path("")
+    @Produces(MediaType.TEXT_HTML)
     public Response index(@QueryParam("msg") @DefaultValue("") String msg) 
             throws IllegalArgumentException, SecurityException, NoSuchMethodException 
     {
@@ -48,20 +50,21 @@ public class HomeResource extends Resource {
 
     @GET
     @Path("/contracts.json")
-    @Produces("application/json")
+    @Produces(MediaType.APPLICATION_JSON)
     public List<Contract> getContracts() {
         return GridPortServer.policyProvider.getContracts();
     }
 
     @GET
     @Path("/endpoints.json")
-    @Produces("application/json")
+    @Produces(MediaType.APPLICATION_JSON)
     public Map<String,Endpoint> getEndpoints() {
         return GridPortServer.policyProvider.getEndpoints();
     }
 
     @POST
     @Path("/restart")
+    @Produces(MediaType.TEXT_HTML)
     public Response restart() throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
         GridPortServer.restart();
         URI uri = uriInfo.getBaseUriBuilder().path(HomeResource.class).path(HomeResource.class.getMethod("index", String.class)).build();

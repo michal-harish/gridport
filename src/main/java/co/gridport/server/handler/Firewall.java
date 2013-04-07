@@ -35,11 +35,6 @@ public class Firewall extends AbstractHandler
         throws IOException, ServletException
     {
 
-        if (request.getRequestURI().equals("/")) {
-            response.sendRedirect("/manage");
-            baseRequest.setHandled(true);
-            return;
-        }
         if (request.getRequestURI().equals("/favicon.ico"))
         {
             response.setStatus(200);
@@ -111,7 +106,7 @@ public class Firewall extends AbstractHandler
                         }
                     } else {
                         for(String IP:remoteIP) {
-                            if (IP.trim().substring(0,range.length()).equals(range)) {
+                            if (IP.trim().length()>=range.length() && IP.trim().substring(0,range.length()).equals(range)) {
                                 log.debug("available contract "+C.getName()+", EXACT MATCH="+IP);
                                 within = true;  
                                 break;
