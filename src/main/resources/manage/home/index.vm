@@ -2,11 +2,9 @@
 
 <script>
     var contracts = [];
-    /*
     $.ajax({url: '/manage/contracts.json',dataType: 'json',type: 'GET'})
         .done(function(data) { contracts = data;})
         .fail(function(data) { $('.error').text($.parseJSON(data.responseText).message);});
-        */
 </script>
 
 <header>
@@ -19,74 +17,86 @@
 <a class="error">$msg</a> 
 #end
 
-<section>
-<h2>Users & Groups</h2>
-<table>
-    <thead>
-        <tr>
-            <th>Username</th>
-            <th>Groups</th>
-            <th><form style="display:inline;" method="POST" action="$this.getUsersUrl()" onsubmit='this.username.value=prompt("New username:"); return this.username.value ? true : false;'><input type="hidden" name="username"/><input type="submit" name="newuser" value="ADD"/></form></th>
-        </tr>
-    </thead>
-    <tbody>
-    #foreach( $user in $users )
-        <tr><td><a href="$this.getUsersUrl()/$user.getUsername()">$user.getUsername()</a></td><td>$user.getGroups()</td></tr>
-    #end
-    </tbody>
-</table>
-</section>
-
-<section>
-<h2>SLA Contracts</h2>
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>IP Ranges</th>
-            <th>Groups</th>
-            <th>Rate</th>
-            <th>Endpoints</th>
-        </tr>
-    </thead>
-    <tbody>
-    #foreach( $contract in $contracts )
-        <tr>
-        <td>$contract.getName()</td>
-        <td>$contract.getIpRange()</td>
-        <td>$contract.getAuthGroupList()</td>
-        <td>#if ($contract.getIntervalMs()>0) $contract.getFrequency()/$contract.getIntervalMs()ms #end</td>
-        <td>
-            #foreach ( $endpointId in $contract.getEndpoints() )
-                #set( $e =  $endpoints.get($endpointId) )
-                [$e.getId()] $e.getUriBase() &rarr; $e.getEndpoint() <br/>
-            #end
-        </td>
-        </tr>
-    #end
-    </tbody>
-</table>
-</section>
-
-<div>
-    <h2>Endpoints</h2>
+<table cellpadding="10">
+<tr>
+<td>
+    <section>
+    <h2>Users & Groups</h2>
     <table>
         <thead>
-            <th>ID</id>
-            <th>URI-BASE</th>
-            <th>ENDPOINT-BASE</th>
+            <tr>
+                <th>Username</th>
+                <th>Groups</th>
+                <th><form style="display:inline;" method="POST" action="$this.getUsersUrl()" onsubmit='this.username.value=prompt("New username:"); return this.username.value ? true : false;'><input type="hidden" name="username"/><input type="submit" name="newuser" value="ADD"/></form></th>
+            </tr>
         </thead>
         <tbody>
-        #foreach( $endpoint in $endpoints.values() )
+        #foreach( $user in $users )
+            <tr><td><a href="$this.getUsersUrl()/$user.getUsername()">$user.getUsername()</a></td><td>$user.getGroups()</td></tr>
+        #end
+        </tbody>
+    </table>
+    </section>
+</td>
+<td>
+    <section>
+    <h2>Contracts & SLAs</h2>
+    <table>
+        <thead>
             <tr>
-                <td>$endpoint.getId()</td>
-                <td>$endpoint.getUriBase()</td>
-                <td>$endpoint.getEndpoint()</td>
+                <th>Contract-Name</th>
+                <th>IP-Ranges</th>
+                <th>Groups</th>
+                <th>Rate</th>
+                <th><form style="display:inline;" method="POST" action="$this.getContractsUrl()" onsubmit='this.name.value=prompt("New contract name:"); return this.name.value ? true : false;'><input type="hidden" name="name"/><input type="submit" value="ADD"/></form></th>
+            </tr>
+        </thead>
+        <tbody>
+        #foreach( $contract in $contracts )
+            <tr>
+            <td><a href="$this.getContractUrl($contract)">$contract.getName()</a></td>
+            <td>$contract.getIpRange()</td>
+            <td>$contract.getAuthGroupList()</td>
+            <td>#if ($contract.getIntervalMs()>0) $contract.getFrequency()/$contract.getIntervalMs()ms #end</td>
             </tr>
         #end
         </tbody>
     </table>
-</div>
+    </section>
+</td>
+</tr>
+<tr>
+<td colspan="2">
+    <section>
+        <h2>Routing Table (Endpoints)</h2>
+        <table>
+            <thead>
+                <th>ID</id>
+                <th>METHOD</id>
+                <th>SSL</id>
+                <th>GATEWAY</id>
+                <th>URI-BASE</th>
+                <th>ENDPOINT-BASE</th>
+                <th>ASYNC</th>
+            </thead>
+            <tbody>
+            #foreach( $endpoint in $endpoints.values() )
+                <tr>
+                    <td>$endpoint.getId()</td>
+                    <td>#if ($endpoint.getHttpMethod()) $endpoint.getHttpMethod()#end</td>
+                    <td>#if ($endpoint.getSsl()) $endpoint.getSsl()#end</td>
+                    <td>#if ($endpoint.getGateway()) $endpoint.getGateway()#end #if ($endpoint.getGatewayHost()) $endpoint.getGatewayHost()#end</td>
+                    <td>$endpoint.getUriBase()</td>
+                    <td>$endpoint.getEndpoint()</td>
+                    <td>#if ($endpoint.getAsync()) $endpoint.getAsync() #end</td>
+                </tr>
+            #end
+            </tbody>
+        </table>
+    </section>
+</td>
+</tr>
+</table>
 
 <div>
     <h2>Active Client Threads</h2>

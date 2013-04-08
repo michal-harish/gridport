@@ -2,6 +2,7 @@ package co.gridport.server.manager;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -51,7 +52,7 @@ public class HomeResource extends Resource {
     @GET
     @Path("/contracts.json")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Contract> getContracts() {
+    public Collection<Contract> getContracts() {
         return GridPortServer.policyProvider.getContracts();
     }
 

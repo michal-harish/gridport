@@ -53,7 +53,7 @@ public class UsersResource extends Resource {
     public Response userAccount(@PathParam("username") String username) throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
         put("user", GridPortServer.policyProvider.getUser(username));
         put("groupsUri", uriInfo.getBaseUriBuilder().path(this.getClass()).path(this.getClass().getMethod("getGroups",String.class)).build(username));
-        return view("manage/users/account.vm");
+        return view("manage/user.vm");
     }
 
     @POST

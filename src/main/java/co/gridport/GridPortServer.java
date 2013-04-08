@@ -27,6 +27,7 @@ import co.gridport.server.ConfigProviderSQLite;
 import co.gridport.server.handler.Authenticator;
 import co.gridport.server.handler.Firewall;
 import co.gridport.server.handler.RequestHandler;
+import co.gridport.server.manager.ContractsResource;
 import co.gridport.server.manager.HomeResource;
 import co.gridport.server.manager.LogsResource;
 import co.gridport.server.manager.UsersResource;
@@ -158,6 +159,7 @@ public class GridPortServer {
                  HomeResource.class.getName()
             +","+UsersResource.class.getName()
             +","+LogsResource.class.getName()
+            +","+ContractsResource.class.getName()
         );
         managerContextHandler.addServlet(s,"/*");
         contextHandlers.addHandler(managerContextHandler);

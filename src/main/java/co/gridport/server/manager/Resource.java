@@ -16,6 +16,7 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 import org.apache.velocity.runtime.RuntimeConstants;
 
+import co.gridport.server.domain.Contract;
 import co.gridport.server.domain.RequestContext;
 
 public abstract class Resource extends VelocityContext {
@@ -36,6 +37,14 @@ public abstract class Resource extends VelocityContext {
     }
     public String getUsersUrl() {
         return uriInfo.getBaseUriBuilder().path(UsersResource.class).build().toString();
+    }
+    public String getContractsUrl() 
+            throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
+            return uriInfo.getBaseUriBuilder().path(ContractsResource.class).build().toString();
+        }
+    public String getContractUrl(Contract contract) 
+        throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
+        return uriInfo.getBaseUriBuilder().path(ContractsResource.class).path(ContractsResource.class.getMethod("getContract", String.class)).build(contract.getName()).toString();
     }
     public String getCurrentUser() {
         RequestContext context = (RequestContext) request.getAttribute("context");

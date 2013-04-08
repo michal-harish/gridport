@@ -26,7 +26,7 @@ public class Endpoint {
         this.id = id;
         this.ssl = ssl;
         this.gateway = gateway;
-        this.gatewayHost = gatewayHost;
+        this.gatewayHost = gatewayHost == null ? "" : gatewayHost;
         this.httpMethod = httpMethod;
         this.uriBase = uriBase;
         this.endpoint = endpoint;

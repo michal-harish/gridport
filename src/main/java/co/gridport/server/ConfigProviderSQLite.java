@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -33,7 +32,7 @@ public class ConfigProviderSQLite implements ConfigProvider {
 
     private Map<String,User> users;
 
-    private List<Contract> contracts;
+    private Map<String, Contract> contracts;
 
     private Map<String,Endpoint> endpoints;
 
@@ -97,9 +96,15 @@ public class ConfigProviderSQLite implements ConfigProvider {
     }
 
     @Override
-    public List<Contract> getContracts() {
-        return Collections.unmodifiableList(contracts);
+    public Collection<Contract> getContracts() {
+        return Collections.unmodifiableCollection(contracts.values());
     }
+
+    @Override
+    public Contract getContract(String contractName) {
+        return contracts.get(contractName);
+    }
+
 
     @Override
     public Map<String,Endpoint>  getEndpoints() {
@@ -279,7 +284,7 @@ public class ConfigProviderSQLite implements ConfigProvider {
 
     private void initializeContracts() {
         //initialize contracts
-        contracts = new ArrayList<Contract>();
+        contracts = new HashMap<String,Contract>();
         try {
             Statement sql = policydb.createStatement();
             try {
@@ -299,7 +304,7 @@ public class ConfigProviderSQLite implements ConfigProvider {
                                 if (!Utils.blank(s.trim())) endpoints.add(s.trim());
                             }
                         }
-                        contracts.add(new Contract(
+                        contracts.put(name, new Contract(
                             name,
                             rs.getString("ip_range"),
                             new Long(Math.round(rs.getFloat("interval") * 1000)),

@@ -32,7 +32,7 @@ public class Contract {
     ) 
     {
         this.name = name;
-        this.ip_range = ip_range;
+        this.ip_range = ip_range == null ? "" : ip_range;
         this.intervalms = intervalms;
         this.frequency = frequency;
         this.groups = groups;

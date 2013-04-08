@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -73,7 +74,7 @@ public class Firewall extends AbstractHandler
     }
 
     private ArrayList<Contract> filterContractsByIP(String[] remoteIP) {
-        List<Contract> definedContracts = GridPortServer.policyProvider.getContracts();
+        Collection<Contract> definedContracts = GridPortServer.policyProvider.getContracts();
         ArrayList<Contract> result = new ArrayList<Contract>();
         for(Contract C: definedContracts) {
             boolean within = (C.getIpRange() == null || C.getIpRange().isEmpty());
