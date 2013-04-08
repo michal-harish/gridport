@@ -77,9 +77,9 @@ public class Firewall extends AbstractHandler
         Collection<Contract> definedContracts = GridPortServer.policyProvider.getContracts();
         ArrayList<Contract> result = new ArrayList<Contract>();
         for(Contract C: definedContracts) {
-            boolean within = (C.getIpRange() == null || C.getIpRange().isEmpty());
+            boolean within = (C.getIpFilters().isEmpty());
             if (!within) {
-                for(String range:C.getIpRange().split("[,\n\r]")) {
+                for(String range:C.getIpFilters()) {
                     if (range.contains("-")) {
                         String[] r = range.split("-",2);
                         try {

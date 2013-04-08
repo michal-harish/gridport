@@ -4,7 +4,7 @@ import co.gridport.server.utils.Utils;
 
 public class Endpoint {
 
-    private String id;
+    private Integer id;
     private Boolean ssl;
     private String gateway;
     private String gatewayHost;
@@ -14,7 +14,7 @@ public class Endpoint {
     private String async;
     
     public Endpoint(
-        String id,
+        Integer id,
         Boolean ssl,
         String gateway,
         String gatewayHost,
@@ -33,7 +33,7 @@ public class Endpoint {
         this.async = async;
     }
 
-    public String getId() {
+    public Integer getId() {
         return id;
     }
 

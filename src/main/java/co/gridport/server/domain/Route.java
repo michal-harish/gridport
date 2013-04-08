@@ -17,7 +17,7 @@ public class Route {
 	public String base_uri;
 	public String context;
 	
-	public String ID;
+	public Integer ID;
 	public int cast = 1;
 	public String url;
 	
@@ -27,7 +27,7 @@ public class Route {
 	public SubRequest subrequest;
 	
 	public Route(
-			String ID,
+			Integer ID,
 			String aurl,
 			String aasync,
 			String averbs
@@ -41,7 +41,7 @@ public class Route {
 	
 	public Route(
 			boolean awildcard,
-			String ID,
+			Integer ID,
 			String agateway,
 			String amethod,
 			String agateway_host,

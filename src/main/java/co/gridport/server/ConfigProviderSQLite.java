@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -99,10 +100,28 @@ public class ConfigProviderSQLite implements ConfigProvider {
     public Collection<Contract> getContracts() {
         return Collections.unmodifiableCollection(contracts.values());
     }
-
     @Override
     public Contract getContract(String contractName) {
         return contracts.get(contractName);
+    }
+    @Override
+    public Contract updateContract(Contract contract) {
+        try {
+            Statement s = policydb.createStatement();
+            s.addBatch("UPDATE contracts SET " +
+                "content='"+StringUtils.join(contract.getEndpoints(),",")+"'" +
+                ", ip_range='"+StringUtils.join(contract.getIpFilters(),",")+"'" +
+                ", interval="+contract.getIntervalMs() +
+                ", frequency="+contract.getFrequency() +
+                ", auth_group='"+StringUtils.join(contract.getGroups(),",")+"'" +
+            " WHERE name ='"+contract.getName()+"'");
+            s.executeBatch();
+            s.close();
+            return contracts.put(contract.getName(), contract);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
 
@@ -260,7 +279,7 @@ public class ConfigProviderSQLite implements ConfigProvider {
         ResultSet rs = sql.executeQuery(qry);
         while (rs.next()) {
             Endpoint endpoint = new Endpoint(
-                rs.getString("ID"),
+                rs.getInt("ID"),
                 Utils.blank(rs.getString("ssl")) ? null : rs.getString("ssl").equals("1") ? true : false,
                 rs.getString("gateway"),
                 rs.getString("gateway_host"),
@@ -298,10 +317,10 @@ public class ConfigProviderSQLite implements ConfigProvider {
                                 if (!Utils.blank(s.trim())) groups.add(s.trim());
                             }
                         }
-                        ArrayList<String> endpoints = new ArrayList<String>();
+                        List<Integer> endpoints = new ArrayList<Integer>();
                         if (rs.getString("content") != null  && !rs.getString("content").trim().equals("")) {
                             for(String s:rs.getString("content").trim().split("[\\s\\n\\r,]+")) {
-                                if (!Utils.blank(s.trim())) endpoints.add(s.trim());
+                                if (!Utils.blank(s.trim())) endpoints.add(Integer.valueOf(s.trim()));
                             }
                         }
                         contracts.put(name, new Contract(
@@ -310,7 +329,7 @@ public class ConfigProviderSQLite implements ConfigProvider {
                             new Long(Math.round(rs.getFloat("interval") * 1000)),
                             rs.getLong("frequency"),
                             groups,
-                            endpoints.toArray( new String[endpoints.size()])
+                            endpoints
                         ));
                     }
                 }
@@ -322,5 +341,4 @@ public class ConfigProviderSQLite implements ConfigProvider {
         }
 
     }
-
 }

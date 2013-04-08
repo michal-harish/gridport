@@ -69,7 +69,7 @@ public class UsersResource extends Resource {
         return Response.seeOther(uriInfo.getBaseUriBuilder().path(HomeResource.class,"index").build()).build();
     }
 
-    @POST
+    @GET
     @Path("/{username}/groups")
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> getGroups(@PathParam("username") String username) {

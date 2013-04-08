@@ -38,10 +38,11 @@
  #foreach ( $group in $user.getGroups() )
     <tr><td>$group</td><td><form method="POST" action="$groupsUri/$group"><input type="submit" value="remove"/></form></td></tr>
  #end
- 
+ <tr><td>
  <form method="POST" action="$groupsUri">
-    <tr><td><input name="group"/></td><td><input type="submit" value="add group"/></td></tr>
-    </table>
+    <input name="group"/></td><td><input type="submit" value="add group"/>
  </form>
+ </td></tr>
+ </table>
 
  #include("manage/footer.vm")

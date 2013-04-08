@@ -1,38 +1,36 @@
 package co.gridport.server.domain;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.annotate.JsonIgnore;
-
-import co.gridport.server.utils.Utils;
 
 
 public class Contract {
     //private static Logger log = LoggerFactory.getLogger("request");
 
     protected String name;
-    protected String[] endpoints = new String[0];
+    protected List<Integer> endpoints;
     protected Long intervalms; 
     protected Long last_request; 
     protected Long frequency;
     protected Long counter;
     protected List<String> groups = new ArrayList<String>();
 
-    private String ip_range;
+    private List<String> ipFilters;
 
     public Contract(
         final String name,
-        final String ip_range,
+        final String ipFilters,
         final Long intervalms,
         final Long frequency,
         final List<String> groups,
-        final String[] endpoints
+        final List<Integer> endpoints
     ) 
     {
         this.name = name;
-        this.ip_range = ip_range == null ? "" : ip_range;
+        this.ipFilters = ipFilters == null ? new ArrayList<String>() : Arrays.asList(ipFilters.split("[,\n\r]"));
         this.intervalms = intervalms;
         this.frequency = frequency;
         this.groups = groups;
@@ -45,17 +43,12 @@ public class Contract {
         return name;
     }
 
-    public String getIpRange() {
-        return ip_range;
+    public List<String> getIpFilters() {
+        return ipFilters;
     }
 
     public List<String> getGroups() {
         return groups;
-    }
-
-    @JsonIgnore
-    public String getAuthGroupList() {
-        return StringUtils.join(groups,",");
     }
 
     public long getIntervalMs() {
@@ -88,24 +81,21 @@ public class Contract {
         last_request = System.currentTimeMillis();
     }
 
-    @JsonIgnore
-    public String getEndpointList() {
-        return StringUtils.join(endpoints,",");
+    public void setEndpoints(List<Integer> endpoints) {
+        this.endpoints = endpoints;
     }
 
-    public String[] getEndpoints() {
+    public List<Integer> getEndpoints() {
         return endpoints;
     }
 
-    public synchronized boolean hasEndpoint(String ID) {
-        if (!Utils.blank(ID)) {
-            if (endpoints.length == 0) {
+    public synchronized boolean hasEndpoint(Integer ID) {
+        if (endpoints.size()== 0) {
+            return true;
+        }
+        for(Integer endpointID:endpoints) {
+            if (ID.equals(endpointID)) {
                 return true;
-            }
-            for(String endpointID:endpoints) {
-                if (ID.equals(endpointID.trim())) {
-                    return true;
-                }
             }
         }
         return false;

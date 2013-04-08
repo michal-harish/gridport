@@ -16,6 +16,7 @@ public interface ConfigProvider {
 
     Collection<Contract> getContracts();
     Contract getContract(String contractName);
+    Contract updateContract(Contract contract);
 
     Map<String,Endpoint> getEndpoints();
 
@@ -24,7 +25,7 @@ public interface ConfigProvider {
     User updateUser(User user);
 
     void close();
-    
+
 
 
 }
