@@ -49,16 +49,13 @@ Configuration
         * 'examplecontract' was created requiring authenticated user from 'examplegroup'
             through which '/example' endpoint can be accessed at most once every second   
  2. Try http://localhost:8040/manage/ from your browser 
-    You should see some rudimentary information about the server - this will become
-    the console for managing the policy.db but until then we have to edit it manually
-    with something like http://sqlitebrowser.sourceforge.net
+    You should see the management console where you now can edit all the routing tables
+    and contracts.
  3. Now try http://localhost:8040/example/
     * as per example configuration this endpoint requires authenticated user so a http login box should pop up
     * note: the authentication is actually digest-md5 not a basic http one 
     * the user must be from the 'exampleuser' group so use 'exampleuser' as username and no password
     * if you have apache or another http server running on port 80 you should see now its default page
- 4. Add some test rules to newly generated policy.db  
-    * edit the ./policy.db and see SLA Contracs & ACL Rules reference below
 
 SLA Contracts
 ------------------------------------------------------------------------
@@ -186,6 +183,9 @@ Backlog
 
 Change Log
 ========================================================================
+09 Apr 2013
+ * Completed the basic managment console
+ 
 07 Apr 2013
  * Started work on web management console
  * Creating user passwords (digest md5 way)
