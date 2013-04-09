@@ -58,7 +58,7 @@ public class Module {
                         GridPortServer.policyProvider.put("java.naming.provider.url","failover:(tcp://localhost:61616)?randomize=falsee&startupMaxReconnectAttempts=3");
                     }
 					String factory = GridPortServer.policyProvider.get("java.naming.factory.initial");
-                    String provider = GridPortServer.policyProvider.get("jjava.naming.provider.url");
+                    String provider = GridPortServer.policyProvider.get("java.naming.provider.url");
 					
 					if (Utils.blank(factory) || Utils.blank(provider)) {
 						return;

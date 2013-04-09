@@ -91,13 +91,13 @@ public class Authenticator extends AbstractHandler
                     String username = auth[0];
                     String password = auth[1];
                     User user = GridPortServer.policyProvider.getUser(username);
-                    if (user.getPassport(realm).equals(Crypt.md5(username+":"+realm+":"+password))) {
+                    if (user!=null && user.getPassport(realm).equals(Crypt.md5(username+":"+realm+":"+password))) {
                         context.setUsername(username);
                         context.setGroups(user.getGroups());
                         context.setSessionToken(null);
                         return;
                     }
-                } else if (a[0].equals("Disget")) {
+                } else if (a[0].equals("Digest")) {
                     String cnonce = null;
                     String username = null;
                     String reply = null;
@@ -201,7 +201,6 @@ public class Authenticator extends AbstractHandler
             //log.info("BASIC AUTH CHALLENGE: realm=" + realm);
             //response.setHeader("WWW-Authenticate: ", "Basic realm=\""+realm+"\"");
 
-            log.info("DIGEST MD5 CHALLENGE: nonce="+nonce + ", realm=" + realm);
             nonce = Crypt.uniqid(); 
             synchronized(sessions) {
                 if (session_index<0) 
@@ -209,6 +208,7 @@ public class Authenticator extends AbstractHandler
                 else
                     sessions.set(session_index, nonce);
             }
+            log.info("DIGEST MD5 CHALLENGE: nonce="+nonce + ", realm=" + realm);
             response.setHeader(
                 "WWW-Authenticate", 
                 "Digest realm=\""+realm+"\", algorithm="+algo+", qop=\""+qop+"\", nonce=\""+nonce+"\""

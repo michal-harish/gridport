@@ -2,6 +2,7 @@ package co.gridport.server.domain;
 
 import co.gridport.server.utils.Utils;
 
+
 public class Endpoint {
 
     private Integer id;
@@ -55,6 +56,14 @@ public class Endpoint {
 
     public String getGatewayHost() {
         return gatewayHost;
+    }
+
+    public String getUrlPattern(String ServerName) {
+        return 
+            (ssl == null ? "http(s)" : ssl ? "https" : "http" ) +"://"
+            + (!Utils.blank(gatewayHost) ? gatewayHost : ServerName )
+            + (!Utils.blank(uriBase) ? uriBase : "/*" )
+            ;
     }
 
     public void setGatewayHost(String gatewayHost) {

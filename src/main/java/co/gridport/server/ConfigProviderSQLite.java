@@ -35,7 +35,7 @@ public class ConfigProviderSQLite implements ConfigProvider {
 
     private Map<String, Contract> contracts;
 
-    private Map<String,Endpoint> endpoints;
+    private Map<Integer,Endpoint> endpoints;
 
     @Override
     public Map<String, String> getSettings() {
@@ -126,7 +126,7 @@ public class ConfigProviderSQLite implements ConfigProvider {
 
 
     @Override
-    public Map<String,Endpoint>  getEndpoints() {
+    public Map<Integer,Endpoint>  getEndpoints() {
         return Collections.unmodifiableMap(endpoints);
     }
 
@@ -273,7 +273,7 @@ public class ConfigProviderSQLite implements ConfigProvider {
     }
 
     private void initializeEndpoints() throws SQLException {
-        endpoints = new HashMap<String,Endpoint>();
+        endpoints = new HashMap<Integer,Endpoint>();
         String qry = "SELECT * FROM endpoints";
         Statement sql = policydb.createStatement();
         ResultSet rs = sql.executeQuery(qry);
@@ -288,7 +288,7 @@ public class ConfigProviderSQLite implements ConfigProvider {
                 rs.getString("service_endpoint").replaceFirst("/$",""),
                 rs.getString("async")
             );
-            endpoints.put(rs.getString("ID"), endpoint);
+            endpoints.put(endpoint.getId(), endpoint);
         }
     }
 

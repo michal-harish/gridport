@@ -43,9 +43,8 @@
  #foreach( $endpoint in $endpoints.values() )
     <tr>
         <td><input name="endpoint" value="$endpoint.getId()" type="checkbox" #if ($contract.getEndpoints().contains($endpoint.getId())) checked="checked" #end onchange="this.form.submit();"/></td>
-        <td>#if ($endpoint.getSsl() == true) https #elseif ($endpoint.getSsl() == false) http #else http(s)#end</td>
-        <td>#if ($endpoint.getGateway()) $endpoint.getGateway()#end #if ($endpoint.getGatewayHost()!="") $endpoint.getGatewayHost() #else $request.getServerName() #end</td>
-        <td>#if ($endpoint.getUriBase()) $endpoint.getUriBase() #else /* #end</td>
+        <td>#if ($endpoint.getGateway()) $endpoint.getGateway()#end</td>
+        <td>$endpoint.getUrlPattern($request.getServerName())</td>
         <td>#if ($endpoint.getHttpMethod()) $endpoint.getHttpMethod()#end</td>
         <td>#if ($endpoint.getAsync()) $endpoint.getAsync() #end</td>
         <td>$endpoint.getEndpoint()</td>

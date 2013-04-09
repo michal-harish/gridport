@@ -45,7 +45,7 @@ public class HomeResource extends Resource {
         put("users", GridPortServer.policyProvider.getUsers());
         put("msg", msg);
 
-        return view("manage/home/index.vm");
+        return view("manage/index.vm");
     }
 
 
@@ -59,7 +59,7 @@ public class HomeResource extends Resource {
     @GET
     @Path("/endpoints.json")
     @Produces(MediaType.APPLICATION_JSON)
-    public Map<String,Endpoint> getEndpoints() {
+    public Map<Integer,Endpoint> getEndpoints() {
         return GridPortServer.policyProvider.getEndpoints();
     }
 

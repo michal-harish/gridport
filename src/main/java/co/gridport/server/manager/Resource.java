@@ -39,9 +39,9 @@ public abstract class Resource extends VelocityContext {
         return uriInfo.getBaseUriBuilder().path(UsersResource.class).build().toString();
     }
     public String getContractsUrl() 
-            throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
-            return uriInfo.getBaseUriBuilder().path(ContractsResource.class).build().toString();
-        }
+        throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
+        return uriInfo.getBaseUriBuilder().path(ContractsResource.class).build().toString();
+    }
     public String getContractUrl(Contract contract) 
         throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
         return uriInfo.getBaseUriBuilder().path(ContractsResource.class).path(ContractsResource.class.getMethod("getContract", String.class)).build(contract.getName()).toString();
@@ -49,6 +49,14 @@ public abstract class Resource extends VelocityContext {
     public String getCurrentUser() {
         RequestContext context = (RequestContext) request.getAttribute("context");
         return context.getUsername();
+    }
+    public String getEndpointsUrl() 
+        throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
+        return uriInfo.getBaseUriBuilder().path(EndpointsResource.class).build().toString();
+    }
+    public String getEndpointUrl(Integer id) 
+        throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
+        return uriInfo.getBaseUriBuilder().path(EndpointsResource.class).path(EndpointsResource.class.getMethod("getEndpoint", Integer.class)).build(id).toString();
     }
 
     static  {
