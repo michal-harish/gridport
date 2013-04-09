@@ -63,6 +63,21 @@ public class ContractsResource extends Resource{
         return view("manage/contract.vm");
     }
 
+    @Path("/{name}")
+    @POST
+    @Produces(MediaType.TEXT_HTML)
+    public Response updateContract(
+        @PathParam("name") String name, 
+        @FormParam("interval") Long interval,
+        @FormParam("frequency") Long frequency
+    ) throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
+        Contract contract = GridPortServer.policyProvider.getContract(name);
+        contract.setIntervalMs(interval);
+        contract.setFrequency(frequency);
+        GridPortServer.policyProvider.updateContract(contract);
+        return Response.seeOther(uriInfo.getBaseUriBuilder().path(this.getClass()).path(this.getClass().getMethod("getContract",String.class)).build(name)).build();
+    }
+
     @GET
     @Path("/{name}/groups")
     @Produces(MediaType.APPLICATION_JSON)

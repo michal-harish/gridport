@@ -8,10 +8,11 @@
 </header>
 
 <h2>Contract: $contract.getName() </h2>
-<form>
+<form method="POST">
    <p>
     <label>Rate limit:</label>
     <input name="frequency" value="$contract.getFrequency()"/> requests per <input name="interval" value="$contract.getIntervalMs()"/>(ms)
+    <input type="submit" value="update"/>
    </p>
 </form>
 <h2>IP Filters</h2>

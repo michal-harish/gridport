@@ -67,12 +67,18 @@ public class Contract {
     }
 
 
-    public long getIntervalMs() {
+    public Long getIntervalMs() {
         return intervalms;
     }
+    public void setIntervalMs(Long intervalms) {
+        this.intervalms = intervalms;
+    }
 
-    public long getFrequency() {
+    public Long getFrequency() {
         return frequency;
+    }
+    public void setFrequency(Long frequency) {
+        this.frequency = frequency;
     }
 
     @JsonIgnore
