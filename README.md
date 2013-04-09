@@ -28,7 +28,7 @@ Installation
     * $> git clone git://github.com/michal-harish/gridport.git
     * $> cd gridport 
  2. Build a single executable jar 
-    * $> mvn package assembly:single
+    * $> mvn package
  3. Start the server 
     * $> java -jar ./target/gridport-server.jar
  4. Optionally you can generate gzip distro and deploy as service 
