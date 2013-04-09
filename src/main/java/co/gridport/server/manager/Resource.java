@@ -59,14 +59,6 @@ public abstract class Resource extends VelocityContext {
         return uriInfo.getBaseUriBuilder().path(EndpointsResource.class).path(EndpointsResource.class.getMethod("getEndpoint", Integer.class)).build(id).toString();
     }
 
-    static  {
-        Properties p = new Properties();
-        p.setProperty("resource.loader", "file");
-        p.setProperty("file.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-        p.setProperty( RuntimeConstants.RUNTIME_LOG_LOGSYSTEM_CLASS, "org.apache.velocity.runtime.log.Log4JLogChute" );
-        p.setProperty("runtime.log.logsystem.log4j.logger", "velocity");
-        Velocity.init(p);
-    }
 
     protected Response view(String templateName) {
         Template template = Velocity.getTemplate(templateName);
@@ -95,4 +87,13 @@ public abstract class Resource extends VelocityContext {
         }
     }
 
+    static  {
+        Properties p = new Properties();
+        p.setProperty("resource.loader", "file");
+        p.setProperty("velocimacro.library", "manage/macros.vm");
+        p.setProperty("file.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+        p.setProperty( RuntimeConstants.RUNTIME_LOG_LOGSYSTEM_CLASS, "org.apache.velocity.runtime.log.Log4JLogChute" );
+        p.setProperty("runtime.log.logsystem.log4j.logger", "velocity");
+        Velocity.init(p);
+    }
 }

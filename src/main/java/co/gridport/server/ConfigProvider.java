@@ -1,6 +1,7 @@
 package co.gridport.server;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import co.gridport.server.domain.Contract;
@@ -19,13 +20,14 @@ public interface ConfigProvider {
     Contract updateContract(Contract contract);
 
     Map<Integer,Endpoint> getEndpoints();
+    Endpoint updateEndpoint(Endpoint endpoint);
+    Endpoint newEndpoint();
 
+    Map<String,List<User>> getGroups();
     Collection<User> getUsers();
     User getUser(String username);
     User updateUser(User user);
 
     void close();
-
-
 
 }

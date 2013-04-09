@@ -17,24 +17,20 @@
 <h2>IP Filters</h2>
  <table>
      #foreach ( $filter in $contract.getIpFilters() )
-        <tr><td>$filter</td><td><form method="POST" action="$ipFiltersUri/$group"><input type="submit" value="remove"/></form></td></tr>
+        <tr><td>$filter</td><td><form method="POST" action="$ipFiltersUri/$filter"><input type="submit" value="remove"/></form></td></tr>
      #end
-     <tr><td>
      <form method="POST" action="$ipFiltersUri">
-        <input name="filter"/></td><td><input type="submit" value="add filter"/>
+        <tr><td><input name="filter"/></td><td><input type="submit" value="add filter"/></td></tr>
      </form>
-     </td></tr>
  </table>
 <h2>Available to Groups</h2>
  <table>
      #foreach ( $group in $contract.getGroups() )
         <tr><td>$group</td><td><form method="POST" action="$groupsUri/$group"><input type="submit" value="remove"/></form></td></tr>
      #end
-     <tr><td>
      <form method="POST" action="$groupsUri">
-        <input name="group"/></td><td><input type="submit" value="add group"/>
+        <tr><td><input name="group"/></td><td><input type="submit" value="add group"/></td></tr>
      </form>
-     </td></tr>
  </table>
  
 <h2>Available Endpoints</h2>

@@ -2,9 +2,7 @@ package co.gridport.server.manager;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DefaultValue;
@@ -20,8 +18,6 @@ import javax.ws.rs.core.UriBuilderException;
 import javax.ws.rs.core.UriInfo;
 
 import co.gridport.GridPortServer;
-import co.gridport.server.domain.Contract;
-import co.gridport.server.domain.Endpoint;
 import co.gridport.server.handler.RequestHandler;
 import co.gridport.server.space.Space2;
 import co.gridport.server.space.Subscription;
@@ -46,21 +42,6 @@ public class HomeResource extends Resource {
         put("msg", msg);
 
         return view("manage/index.vm");
-    }
-
-
-    @GET
-    @Path("/contracts.json")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Collection<Contract> getContracts() {
-        return GridPortServer.policyProvider.getContracts();
-    }
-
-    @GET
-    @Path("/endpoints.json")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Map<Integer,Endpoint> getEndpoints() {
-        return GridPortServer.policyProvider.getEndpoints();
     }
 
     @POST

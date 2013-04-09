@@ -69,6 +69,24 @@ public class ConfigProviderSQLite implements ConfigProvider {
 
 
     @Override
+    public Map<String,List<User>> getGroups() {
+        Map<String,List<User>> map = new HashMap<String,List<User>>();
+        for(User user: users.values()) {
+            for(String group: user.getGroups()) {
+                List<User> groupUsers;
+                if (map.containsKey(group)) {
+                    groupUsers = map.get(group);
+                } else {
+                    groupUsers = new ArrayList<User>();
+                }
+                groupUsers.add(user);
+                map.put(group, groupUsers);
+            }
+        }
+        return map;
+    }
+
+    @Override
     public Collection<User> getUsers() {
         return Collections.unmodifiableCollection(users.values());
     }
@@ -124,10 +142,55 @@ public class ConfigProviderSQLite implements ConfigProvider {
         }
     }
 
+    @Override
+    public Endpoint newEndpoint() {
+        try {
+            Statement s = policydb.createStatement();
+            s.executeUpdate("INSERT INTO endpoints(uri_base) VALUES('')");
+            s.close();
+            ResultSet rs = s.executeQuery("SELECT last_insert_rowid()");
+            if (rs.next()) {
+                Integer id = rs.getInt(1);
+                s.close();
+                Endpoint endpoint = new Endpoint(id,null,null,null,null,null,null,null);
+                endpoints.put(id, endpoint);
+                return endpoint;
+            } else {
+                s.close();
+                return null;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     @Override
     public Map<Integer,Endpoint>  getEndpoints() {
         return Collections.unmodifiableMap(endpoints);
+    }
+
+    @Override
+    public Endpoint updateEndpoint(Endpoint endpoint) {
+        try {
+            Statement s = policydb.createStatement();
+            s.addBatch("REPLACE INTO endpoints(id,gateway_host,http_method,uri_base,ssl,async,service_endpoint,gateway) VALUES(" +
+                +endpoint.getId() +
+                ",'"+endpoint.getGatewayHost()+"'" +
+                ",'"+endpoint.getHttpMethod()+"'" +
+                ",'"+endpoint.getUriBase()+"'" +
+                ",'"+(endpoint.getSsl() == null ? "" : endpoint.getSsl() == true ? "1" : "0" )+"'" +
+                ",'"+endpoint.getAsync()+"'" +
+                ",'"+endpoint.getEndpoint()+"'" +
+                ",'"+endpoint.getGateway()+"'" +
+            ")");
+            s.executeBatch();
+            s.close();
+            return endpoints.put(endpoint.getId(), endpoint);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override
@@ -285,7 +348,7 @@ public class ConfigProviderSQLite implements ConfigProvider {
                 rs.getString("gateway_host"),
                 rs.getString("http_method"),
                 rs.getString("uri_base"),
-                rs.getString("service_endpoint").replaceFirst("/$",""),
+                rs.getString("service_endpoint"),
                 rs.getString("async")
             );
             endpoints.put(endpoint.getId(), endpoint);
@@ -341,4 +404,5 @@ public class ConfigProviderSQLite implements ConfigProvider {
         }
 
     }
+
 }

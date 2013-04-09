@@ -2,6 +2,7 @@ package co.gridport.server.domain;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
@@ -30,11 +31,13 @@ public class Contract {
     ) 
     {
         this.name = name;
-        this.ipFilters = ipFilters == null ? new ArrayList<String>() : Arrays.asList(ipFilters.split("[,\n\r]"));
+        this.ipFilters = ipFilters == null 
+            ? new ArrayList<String>() 
+            : new ArrayList<String>(Arrays.asList(ipFilters.split("[,\n\r]")));
         this.intervalms = intervalms;
         this.frequency = frequency;
-        this.groups = groups;
-        this.endpoints = endpoints;
+        this.groups = groups == null ? new ArrayList<String>() : groups;
+        this.endpoints = endpoints == null ? new ArrayList<Integer>() :  endpoints;
         last_request = 0L;
         counter = 0L;
     }
@@ -44,12 +47,25 @@ public class Contract {
     }
 
     public List<String> getIpFilters() {
-        return ipFilters;
+        return Collections.unmodifiableList(ipFilters);
+    }
+    public void addIpFilter(String ipFilter) {
+        ipFilters.add(ipFilter);
+    }
+    public void removeIpFilter(String ipFilter) {
+        ipFilters.remove(ipFilter);
     }
 
     public List<String> getGroups() {
-        return groups;
+        return Collections.unmodifiableList(groups);
     }
+    public void addGroup(String group) {
+        groups.add(group);
+    }
+    public void removeGroup(String group) {
+        groups.remove(group);
+    }
+
 
     public long getIntervalMs() {
         return intervalms;
@@ -116,5 +132,4 @@ public class Contract {
         }
         return false;
     }
-
 }

@@ -26,12 +26,12 @@ public class Endpoint {
     ) {
         this.id = id;
         this.ssl = ssl;
-        this.gateway = gateway;
+        this.gateway = gateway == null ? "" : gateway;
         this.gatewayHost = gatewayHost == null ? "" : gatewayHost;
-        this.httpMethod = httpMethod;
-        this.uriBase = uriBase;
-        this.endpoint = endpoint;
-        this.async = async;
+        this.httpMethod = httpMethod == null ? "" : httpMethod;
+        this.uriBase = uriBase == null ? "" : uriBase;
+        this.endpoint = endpoint == null ? "" : endpoint.replaceFirst("/$","");
+        this.async = async == null ? "" : async;
     }
 
     public Integer getId() {
@@ -40,6 +40,10 @@ public class Endpoint {
 
     public Boolean getSsl() {
         return ssl;
+    }
+
+    public Integer getProtocol() {
+        return ssl == null ? 0 : ssl ? 1 : 2;
     }
 
     public void setSsl(Boolean ssl) {

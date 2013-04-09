@@ -1,0 +1,24 @@
+#macro( contracts $contracts )
+     <table>
+        <thead>
+            <tr>
+                <th>Contract</th>
+                <th>IP-Ranges</th>
+                <th>Auth-Groups</th>
+                <th>Rate-Limit</th>
+                <th>Time-Ranges</th>
+            </tr>
+        </thead>
+        <tbody>
+        #foreach( $contract in $contracts )
+            <tr>
+            <td><a href="$this.getContractUrl($contract)">$contract.getName()</a></td>
+            <td>$contract.getIpFilters()</td>
+            <td>$contract.getGroups()</td>
+            <td>#if ($contract.getIntervalMs()>0) $contract.getFrequency()/$contract.getIntervalMs()ms #end</td>
+            </tr>
+        #end
+        </tbody>
+    </table>
+
+#end

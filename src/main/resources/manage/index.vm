@@ -21,40 +21,24 @@
 <tr>
 <td>
     <section>
-    <h2>Contracts & SLAs</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Contract</th>
-                <th>IP-Ranges</th>
-                <th>Auth-Groups</th>
-                <th>Rate-Limit</th>
-                <th>Time-Ranges</th>
-                <th><form style="display:inline;" method="POST" action="$this.getContractsUrl()" onsubmit='this.name.value=prompt("New contract name:"); return this.name.value ? true : false;'><input type="hidden" name="name"/><input type="submit" value="ADD"/></form></th>
-            </tr>
-        </thead>
-        <tbody>
-        #foreach( $contract in $contracts )
-            <tr>
-            <td><a href="$this.getContractUrl($contract)">$contract.getName()</a></td>
-            <td>$contract.getIpFilters()</td>
-            <td>$contract.getGroups()</td>
-            <td>#if ($contract.getIntervalMs()>0) $contract.getFrequency()/$contract.getIntervalMs()ms #end</td>
-            </tr>
-        #end
-        </tbody>
-    </table>
+    <h2>
+        Contracts & SLAs
+        <form style="display:inline;" method="POST" action="$this.getContractsUrl()" onsubmit='this.name.value=prompt("New contract name:"); return this.name.value ? true : false;'><input type="hidden" name="name"/><input type="submit" value="ADD"/></form>
+    </h2>
+    #contracts( $contracts )
     </section>
 </td>
 <td>
     <section>
-    <h2>Users & Groups</h2>
+    <h2>
+        Users & Groups
+        <form style="display:inline;" method="POST" action="$this.getUsersUrl()" onsubmit='this.username.value=prompt("New username:"); return this.username.value ? true : false;'><input type="hidden" name="username"/><input type="submit" name="newuser" value="ADD"/></form>
+    </h2>
     <table>
         <thead>
             <tr>
                 <th>Username</th>
                 <th>Groups</th>
-                <th><form style="display:inline;" method="POST" action="$this.getUsersUrl()" onsubmit='this.username.value=prompt("New username:"); return this.username.value ? true : false;'><input type="hidden" name="username"/><input type="submit" name="newuser" value="ADD"/></form></th>
             </tr>
         </thead>
         <tbody>
@@ -68,7 +52,10 @@
 </table>
 
     <section>
-        <h2>Routing Table (Endpoints)</h2>
+        <h2>
+            Routing Table (Endpoints)
+            <form style="display:inline;" method="POST" action="$this.getEndpointsUrl()"><input type="submit" name="newendpoint" value="ADD"/></form>
+        </h2>
         <table>
             <thead>
                 <th>Protocol://Host/URI-Pattern</th>

@@ -13,16 +13,21 @@
 </style>
 <form method="POST">
     <table>
-    <tr><td><label>SSL:</label></td><td><input name="ssl" value="$endpoint.getSsl()"/></td></tr>
-    <tr><td><label>Gateway:</label></td><td><input name="gateway" value="$endpoint.getGateway()"/></td></tr>
-    <tr><td><label>Gateway Host:</label></td><td><input name="gatewayHost" value="$endpoint.getGatewayHost()"/></td></tr>
+    <tr><td><label>Protocol(s):</label></td><td><select name="protocol">
+        <option value="0" #if ($endpoint.getProtocol()==0) selected="selected" #end>http/https</option>
+        <option value="1" #if ($endpoint.getProtocol()==1) selected="selected" #end>https only</option>
+        <option value="2" #if ($endpoint.getProtocol()==2) selected="selected" #end>http only</option>
+    </select></td></tr>
+    <tr><td><label>Gateway IP:</label></td><td><input name="gateway" value="$endpoint.getGateway()"/></td></tr>
+    <tr><td><label>Host:</label></td><td><input name="gatewayHost" value="$endpoint.getGatewayHost()"/></td></tr>
     <tr><td><label>URI-Pattern:</label></td><td><input name="uriBase" value="$endpoint.getUriBase()"/></td></tr>
     <tr><td><label>Allwed methods:</label></td><td><input name="httpMethod" value="$endpoint.getHttpMethod()"/></td></tr>
     <tr><td><label>Async status coce:</label></td><td><input name="async" value="$endpoint.getAsync()"/></td></tr>
     <tr><td><label>Endpoint-URI-Base:</label></td><td><input name="endpoint" value="$endpoint.getEndpoint()"/></td></tr>
-    <tr><td></td><td><input type="submit" value="submit"/></td></tr>
+    <tr><td></td><td><input type="submit" value="Update Endpoint"/></td></tr>
     </table>
 </form>
  #include("manage/footer.vm")
 
  <h2>Available via Contracts:</h2>
+ #contracts( $contracts )
