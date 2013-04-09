@@ -31,6 +31,7 @@ Installation
     * $> mvn package
  3. Start the server 
     * $> java -jar ./target/gridport-server.jar
+    * Check http localhost:8040/manage/
  4. Optionally you can generate gzip distro and deploy as service 
     * $> ant distrobuild
     * this should generate different packages in ./target/dist
