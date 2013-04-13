@@ -23,7 +23,7 @@ import co.gridport.server.domain.Endpoint;
 @Path("/endpoints")
 public class EndpointsResource extends Resource {
 
-    @Context HttpServletRequest request;
+    @Context public HttpServletRequest request;
 
     @GET
     @Path("")

@@ -22,7 +22,7 @@ import co.gridport.server.domain.Contract;
 @Path("/contracts")
 public class ContractsResource extends Resource{
 
-    @Context HttpServletRequest request;
+    @Context public HttpServletRequest request;
 
     @GET
     @Path("")

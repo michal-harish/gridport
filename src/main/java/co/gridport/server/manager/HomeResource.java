@@ -25,8 +25,8 @@ import co.gridport.server.space.Subscription;
 @Path("/")
 public class HomeResource extends Resource {
 
-    @Context UriInfo uriInfo;
-    @Context HttpServletRequest request;
+    @Context public UriInfo uriInfo;
+    @Context public HttpServletRequest request;
 
 
     @GET

@@ -1,0 +1,84 @@
+package co.gridport.server.kafka;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriBuilderException;
+import javax.ws.rs.core.UriInfo;
+
+import co.gridport.server.VelocityResource;
+
+@Path("/{zk}")
+public class ClusterInfoResource extends VelocityResource {
+
+    @Context public UriInfo uriInfo;
+
+    @PathParam("zk") String zkServer;
+
+    @GET
+    @Path("/topics")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String,String> getTopicList() throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
+        ClusterInfo cluster = ContextHandler.getClusterInfo(zkServer);
+        Map<String,String> result = new HashMap<String,String>();
+        for(String topic: cluster.getTopics().keySet()) {
+            result.put(
+                topic,
+                uriInfo.getBaseUriBuilder()
+                    .path(ClusterInfoResource.class)
+                    .path(ClusterInfoResource.class.getMethod("getTopicInfo", String.class))
+                    .build(zkServer,topic).toString()
+            );
+        }
+        return result;
+    }
+
+    @GET
+    @Path("/topics/{topic}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public TopicInfo getTopicInfo(@PathParam("topic") String topic) {
+        ClusterInfo cluster = ContextHandler.getClusterInfo(zkServer);
+        return cluster.getTopics().get(topic);
+    }
+
+    @GET
+    @Path("/consumers")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String,String> getGroupList() throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
+        ClusterInfo cluster = ContextHandler.getClusterInfo(zkServer);
+        Map<String,String> result = new HashMap<String,String>();
+        for(String groupid: cluster.getConsumers().keySet()) {
+            result.put(
+                groupid,
+                uriInfo.getBaseUriBuilder()
+                    .path(ClusterInfoResource.class)
+                    .path(ClusterInfoResource.class.getMethod("getConsumerInfo", String.class))
+                    .build(zkServer,groupid).toString()
+            );
+        }
+        return result;
+    }
+
+    @GET
+    @Path("/consumers/{groupid}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ConsumerInfo getConsumerInfo(@PathParam("groupid") String groupid) {
+        ClusterInfo cluster = ContextHandler.getClusterInfo(zkServer);
+        return cluster.getConsumers().get(groupid);
+    }
+
+    @GET
+    @Path("/brokers")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String,BrokerInfo> getBrokerList() throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
+        ClusterInfo cluster = ContextHandler.getClusterInfo(zkServer);
+        return cluster.getBrokers();
+    }
+
+}

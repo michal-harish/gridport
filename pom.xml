@@ -48,6 +48,12 @@
             <artifactId>jetty-servlet</artifactId>
             <version>8.1.0.v20120127</version>
         </dependency>
+        <!--  kafka -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-core</artifactId>
+            <version>0.7.3-1</version>
+        </dependency> 
 
         <!--  resteasy and velocity -->
         <dependency>
@@ -98,6 +104,14 @@
         </dependency>
 
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>gridport-releases</id>
+            <name>GridPort Releases</name>
+            <url>http://maven.gridport.co/content/repositories/releases</url>
+        </repository>
+    </repositories>
 
   <build>
     <plugins>

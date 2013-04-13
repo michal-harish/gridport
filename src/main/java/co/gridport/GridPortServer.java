@@ -8,16 +8,12 @@ import java.util.Scanner;
 
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.server.ssl.SslSocketConnector;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
-import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,11 +23,6 @@ import co.gridport.server.ConfigProviderSQLite;
 import co.gridport.server.handler.Authenticator;
 import co.gridport.server.handler.Firewall;
 import co.gridport.server.handler.RequestHandler;
-import co.gridport.server.manager.ContractsResource;
-import co.gridport.server.manager.EndpointsResource;
-import co.gridport.server.manager.HomeResource;
-import co.gridport.server.manager.LogsResource;
-import co.gridport.server.manager.UsersResource;
 import co.gridport.server.utils.Utils;
 
 public class GridPortServer {
@@ -42,6 +33,7 @@ public class GridPortServer {
 
     private static Server server;
     public static ConfigProvider policyProvider;
+    private static ContextHandlerCollection contextHandlers;
 
     private static boolean cliEnabled = false;
 
@@ -144,38 +136,21 @@ public class GridPortServer {
             log.info("*** SSL CONNECTOR PORT " + connector2.getPort());
         }
 
-        //competing context handlers
-        ContextHandlerCollection contextHandlers = new ContextHandlerCollection();
-
-        ContextHandler requestHandler = new ContextHandler("/");
-        requestHandler.setHandler(new RequestHandler());
-        contextHandlers.addHandler(requestHandler);
-
-        ServletContextHandler managerContextHandler = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
-        managerContextHandler.setContextPath("/manage");
-        ServletHolder s = new ServletHolder(new HttpServletDispatcher());
-        s.setInitOrder(1);
-        s.setInitParameter("resteasy.scan", "false");
-        s.setInitParameter("resteasy.resources",
-                 HomeResource.class.getName()
-            +","+UsersResource.class.getName()
-            +","+LogsResource.class.getName()
-            +","+ContractsResource.class.getName()
-            +","+EndpointsResource.class.getName()
-        );
-        managerContextHandler.addServlet(s,"/*");
-        contextHandlers.addHandler(managerContextHandler);
-
         //all requests pass through the following chain of handlers:
         HandlerList serialHandlers = new HandlerList();
         serialHandlers.addHandler(new Firewall());
         serialHandlers.addHandler(new Authenticator());
+        contextHandlers = new ContextHandlerCollection();
         serialHandlers.addHandler(contextHandlers);
         server.setHandler(serialHandlers);
     }
 
     private static void initializeModules() {
-        co.gridport.server.jms.Module.initialize();
+        contextHandlers.addHandler(new co.gridport.server.router.ContextHandler("/"));
+        contextHandlers.addHandler(new co.gridport.server.manager.ContextHandler("/manage"));
+        contextHandlers.addHandler(new co.gridport.server.kafka.ContextHandler("/kafka"));
+        co.gridport.server.jms.Module.initialize(); //TODO turn jms module into ContextHandler
+
     }
 
     private static void startServer() throws Exception {

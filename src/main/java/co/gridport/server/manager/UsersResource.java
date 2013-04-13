@@ -21,7 +21,7 @@ import co.gridport.server.domain.User;
 @Path("/users")
 public class UsersResource extends Resource {
 
-    @Context HttpServletRequest request;
+    @Context public HttpServletRequest request;
 
     @GET
     @Path("")
