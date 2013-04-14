@@ -3,11 +3,16 @@ package co.gridport;
 import java.io.BufferedInputStream;
 import java.net.InetAddress;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
 
+import javax.ws.rs.core.Application;
+
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
@@ -20,32 +25,72 @@ import org.slf4j.LoggerFactory;
 import co.gridport.server.ClientThreadRouter;
 import co.gridport.server.ConfigProvider;
 import co.gridport.server.ConfigProviderSQLite;
+import co.gridport.server.Module;
 import co.gridport.server.handler.Authenticator;
 import co.gridport.server.handler.Firewall;
 import co.gridport.server.handler.RequestHandler;
+import co.gridport.server.jms.ModuleJMS;
+import co.gridport.server.kafka.ModuleKafka;
+import co.gridport.server.manager.ModuleManager;
+import co.gridport.server.router.ModuleRouter;
 import co.gridport.server.utils.Utils;
 
-public class GridPortServer {
-
-    public static String instanceId;
-
-    public static SimpleDateFormat date = new SimpleDateFormat("EEE dd MMM yyyy HH:mm:ss.SSS zzz");
-
-    private static Server server;
-    public static ConfigProvider policyProvider;
-    private static ContextHandlerCollection contextHandlers;
-
-    private static boolean cliEnabled = false;
+public class GridPortServer extends Application {
 
     private static Logger log = LoggerFactory.getLogger("server");
+    public static  SimpleDateFormat date = new SimpleDateFormat("EEE dd MMM yyyy HH:mm:ss.SSS zzz");
+    private static GridPortServer instance;
 
     public static void main(String[] args) {
-
+        boolean cliEnabled = false;
         if (args.length>0) {
             for(String A:args) {
                 if (A.equals("cli")) cliEnabled=true;
             }
         }
+        instance = new GridPortServer(cliEnabled);
+        instance.run();
+    }
+
+    public static String getInstanceId() {
+        return instance.instanceId;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T extends Module> T getModule(Class<? extends T> moduleClass) {
+        for(Module module:instance.modules)  {
+            if (module.getClass().equals(moduleClass)) {
+                return (T) module;
+            }
+        }
+        return null;
+    }
+
+    public static void restart() {
+        new Thread() {
+            @Override public void run() {
+                try {
+                    instance.stopServer();
+                    instance.reloadServerConfig();
+                    instance.initializeModules();
+                    instance.startServer();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+    }
+    public String instanceId;
+    private boolean cliEnabled = false;
+    private Server server;
+    private List<Module> modules = new ArrayList<Module>();
+    private ContextHandlerCollection contextHandlers;
+    private ConfigProvider config;
+
+    public GridPortServer(Boolean cliEnabled) {
+
+        this.cliEnabled = cliEnabled;
+
         try {
 
             instanceId = "GRIDPORT-"+InetAddress.getLocalHost().getHostName();
@@ -62,7 +107,9 @@ public class GridPortServer {
         }
 
         log.info("***************************************");
+    }
 
+    public void run() {
         if (cliEnabled) {
             log.info("(to install as service execute ./sh.daemon start)");
             String charsetName = "UTF-8";
@@ -89,7 +136,7 @@ public class GridPortServer {
         }
     }
 
-    private static void createServer() {
+    private void createServer() {
         server = new Server();
         server.setThreadPool(
             new QueuedThreadPool(50)
@@ -102,99 +149,97 @@ public class GridPortServer {
         });
     }
 
-    public static void reloadServerConfig() throws Exception {
+    public void reloadServerConfig() throws Exception {
         stopServer();
 
-        policyProvider = new ConfigProviderSQLite();
+        config = new ConfigProviderSQLite();
 
-        if (policyProvider.has("router.log")) ClientThreadRouter.logTopic = policyProvider.get("router.log");
+        if (config.has("router.log")) ClientThreadRouter.logTopic = config.get("router.log");
 
-        if (policyProvider.has("keyStoreFile") && !Utils.blank(policyProvider.get("keyStoreFile"))) {
-            System.setProperty("javax.net.ssl.trustStore", policyProvider.get("keyStoreFile"));
-            System.setProperty("javax.net.ssl.trustStorePassword", policyProvider.get("keyStorePass"));
-            log.info("*** TRUST KEYSTORE " +  policyProvider.get("keyStoreFile"));
+        if (config.has("keyStoreFile") && !Utils.blank(config.get("keyStoreFile"))) {
+            System.setProperty("javax.net.ssl.trustStore", config.get("keyStoreFile"));
+            System.setProperty("javax.net.ssl.trustStorePassword", config.get("keyStorePass"));
+            log.info("*** TRUST KEYSTORE " +  config.get("keyStoreFile"));
         }
 
-        if (policyProvider.has("httpPort"))
+        if (config.has("httpPort"))
         {
             SelectChannelConnector connector1 = new SelectChannelConnector();
-            connector1.setPort(Integer.valueOf(policyProvider.get("httpPort")));
+            connector1.setPort(Integer.valueOf(config.get("httpPort")));
             connector1.setMaxIdleTime(30000);
             server.addConnector(connector1);
             log.info("*** HTTP CONNECTOR PORT " + connector1.getPort());
         }
-        if (policyProvider.has("sslPort")) {
-            SslContextFactory sslContextFactory = new SslContextFactory(policyProvider.get("keyStoreFile"));
-            sslContextFactory.setKeyStorePassword(policyProvider.get("keyStorePass"));
+        if (config.has("sslPort")) {
+            SslContextFactory sslContextFactory = new SslContextFactory(config.get("keyStoreFile"));
+            sslContextFactory.setKeyStorePassword(config.get("keyStorePass"));
             //sslContextFactory.setTrustStore(TRUSTSTORE_LOCATION);
             //sslContextFactory.setTrustStorePassword(TRUSTSTORE_PASS);
             //sslContextFactory.setNeedClientAuth(true);
 
             SslSocketConnector connector2 = new SslSocketConnector(sslContextFactory);
-            connector2.setPort(Integer.valueOf(policyProvider.get("sslPort")));
+            connector2.setPort(Integer.valueOf(config.get("sslPort")));
             server.addConnector(connector2);
             log.info("*** SSL CONNECTOR PORT " + connector2.getPort());
         }
 
         //all requests pass through the following chain of handlers:
         HandlerList serialHandlers = new HandlerList();
-        serialHandlers.addHandler(new Firewall());
-        serialHandlers.addHandler(new Authenticator());
+        serialHandlers.addHandler(new Firewall(config));
+        serialHandlers.addHandler(new Authenticator(config));
         contextHandlers = new ContextHandlerCollection();
         serialHandlers.addHandler(contextHandlers);
         server.setHandler(serialHandlers);
     }
 
-    private static void initializeModules() {
-        contextHandlers.addHandler(new co.gridport.server.router.ContextHandler("/"));
-        contextHandlers.addHandler(new co.gridport.server.manager.ContextHandler("/manage"));
-        contextHandlers.addHandler(new co.gridport.server.kafka.ContextHandler("/kafka"));
-        co.gridport.server.jms.Module.initialize(); //TODO turn jms module into ContextHandler
-
+    private void initializeModules() {
+        addModule(new ModuleManager(), "/manage");
+        //addModule(new ModuleTupleSpace(), "/space");
+        addModule(new ModuleKafka(), "/kafka");
+        addModule(new ModuleJMS(), "/jms");
+        addModule(new ModuleRouter(), "/");
     }
 
-    private static void startServer() throws Exception {
+    private void addModule(Module module, String contextPath) {
+        try {
+            ContextHandler contextHandler = module.register(config, contextPath);
+            modules.add(module);
+            contextHandlers.addHandler(contextHandler);
+        } catch (Exception e) {
+            log.error("*** " + module.getClass().getSimpleName() + " initialization failed",e);
+        }
+    }
+
+    private void startServer() throws Exception {
         server.start();
     }
 
-    public static void restart() {
-        new Thread() {
-            @Override public void run() {
-                try {
-                    reloadServerConfig();
-                    server.start();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }.start();
-    }
-
-    public static void shutdown() {
+    public void shutdown() {
         stopServer();
-
-        //close modules
-        co.gridport.server.jms.Module.close();
-        co.gridport.server.space.Space2.close();
-
-        policyProvider.close();
-
+        config.close();
         log.info("*** SHUT DOWN COMPLETE ***");
-        //Info(Thread.getAllStackTraces());
     }
 
-    private static void stopServer() {
+    private void stopServer() {
         if (server != null)
         {
             log.info("*** Stopping GridPort server");
             try {
                 if (server.isRunning()) {
                     server.stop();
-                    for(Connector c: server.getConnectors()) {
+                }
+                if (server.getConnectors() != null) {
+                    for(Connector c: server.getConnectors().clone()) {
                         server.removeConnector(c);
                     }
-                    policyProvider.close();
                 }
+
+                for(Module module:modules) {
+                    module.close();
+                }
+                modules.clear();
+
+                if (config !=null) config.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }

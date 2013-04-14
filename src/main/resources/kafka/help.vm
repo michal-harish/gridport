@@ -1,0 +1,26 @@
+<html>
+<head>
+    <title>GridPort Kafka Module</title>
+</head>
+<body>
+    <h1>GridPort - Kafka Module API</h1>
+    #if (!$topicListUrl)
+        <p>
+        This API is works for any given cluster of Kafka managed by Zookeeper Ensamble identified by a zookeeper connection string.<br/> 
+        For example To get a list of consumers $baseUri myzookeeper.example.com/consumers
+        </p>
+        <strong>Enter an address of the Zookeeper Server which manages the Kafka Cluster</strong>
+        <form method="POST" action="$baseUri">
+        <pre>$baseUri<input name="zk" size="60"/>/ <input type="submit"/></pre>
+        </form>
+    #else
+        <h2>GET List of topics [JSON] </h2>
+        <a href="$topicListUrl">$topicListUrl</a>
+        <h2>GET List of consumer [JSON] </h2>
+        <a href="$consumerListUrl">$consumerListUrl</a>
+        <h2>GET List of brokers [JSON] </h2>
+        <a href="$brokerListUrl">$brokerListUrl</a>
+    #end
+
+</body>
+</html>

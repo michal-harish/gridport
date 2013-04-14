@@ -9,6 +9,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilderException;
 import javax.ws.rs.core.UriInfo;
 
@@ -22,10 +23,20 @@ public class ClusterInfoResource extends VelocityResource {
     @PathParam("zk") String zkServer;
 
     @GET
+    @Path("")
+    @Produces(MediaType.TEXT_HTML)
+    public Response getHelp() throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
+        put("topicListUrl", uriInfo.getBaseUriBuilder().path(ClusterInfoResource.class).path(ClusterInfoResource.class.getMethod("getTopicList")).build(zkServer));
+        put("consumerListUrl", uriInfo.getBaseUriBuilder().path(ClusterInfoResource.class).path(ClusterInfoResource.class.getMethod("getConsumerList")).build(zkServer));
+        put("brokerListUrl", uriInfo.getBaseUriBuilder().path(ClusterInfoResource.class).path(ClusterInfoResource.class.getMethod("getBrokerList")).build(zkServer));
+        return view("kafka/help.vm");
+    }
+
+    @GET
     @Path("/topics")
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String,String> getTopicList() throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
-        ClusterInfo cluster = ContextHandler.getClusterInfo(zkServer);
+        ClusterInfo cluster = ModuleKafka.getClusterInfo(zkServer);
         Map<String,String> result = new HashMap<String,String>();
         for(String topic: cluster.getTopics().keySet()) {
             result.put(
@@ -43,15 +54,15 @@ public class ClusterInfoResource extends VelocityResource {
     @Path("/topics/{topic}")
     @Produces(MediaType.APPLICATION_JSON)
     public TopicInfo getTopicInfo(@PathParam("topic") String topic) {
-        ClusterInfo cluster = ContextHandler.getClusterInfo(zkServer);
+        ClusterInfo cluster = ModuleKafka.getClusterInfo(zkServer);
         return cluster.getTopics().get(topic);
     }
 
     @GET
     @Path("/consumers")
     @Produces(MediaType.APPLICATION_JSON)
-    public Map<String,String> getGroupList() throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
-        ClusterInfo cluster = ContextHandler.getClusterInfo(zkServer);
+    public Map<String,String> getConsumerList() throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
+        ClusterInfo cluster = ModuleKafka.getClusterInfo(zkServer);
         Map<String,String> result = new HashMap<String,String>();
         for(String groupid: cluster.getConsumers().keySet()) {
             result.put(
@@ -69,7 +80,7 @@ public class ClusterInfoResource extends VelocityResource {
     @Path("/consumers/{groupid}")
     @Produces(MediaType.APPLICATION_JSON)
     public ConsumerInfo getConsumerInfo(@PathParam("groupid") String groupid) {
-        ClusterInfo cluster = ContextHandler.getClusterInfo(zkServer);
+        ClusterInfo cluster = ModuleKafka.getClusterInfo(zkServer);
         return cluster.getConsumers().get(groupid);
     }
 
@@ -77,7 +88,7 @@ public class ClusterInfoResource extends VelocityResource {
     @Path("/brokers")
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String,BrokerInfo> getBrokerList() throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
-        ClusterInfo cluster = ContextHandler.getClusterInfo(zkServer);
+        ClusterInfo cluster = ModuleKafka.getClusterInfo(zkServer);
         return cluster.getBrokers();
     }
 

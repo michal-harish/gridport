@@ -17,7 +17,7 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.gridport.GridPortServer;
+import co.gridport.server.ConfigProvider;
 import co.gridport.server.domain.Contract;
 import co.gridport.server.domain.Endpoint;
 import co.gridport.server.domain.RequestContext;
@@ -27,7 +27,12 @@ import co.gridport.server.utils.Utils;
 public class Firewall extends AbstractHandler
 {
     static private Logger log = LoggerFactory.getLogger("firewall");
+    private ConfigProvider config;
     
+    public Firewall(ConfigProvider config) {
+        this.config = config;
+    }
+
     public void handle(
         String target,
         Request baseRequest,
@@ -74,7 +79,7 @@ public class Firewall extends AbstractHandler
     }
 
     private ArrayList<Contract> filterContractsByIP(String[] remoteIP) {
-        Collection<Contract> definedContracts = GridPortServer.policyProvider.getContracts();
+        Collection<Contract> definedContracts = config.getContracts();
         ArrayList<Contract> result = new ArrayList<Contract>();
         for(Contract C: definedContracts) {
             boolean within = (C.getIpFilters().isEmpty());
@@ -153,10 +158,10 @@ public class Firewall extends AbstractHandler
         return routes; 
     }
 
-    private static List<Route> filterEndpointsByRequest(RequestContext context) {
+    private List<Route> filterEndpointsByRequest(RequestContext context) {
 
         List<Endpoint> endpoints = new ArrayList<Endpoint>();
-        for(Endpoint e: GridPortServer.policyProvider.getEndpoints().values()) {
+        for(Endpoint e: config.getEndpoints().values()) {
             if (!Utils.blank(e.getGateway()) && !e.getGateway().equals(context.getGateway())) continue;
             if (!Utils.blank(e.getGatewayHost()) && !e.getGatewayHost().equals(context.getHost())) continue;
             if (!Utils.blank(e.getHttpMethod()) && !e.getHttpMethod().contains(context.getMethod())) continue;

@@ -16,7 +16,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilderException;
 
-import co.gridport.GridPortServer;
+import co.gridport.server.ConfigProvider;
 import co.gridport.server.domain.Contract;
 import co.gridport.server.domain.Endpoint;
 
@@ -24,12 +24,13 @@ import co.gridport.server.domain.Endpoint;
 public class EndpointsResource extends Resource {
 
     @Context public HttpServletRequest request;
+    @Context public ConfigProvider config;
 
     @GET
     @Path("")
     @Produces(MediaType.APPLICATION_JSON)
     public Map<Integer,Endpoint> getEndpoints() {
-        return GridPortServer.policyProvider.getEndpoints();
+        return config.getEndpoints();
     }
 
     @POST
@@ -38,7 +39,7 @@ public class EndpointsResource extends Resource {
     public Response addEndpoint() 
         throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
         try {
-            Endpoint endpoint = GridPortServer.policyProvider.newEndpoint();
+            Endpoint endpoint = config.newEndpoint();
             return Response.seeOther(uriInfo.getBaseUriBuilder().path(this.getClass()).path(this.getClass().getMethod("getEndpoint",Integer.class)).build(endpoint.getId())).build();
         } catch (Exception e) { 
             e.printStackTrace();
@@ -51,9 +52,9 @@ public class EndpointsResource extends Resource {
     @Path("/{id}")
     @Produces(MediaType.TEXT_HTML)
     public Response getEndpoint(@PathParam("id") Integer id) {
-        Endpoint endpoint = GridPortServer.policyProvider.getEndpoints().get(id);
+        Endpoint endpoint = config.getEndpoints().get(id);
         List<Contract> contracts = new ArrayList<Contract>();
-        for(Contract c: GridPortServer.policyProvider.getContracts()) {
+        for(Contract c: config.getContracts()) {
             if (c.hasEndpoint(id)) {
                 contracts.add(c);
             }
@@ -78,7 +79,7 @@ public class EndpointsResource extends Resource {
         @FormParam("async") String async
     ) throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
 
-        GridPortServer.policyProvider.updateEndpoint(new Endpoint(
+        config.updateEndpoint(new Endpoint(
             id,
             protocol == 0 ? null : protocol == 1 ? true : false,
             gateway,

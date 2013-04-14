@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -171,6 +172,16 @@ public class ConfigProviderSQLite implements ConfigProvider {
     }
 
     @Override
+    public Endpoint getEndpointByTargetUrl(String targetUrl) {
+        for(Endpoint e: endpoints.values()) {
+            if (e.getEndpoint().equals(targetUrl)) {
+                return e;
+            }
+        }
+        return null;
+    }
+
+    @Override
     public Endpoint updateEndpoint(Endpoint endpoint) {
         try {
             Statement s = policydb.createStatement();
@@ -230,8 +241,6 @@ public class ConfigProviderSQLite implements ConfigProvider {
             s.addBatch("INSERT INTO settings(name,value) VALUES('keyStoreFile','')");
             s.addBatch("INSERT INTO settings(name,value) VALUES('keyStorePass','')");
             s.addBatch("INSERT INTO settings(name,value) VALUES('generalTimeout','')");
-            s.addBatch("INSERT INTO endpoints(ID,http_method,uri_base,service_endpoint) VALUES(1,'GET POST DELETE','/manage/*','module://manager')");
-            s.addBatch("INSERT INTO endpoints(ID,http_method,uri_base,service_endpoint) VALUES(2,'GET POST MOVE PUT OPTIONS','/space/*','module://space')");
             s.addBatch("INSERT INTO endpoints(ID,http_method,uri_base,service_endpoint) VALUES(3,'GET POST','/example/*','http://localhost:80/')");
             s.executeBatch();
             s.close();
@@ -321,8 +330,8 @@ public class ConfigProviderSQLite implements ConfigProvider {
     }
 
     private void initializeUsers() throws SQLException {
-        users = new HashMap<String,User>();
-        String qry = "SELECT * FROM users";
+        users = new LinkedHashMap<String,User>();
+        String qry = "SELECT * FROM users ORDER BY username";
         Statement sql = policydb.createStatement();
         ResultSet rs = sql.executeQuery(qry);
         while (rs.next()) {
@@ -336,8 +345,8 @@ public class ConfigProviderSQLite implements ConfigProvider {
     }
 
     private void initializeEndpoints() throws SQLException {
-        endpoints = new HashMap<Integer,Endpoint>();
-        String qry = "SELECT * FROM endpoints";
+        endpoints = new LinkedHashMap<Integer,Endpoint>();
+        String qry = "SELECT * FROM endpoints ORDER BY uri_base";
         Statement sql = policydb.createStatement();
         ResultSet rs = sql.executeQuery(qry);
         while (rs.next()) {
@@ -356,9 +365,9 @@ public class ConfigProviderSQLite implements ConfigProvider {
     }
 
     private void initializeSettings() throws SQLException {
-        settings = new HashMap<String,String>();
+        settings = new LinkedHashMap<String,String>();
         ResultSet rs;
-        rs = policydb.createStatement().executeQuery("SELECT * FROM settings");
+        rs = policydb.createStatement().executeQuery("SELECT * FROM settings ORDER BY name");
         while (rs.next()) if (!Utils.blank(rs.getString("name")) && !Utils.blank(rs.getString("value"))) {
             settings.put(rs.getString("name"), rs.getString("value"));
         }
@@ -366,11 +375,11 @@ public class ConfigProviderSQLite implements ConfigProvider {
 
     private void initializeContracts() {
         //initialize contracts
-        contracts = new HashMap<String,Contract>();
+        contracts = new LinkedHashMap<String,Contract>();
         try {
             Statement sql = policydb.createStatement();
             try {
-                ResultSet rs = sql.executeQuery("SELECT * FROM contracts");
+                ResultSet rs = sql.executeQuery("SELECT * FROM contracts ORDER BY name");
                 while (rs.next()) {
                     String name = rs.getString("name") == null ? "default" : rs.getString("name");
                     synchronized(contracts) {

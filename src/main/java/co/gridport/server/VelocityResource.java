@@ -12,6 +12,7 @@ import org.apache.velocity.app.Velocity;
 import org.apache.velocity.runtime.RuntimeConstants;
 
 public class VelocityResource extends VelocityContext {
+
     static  {
         Properties p = new Properties();
         p.setProperty("resource.loader", "file");

@@ -15,19 +15,20 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilderException;
 
-import co.gridport.GridPortServer;
+import co.gridport.server.ConfigProvider;
 import co.gridport.server.domain.User;
 
 @Path("/users")
 public class UsersResource extends Resource {
 
     @Context public HttpServletRequest request;
+    @Context public ConfigProvider config;
 
     @GET
     @Path("")
     @Produces(MediaType.APPLICATION_JSON)
     public Collection<User> getUsers() {
-        return GridPortServer.policyProvider.getUsers();
+        return config.getUsers();
     }
 
     @POST
@@ -35,11 +36,11 @@ public class UsersResource extends Resource {
     @Produces(MediaType.TEXT_HTML)
     public Response addUser(@FormParam("username") String username) throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
         try {
-            if (GridPortServer.policyProvider.getUser(username) != null) {
+            if (config.getUser(username) != null) {
                 throw new IllegalArgumentException("User `"+username+"` already exists");
             }
             User user = new User(username, "",null);
-            GridPortServer.policyProvider.updateUser(user);
+            config.updateUser(user);
             return Response.seeOther(uriInfo.getBaseUriBuilder().path(this.getClass()).path(this.getClass().getMethod("userAccount",String.class)).build(username)).build();
         } catch (Exception e) { 
             e.printStackTrace();
@@ -51,7 +52,7 @@ public class UsersResource extends Resource {
     @Path("/{username}")
     @Produces(MediaType.TEXT_HTML)
     public Response userAccount(@PathParam("username") String username) throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
-        put("user", GridPortServer.policyProvider.getUser(username));
+        put("user", config.getUser(username));
         put("groupsUri", uriInfo.getBaseUriBuilder().path(this.getClass()).path(this.getClass().getMethod("getGroups",String.class)).build(username));
         return view("manage/user.vm");
     }
@@ -63,9 +64,9 @@ public class UsersResource extends Resource {
             throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException 
     {
         if (password == null) throw new IllegalArgumentException();
-        User user = GridPortServer.policyProvider.getUser(username);
+        User user = config.getUser(username);
         user.setPassword("", password);
-        GridPortServer.policyProvider.updateUser(user);
+        config.updateUser(user);
         return Response.seeOther(uriInfo.getBaseUriBuilder().path(HomeResource.class,"index").build()).build();
     }
 
@@ -73,7 +74,7 @@ public class UsersResource extends Resource {
     @Path("/{username}/groups")
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> getGroups(@PathParam("username") String username) {
-        return GridPortServer.policyProvider.getUser(username).getGroups();
+        return config.getUser(username).getGroups();
     }
  
     @POST
@@ -82,10 +83,10 @@ public class UsersResource extends Resource {
     public Response addUserGroup(@PathParam("username") String username, @FormParam("group") String group) 
             throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException 
     {
-        User user = GridPortServer.policyProvider.getUser(username);
+        User user = config.getUser(username);
         if (!user.getGroups().contains(group)) {
             user.getGroups().add(group);
-            GridPortServer.policyProvider.updateUser(user);
+            config.updateUser(user);
         }
         return Response.seeOther(uriInfo.getBaseUriBuilder().path(this.getClass()).path(this.getClass().getMethod("userAccount",String.class)).build(username)).build();
     }
@@ -96,10 +97,10 @@ public class UsersResource extends Resource {
     public Response removeUserGroup(@PathParam("username") String username, @PathParam("group") String group) 
         throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException 
     {
-        User user = GridPortServer.policyProvider.getUser(username);
+        User user = config.getUser(username);
         if (user.getGroups().contains(group)) {
             user.getGroups().remove(group);
-            GridPortServer.policyProvider.updateUser(user);
+            config.updateUser(user);
         }
         return Response.seeOther(uriInfo.getBaseUriBuilder().path(this.getClass()).path(this.getClass().getMethod("userAccount",String.class)).build(username)).build();
     }

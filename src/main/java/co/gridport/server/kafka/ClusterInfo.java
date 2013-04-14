@@ -20,6 +20,15 @@ public class ClusterInfo {
         zk = new ZkClient(connectionString, 10000, 10000, new StringSerializer());
     }
 
+    public void close() {
+        if (zk !=null) zk.close();
+        zk = null;
+        for(BrokerInfo broker: brokers.values()) {
+            broker.close();
+        }
+        brokers = null;
+    }
+
     public Map<String, ConsumerInfo> getConsumers() {
         if (consumers == null) {
             consumers = new HashMap<String, ConsumerInfo>();
@@ -131,5 +140,6 @@ public class ClusterInfo {
             return data.toString().getBytes();
         }
     }
+
 
 }

@@ -20,6 +20,7 @@ public interface ConfigProvider {
     Contract updateContract(Contract contract);
 
     Map<Integer,Endpoint> getEndpoints();
+    Endpoint getEndpointByTargetUrl(String string);
     Endpoint updateEndpoint(Endpoint endpoint);
     Endpoint newEndpoint();
 
@@ -29,5 +30,6 @@ public interface ConfigProvider {
     User updateUser(User user);
 
     void close();
+    
 
 }

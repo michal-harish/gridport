@@ -54,7 +54,7 @@ public class POSTListenerTopic extends POSTListener {
 			//now create the JMS listener
 			javax.jms.TopicConnectionFactory factory  = (javax.jms.TopicConnectionFactory)ctx.lookup("ConnectionFactory");
 			connection = factory.createConnection();
-	        connection.setClientID(GridPortServer.instanceId+":"+topicId);
+	        connection.setClientID(GridPortServer.getInstanceId()+":"+topicId);
 	        session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);        			
 			Topic topic = session.createTopic(topicId);
 	        consumer = session.createDurableSubscriber(topic,name);        
@@ -177,6 +177,6 @@ public class POSTListenerTopic extends POSTListener {
     }
 
 	public void onException(JMSException jsme) {
-		Module.log.warn("onException Received in TopicListenerPOST");		
+		ModuleJMS.log.warn("onException Received in TopicListenerPOST");		
 	}
 }

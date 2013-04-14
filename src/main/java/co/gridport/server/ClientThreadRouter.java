@@ -11,6 +11,7 @@ import javax.jms.JMSException;
 import co.gridport.GridPortServer;
 import co.gridport.server.domain.RequestContext;
 import co.gridport.server.domain.Route;
+import co.gridport.server.jms.ModuleJMS;
 import co.gridport.server.utils.Utils;
 
 public class ClientThreadRouter extends ClientThread {
@@ -97,7 +98,7 @@ public class ClientThreadRouter extends ClientThread {
     protected void complete() {
         //LOG into jms topic://gridport.log.router
         if (!Utils.blank(ClientThreadRouter.logTopic)) {
-            if (co.gridport.server.jms.Module.initialized) {
+            if (GridPortServer.getModule(ModuleJMS.class).initialized) {
                 HashMap<String,String> log_properties = new HashMap<String,String>();
                 log_properties.put("gridport-log-version", "1");
                 log_properties.put("gridport-log-date", GridPortServer.date.format(System.currentTimeMillis()));
@@ -118,7 +119,7 @@ public class ClientThreadRouter extends ClientThread {
                 }
                 try {
                     // week expiration for log messages
-                    co.gridport.server.jms.Module.publish(ClientThreadRouter.logTopic, log_payload, log_properties,60*60*24*7);
+                    GridPortServer.getModule(ModuleJMS.class).publish(ClientThreadRouter.logTopic, log_payload, log_properties,60*60*24*7);
                 } catch (JMSException e) {
                     log.warn(ClientThreadRouter.logTopic+" ERROR " + e.getMessage());
                 }

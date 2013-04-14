@@ -19,7 +19,7 @@ public class BrokerInfo {
     public String getAddress() {
         return host+":"+port;
     }
-    
+
     @JsonIgnore
     public SimpleConsumer getConnector() {
         if (connector == null) {
@@ -27,6 +27,13 @@ public class BrokerInfo {
         }
         return connector;
 
+    }
+
+    public void close() {
+        if (connector != null) {
+            connector.close();
+            connector = null;
+        }
     }
 
 }

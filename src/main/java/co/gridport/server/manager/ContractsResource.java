@@ -16,19 +16,20 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilderException;
 
-import co.gridport.GridPortServer;
+import co.gridport.server.ConfigProvider;
 import co.gridport.server.domain.Contract;
 
 @Path("/contracts")
-public class ContractsResource extends Resource{
+public class ContractsResource extends Resource {
 
     @Context public HttpServletRequest request;
+    @Context public ConfigProvider config;
 
     @GET
     @Path("")
     @Produces(MediaType.APPLICATION_JSON)
     public Collection<Contract> getContracts() {
-        return GridPortServer.policyProvider.getContracts();
+        return config.getContracts();
     }
 
     @POST
@@ -37,11 +38,11 @@ public class ContractsResource extends Resource{
     public Response addContract(@FormParam("name") String name) 
         throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
         try {
-            if (GridPortServer.policyProvider.getContract(name) != null) {
+            if (config.getContract(name) != null) {
                 throw new IllegalArgumentException("Contract `"+name+"` already exists");
             }
             Contract contract = new Contract(name, null, 0L, 0L, null, null);
-            GridPortServer.policyProvider.updateContract(contract);
+            config.updateContract(contract);
             return Response.seeOther(uriInfo.getBaseUriBuilder().path(this.getClass()).path(this.getClass().getMethod("getContract",String.class)).build(name)).build();
         } catch (Exception e) { 
             e.printStackTrace();
@@ -55,8 +56,8 @@ public class ContractsResource extends Resource{
     @Produces(MediaType.TEXT_HTML)
     public Response getContract(@PathParam("name") String name)
         throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
-        put("contract", GridPortServer.policyProvider.getContract(name));
-        put("endpoints", GridPortServer.policyProvider.getEndpoints());
+        put("contract", config.getContract(name));
+        put("endpoints", config.getEndpoints());
         put("groupsUri", uriInfo.getBaseUriBuilder().path(this.getClass()).path(this.getClass().getMethod("getGroups",String.class)).build(name));
         put("ipFiltersUri", uriInfo.getBaseUriBuilder().path(this.getClass()).path(this.getClass().getMethod("getIpFilters",String.class)).build(name));
         put("endpointsUri", uriInfo.getBaseUriBuilder().path(this.getClass()).path(this.getClass().getMethod("getEndpoints",String.class)).build(name));
@@ -71,10 +72,10 @@ public class ContractsResource extends Resource{
         @FormParam("interval") Long interval,
         @FormParam("frequency") Long frequency
     ) throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
-        Contract contract = GridPortServer.policyProvider.getContract(name);
+        Contract contract = config.getContract(name);
         contract.setIntervalMs(interval);
         contract.setFrequency(frequency);
-        GridPortServer.policyProvider.updateContract(contract);
+        config.updateContract(contract);
         return Response.seeOther(uriInfo.getBaseUriBuilder().path(this.getClass()).path(this.getClass().getMethod("getContract",String.class)).build(name)).build();
     }
 
@@ -82,7 +83,7 @@ public class ContractsResource extends Resource{
     @Path("/{name}/groups")
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> getGroups(@PathParam("name") String name) {
-        return GridPortServer.policyProvider.getContract(name).getGroups();
+        return config.getContract(name).getGroups();
     }
 
     @POST
@@ -90,9 +91,9 @@ public class ContractsResource extends Resource{
     @Produces(MediaType.TEXT_HTML)
     public Response addUserGroup(@PathParam("name") String name, @FormParam("group") String group) 
         throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
-        Contract contract = GridPortServer.policyProvider.getContract(name);
+        Contract contract = config.getContract(name);
         contract.addGroup(group);
-        GridPortServer.policyProvider.updateContract(contract);
+        config.updateContract(contract);
         return Response.seeOther(uriInfo.getBaseUriBuilder().path(this.getClass()).path(this.getClass().getMethod("getContract",String.class)).build(name)).build();
     }
 
@@ -101,9 +102,9 @@ public class ContractsResource extends Resource{
     @Produces(MediaType.TEXT_HTML)
     public Response removeUserGroup(@PathParam("name") String name, @PathParam("group") String group) 
         throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
-        Contract contract = GridPortServer.policyProvider.getContract(name);
+        Contract contract = config.getContract(name);
         contract.removeGroup(group);
-        GridPortServer.policyProvider.updateContract(contract);
+        config.updateContract(contract);
         return Response.seeOther(uriInfo.getBaseUriBuilder().path(this.getClass()).path(this.getClass().getMethod("getContract",String.class)).build(name)).build();
     }
 
@@ -111,7 +112,7 @@ public class ContractsResource extends Resource{
     @Path("/{name}/ipfilters")
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> getIpFilters(@PathParam("name") String name) {
-        return GridPortServer.policyProvider.getContract(name).getIpFilters();
+        return config.getContract(name).getIpFilters();
     }
 
     @POST
@@ -119,9 +120,9 @@ public class ContractsResource extends Resource{
     @Produces(MediaType.TEXT_HTML)
     public Response addIpFilter(@PathParam("name") String name, @FormParam("filter") String filter) 
         throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
-        Contract contract = GridPortServer.policyProvider.getContract(name);
+        Contract contract = config.getContract(name);
         contract.addIpFilter(filter);
-        GridPortServer.policyProvider.updateContract(contract);
+        config.updateContract(contract);
         return Response.seeOther(uriInfo.getBaseUriBuilder().path(this.getClass()).path(this.getClass().getMethod("getContract",String.class)).build(name)).build();
     }
 
@@ -130,9 +131,9 @@ public class ContractsResource extends Resource{
     @Produces(MediaType.TEXT_HTML)
     public Response removeIpFilter(@PathParam("name") String name, @PathParam("filter") String filter) 
         throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
-        Contract contract = GridPortServer.policyProvider.getContract(name);
+        Contract contract = config.getContract(name);
         contract.removeIpFilter(filter);
-        GridPortServer.policyProvider.updateContract(contract);
+        config.updateContract(contract);
         return Response.seeOther(uriInfo.getBaseUriBuilder().path(this.getClass()).path(this.getClass().getMethod("getContract",String.class)).build(name)).build();
     }
 
@@ -140,7 +141,7 @@ public class ContractsResource extends Resource{
     @Path("/{name}/endpoints")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Integer> getEndpoints(@PathParam("name") String name) {
-        return GridPortServer.policyProvider.getContract(name).getEndpoints();
+        return config.getContract(name).getEndpoints();
     }
 
     @POST
@@ -148,9 +149,9 @@ public class ContractsResource extends Resource{
     @Produces(MediaType.TEXT_HTML)
     public Response updateAvailableEndpoints(@PathParam("name") String name, @FormParam("endpoint") Integer[] endpoints) 
         throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
-        Contract contract = GridPortServer.policyProvider.getContract(name);
+        Contract contract = config.getContract(name);
         contract.setEndpoints(Arrays.asList(endpoints));
-        GridPortServer.policyProvider.updateContract(contract);
+        config.updateContract(contract);
         return Response.seeOther(uriInfo.getBaseUriBuilder().path(this.getClass()).path(this.getClass().getMethod("getContract",String.class)).build(name)).build();
     }
 }

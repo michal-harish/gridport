@@ -17,7 +17,7 @@ Motivation and Objectives
  * to be a Http interface to publish-subscribe systems
    * JMS Module - working
    * Tuple Space Module - experimental
-   * Kafka Module - not implemented yet   
+   * Kafka Module - working, but not with publish/subscribe, just topology
 
 Quick Start Instructions
 ========================================================================
@@ -151,23 +151,22 @@ JMS Receiver Example (php)
 Backlog
 ========================================================================
 
-* BUG Win-64 wrapper native missing
-* REFACTOR move log to /var/log/gridport.log, add log4j configurator and create install script for linux 
+* BUG ROUTER Set-Cookie passes only last cookie instruction
+* BUG Win-64 wrapper native missing (not available in communit edition)
+* BUG make an internal function to read header by case-insensitive header name key
+* FEATURE exception handling and propagation with default html pages for 40x and 50x
+* FEATURE move log to /var/log/gridport.log, add log4j configurator and create install script for linux 
 * REFACTOR domain.Route as immutable POJO with reference to Endpoint
-* REFACTOR add interface Module ( initialize(), close(), cliCommand(),... )
-* REFACTOR make an internal function to read header by case-insensitive header name key
-    
-* DESIGN exception handling and propagation
-* DESIGN account management (registration, password change, ...)
-* DESIGN manager interface (options are cli, web, api)
-* DESIGN review default jms auditing
+* REFACTOR ClientThread.loadIncomingContentEntity() should not exist, streaming should be impelemented
+* REFACTOR & review default jms auditing
+
+* DESIGN KAFKA publish/subscribe RESTful API
+* DESIGN MANAGER account management (registration, password change, ...)
 * DESIGN review OPTIONS usage and implement merging Allow headers with proxy settings
 * DESIGN proxyMulticast() - implement MATCH (200 ok if responses are identical); 
 * DESIGN testing strategy (ESP. EXPECTATIONS AND ASSUMPTIONS ABOUT ROUTING)
-* DESIGN performance benchmarking strategy
+* DESIGN benchmarking strategy
 
-* BUG ROUTER Set-Cookie passes only last cookie instruction
-* FEATURE ClientThread.loadIncomingContentEntity() should not exist, streaming should be impelemented
 * FEATURE process multiple subrequest responses in a streaming fashion 
 * FEATURE ROUTER if any of the sub request of a multicast event responds with 4xx, ALL subrequests need to be cancelled with extra compensation for those that have already returned 2xx or 3xx 
 * FEATURE ROUTER Compensate for pending Event Sub requests           
@@ -180,12 +179,17 @@ Backlog
 * FEATUER JMS Keep publishers alive with a session per some client request attribute (probably remote ip?) 
 * FEATURE JMS HTTP GET to operate as non-durable retrospective subscriber and only use it as list for url base topic and queue
 * FEATURE JMS POSTListenerQueue
-* TEST JMS setup with HornetQ
+* FEATURE JMS setup with HornetQ
 
 Change Log
 ========================================================================
+13 Apr 2013
+ * Interface Module for pluggable context handlers
+ * ModuleKafka for scanning topologies and consumption status
+
 09 Apr 2013
  * Completed the basic managment console
+ * Reload config via management console
  
 07 Apr 2013
  * Started work on web management console

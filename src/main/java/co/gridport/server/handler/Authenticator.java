@@ -15,7 +15,7 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.gridport.GridPortServer;
+import co.gridport.server.ConfigProvider;
 import co.gridport.server.domain.Contract;
 import co.gridport.server.domain.RequestContext;
 import co.gridport.server.domain.Route;
@@ -28,6 +28,11 @@ public class Authenticator extends AbstractHandler
 {
     static private Logger log = LoggerFactory.getLogger("authenticator");
     private ArrayList<String> sessions = new ArrayList<String>();  
+    private ConfigProvider config;
+
+    public Authenticator(ConfigProvider config) {
+        this.config = config;
+    }
 
     public void handle(String target,
         Request baseRequest,
@@ -90,7 +95,7 @@ public class Authenticator extends AbstractHandler
                     String[] auth = new String(Base64.decodeBase64(a[1].getBytes())).split("\\:");
                     String username = auth[0];
                     String password = auth[1];
-                    User user = GridPortServer.policyProvider.getUser(username);
+                    User user = config.getUser(username);
                     if (user!=null && user.getPassport(realm).equals(Crypt.md5(username+":"+realm+":"+password))) {
                         context.setUsername(username);
                         context.setGroups(user.getGroups());
@@ -149,7 +154,7 @@ public class Authenticator extends AbstractHandler
                         if (nonce!=null && qop.equals("auth")) {
                             String passport = null; //=md5(username +":" + realm + ":" + password)
                             groups = null;
-                            for(User definedUser: GridPortServer.policyProvider.getUsers()) {
+                            for(User definedUser: config.getUsers()) {
                                 if (definedUser.getUsername().equals(username)) {
                                     for(String g:auth_require.split("[\\s\\,\\;]")) {
                                         if (definedUser.getGroups().contains(g)) {

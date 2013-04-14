@@ -18,6 +18,7 @@ import javax.ws.rs.core.UriBuilderException;
 import javax.ws.rs.core.UriInfo;
 
 import co.gridport.GridPortServer;
+import co.gridport.server.ConfigProvider;
 import co.gridport.server.handler.RequestHandler;
 import co.gridport.server.space.Space2;
 import co.gridport.server.space.Subscription;
@@ -27,6 +28,7 @@ public class HomeResource extends Resource {
 
     @Context public UriInfo uriInfo;
     @Context public HttpServletRequest request;
+    @Context public ConfigProvider config;
 
 
     @GET
@@ -36,9 +38,9 @@ public class HomeResource extends Resource {
             throws IllegalArgumentException, SecurityException, NoSuchMethodException 
     {
         put("processes", getProcessList());
-        put("endpoints", GridPortServer.policyProvider.getEndpoints());
-        put("contracts", GridPortServer.policyProvider.getContracts());
-        put("users", GridPortServer.policyProvider.getUsers());
+        put("endpoints", config.getEndpoints());
+        put("contracts", config.getContracts());
+        put("users", config.getUsers());
         put("msg", msg);
 
         return view("manage/index.vm");
