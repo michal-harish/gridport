@@ -68,6 +68,7 @@ public class ModuleJMS implements co.gridport.server.Module {
         defaultEndpoint.setSsl(null);
         defaultEndpoint.setHttpMethod("GET PUT DELETE POST");
         defaultEndpoint.setUriBase(contextPath.replaceFirst("/?$",  "")+"/*");
+        config.updateEndpoint(defaultEndpoint);
 
         Hashtable<String,String> env = new Hashtable<String,String>();
         env.put(javax.naming.Context.INITIAL_CONTEXT_FACTORY,factory);

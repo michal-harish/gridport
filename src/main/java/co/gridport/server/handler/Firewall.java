@@ -143,7 +143,9 @@ public class Firewall extends AbstractHandler
             //remove route if it doesn't have available contract
             boolean hasContract = false;
             for(Contract C: availableContracts) {
-                if (!C.hasEndpoint(route.ID)) continue;
+                if (C.getEndpoints().size() > 0) {
+                    if (!C.hasEndpoint(route.ID)) continue;
+                }
                 //if (!C.hasEitherGroup(E.auth_group)) continue;
                 route.contracts.add(C);
                 if (C.getGroups().size() == 0) route.defaultRoute = true;

@@ -23,6 +23,7 @@ public class ModuleTupleSpace implements Module {
         defaultEndpoint.setSsl(null);
         defaultEndpoint.setHttpMethod("POST GET OPTIONS MOVE PUT");
         defaultEndpoint.setUriBase(contextPath.replaceFirst("/?$",  "")+"/*");
+        config.updateEndpoint(defaultEndpoint);
 
         Space2.initialize(MediumMemory.class);
 
