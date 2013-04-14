@@ -151,30 +151,27 @@ JMS Receiver Example (php)
 Backlog
 ========================================================================
 
+* FEATURE sendHtmlError with 400,403,404,500 from Firewall and Authenticator
+* REFACTOR loadIncomingContentEntity() should not be used in the proxy requests, multiplex streaming should be impelemented
 * BUG ROUTER Set-Cookie passes only last cookie instruction
-* BUG Win-64 wrapper native missing (not available in communit edition)
 * BUG make an internal function to read header by case-insensitive header name key
 * FEATURE exception handling and propagation with default html pages for 40x and 50x
 * FEATURE move log to /var/log/gridport.log, add log4j configurator and create install script for linux 
 * REFACTOR domain.Route as immutable POJO with reference to Endpoint
-* REFACTOR loadIncomingContentEntity() should not be used in the proxy requests, multiplex streaming should be impelemented
 * REFACTOR & review default jms auditing
-
+* FEATURE Win-64 wrapper native missing (not available in communit edition)
 * DESIGN KAFKA publish/subscribe RESTful API
 * DESIGN MANAGER account management (registration, password change, ...)
 * DESIGN review OPTIONS usage and implement merging Allow headers with proxy settings
 * DESIGN proxyMulticast() - implement MATCH (200 ok if responses are identical); 
 * DESIGN testing strategy (ESP. EXPECTATIONS AND ASSUMPTIONS ABOUT ROUTING)
 * DESIGN benchmarking strategy
-
 * FEATURE process multiple subrequest responses in a streaming fashion 
 * FEATURE ROUTER if any of the sub request of a multicast event responds with 4xx, ALL subrequests need to be cancelled with extra compensation for those that have already returned 2xx or 3xx 
 * FEATURE ROUTER Compensate for pending Event Sub requests           
 * FEATURE ROUTER SECONDARY employ user_agent routing variables if SLAs 
 * FEATURE ROUTER currently if nested URIs are used the more general must precede the general one if it need be routed to
 * FEATURE ROUTER 504 Gateway Timeout in mergeTasks()    
-* FEATURE send some default html with 400,403,404,500; also from Authenticator
-
 * BUG JMS Subscription initailization doesn't invoke recovery thread
 * FEATUER JMS Keep publishers alive with a session per some client request attribute (probably remote ip?) 
 * FEATURE JMS HTTP GET to operate as non-durable retrospective subscriber and only use it as list for url base topic and queue
@@ -183,6 +180,10 @@ Backlog
 
 Change Log
 ========================================================================
+14 Apr 2013
+ * Standalone PubSubHandler for JMSModule
+ * Added serveHtmlError for standard 40x 50x responses
+ * Bugfixes and cleanup
 13 Apr 2013
  * Interface Module for pluggable context handlers
  * ModuleKafka for scanning topologies and consumption status
