@@ -157,7 +157,7 @@ Backlog
 * FEATURE exception handling and propagation with default html pages for 40x and 50x
 * FEATURE move log to /var/log/gridport.log, add log4j configurator and create install script for linux 
 * REFACTOR domain.Route as immutable POJO with reference to Endpoint
-* REFACTOR ClientThread.loadIncomingContentEntity() should not exist, streaming should be impelemented
+* REFACTOR loadIncomingContentEntity() should not be used in the proxy requests, multiplex streaming should be impelemented
 * REFACTOR & review default jms auditing
 
 * DESIGN KAFKA publish/subscribe RESTful API

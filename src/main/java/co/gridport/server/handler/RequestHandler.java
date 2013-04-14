@@ -13,11 +13,10 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.gridport.server.ClientThread;
-import co.gridport.server.ClientThreadRouter;
-import co.gridport.server.SubRequest;
 import co.gridport.server.domain.RequestContext;
-import co.gridport.server.jms.ClientThreadJMS;
+import co.gridport.server.router.ClientThread;
+import co.gridport.server.router.ClientThreadRouter;
+import co.gridport.server.router.SubRequest;
 import co.gridport.server.space.ClientThreadSpace;
 
 public class RequestHandler extends AbstractHandler {
@@ -32,16 +31,15 @@ public class RequestHandler extends AbstractHandler {
     ) throws IOException, ServletException
     {
         RequestContext context = (RequestContext) request.getAttribute("context");
-
+        baseRequest.setAttribute("status", "Routing");
         ClientThread thread;
         if (context.getRoutes().get(0).endpoint.equals("module://space")) {
             log.info("GridPortHandler -> ClientThreadSpace " + request.getRequestURI());
             thread = new ClientThreadSpace(context);
-        } else if (context.getRoutes().get(0).endpoint.equals("module://jms")) {
-            log.info("GridPortHandler -> ClientThreadJMS " + request.getRequestURI());
-            thread = new ClientThreadJMS(context);
+            baseRequest.setAttribute("status", "Serving Space");
         } else {
             log.info("GridPortHandler -> ClientThreadRouter " + request.getRequestURI());
+            baseRequest.setAttribute("status", "Serving Proxy");
             thread = new ClientThreadRouter(context);
         }
 

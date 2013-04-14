@@ -1,4 +1,4 @@
-package co.gridport.server;
+package co.gridport.server.router;
 
 import java.io.IOException;
 import java.net.MalformedURLException;

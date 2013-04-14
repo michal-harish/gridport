@@ -6,6 +6,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriBuilderException;
 import javax.ws.rs.core.UriInfo;
 
+import org.eclipse.jetty.server.Request;
+
 import co.gridport.server.VelocityResource;
 import co.gridport.server.domain.Contract;
 import co.gridport.server.domain.RequestContext;
@@ -22,6 +24,9 @@ public abstract class Resource extends VelocityResource {
     }
     public String getLogsUrl() throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
         return uriInfo.getBaseUriBuilder().path(LogsResource.class).path(LogsResource.class.getMethod("index")).build().toString();
+    }
+    public String getRequestsUrl() throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
+        return uriInfo.getBaseUriBuilder().path(ProcessesResource.class).build().toString();
     }
     public String getRestartUrl() throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
         return uriInfo.getBaseUriBuilder().path(HomeResource.class).path(HomeResource.class.getMethod("restart")).build().toString();
@@ -40,6 +45,10 @@ public abstract class Resource extends VelocityResource {
     public String getCurrentUser() {
         RequestContext context = (RequestContext) request.getAttribute("context");
         return context.getUsername();
+    }
+    public RequestContext getContext(Request request) {
+        RequestContext context = (RequestContext) request.getAttribute("context");
+        return context;
     }
     public String getEndpointsUrl() 
         throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {

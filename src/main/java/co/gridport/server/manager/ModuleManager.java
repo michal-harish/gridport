@@ -46,6 +46,7 @@ public class ModuleManager implements Module {
                  HomeResource.class.getName()
             +","+UsersResource.class.getName()
             +","+LogsResource.class.getName()
+            +","+ProcessesResource.class.getName()
             +","+ContractsResource.class.getName()
             +","+EndpointsResource.class.getName()
         );

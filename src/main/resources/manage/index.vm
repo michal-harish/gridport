@@ -8,10 +8,9 @@
 </script>
 
 <header>
-<em>GridPort Server Instance</em> | $request.getRemoteHost() | $this.getCurrentUser()  
-| <a href="$this.getLogsUrl()">logs</a> 
-| <form style="display:inline;" method="POST" action="$this.getRestartUrl()" onsubmit='return confirm("Reload configuration and restart the server ?");'><input type="submit" name="restart" value="RESTART"/></form>
+    #menu()
 </header>
+
 
 #if ($msg != "")
 <a class="error">$msg</a> 
@@ -83,15 +82,5 @@
             </tbody>
         </table>
     </section>
-
-<div>
-    <h2>Active Client Threads</h2>
-    <ul>
-        #foreach( $processInfo in $processes )
-            <li>$processInfo</li>
-        #end
-    </ul> 
-</div>
-
 
 #include("manage/footer.vm")

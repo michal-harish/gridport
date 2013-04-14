@@ -41,7 +41,7 @@ public class Authenticator extends AbstractHandler
         throws IOException, ServletException
     {
         RequestContext context = (RequestContext) request.getAttribute("context");
-
+        baseRequest.setAttribute("status", "Authenticating");
         try {
 
             //aggregate auth groups for all available routes 
@@ -53,6 +53,7 @@ public class Authenticator extends AbstractHandler
                     log.debug("route without contract: "+E.endpoint);
                     response.setStatus(409);
                     baseRequest.setHandled(true);
+                    baseRequest.setAttribute("status", "Rejected");
                     return;
                 }
                 for(Contract C:E.contracts) {
@@ -70,10 +71,13 @@ public class Authenticator extends AbstractHandler
                 log.debug("invalid auth group configuration");
                 response.setStatus(409);
                 baseRequest.setHandled(true);
+                baseRequest.setAttribute("status", "Rejected");
                 return;
             } else if (auth_require.equals("default")) {
                 log.debug("auth not required");
                 context.setGroups(Arrays.asList("default"));
+                context.setUsername("guest");
+                baseRequest.setAttribute("status", "Serving");
                 return;
             } else {
                 log.debug("auth group aggregate: "+auth_require);
@@ -100,6 +104,7 @@ public class Authenticator extends AbstractHandler
                         context.setUsername(username);
                         context.setGroups(user.getGroups());
                         context.setSessionToken(null);
+                        baseRequest.setAttribute("status", "Rejected");
                         return;
                     }
                 } else if (a[0].equals("Digest")) {
@@ -180,6 +185,7 @@ public class Authenticator extends AbstractHandler
                                     context.setUsername(username);
                                     context.setGroups(groups);
                                     context.setSessionToken(nonce);
+                                    baseRequest.setAttribute("status", "Serving");
                                     return;
                                 }
                             }
@@ -199,6 +205,7 @@ public class Authenticator extends AbstractHandler
                 }
                 context.setUsername("guest");
                 context.setGroups(Arrays.asList("default"));
+                baseRequest.setAttribute("status", "Serving");
                 return;
             }
 
@@ -228,6 +235,7 @@ public class Authenticator extends AbstractHandler
             log.error("GridPortAuthenticator",e);
             response.setStatus(500);
             baseRequest.setHandled(true);
+            baseRequest.setAttribute("status", "Failed");
             return; 
         }
     }

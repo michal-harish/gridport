@@ -1,0 +1,40 @@
+<h2>Subscribe to topic or queue</h2>
+
+Request: <b>PUT topics/&lt;topic_filter&gt;</b> + <b>URL of the receiver in the entity</b><br/>
+Request: <b>PUT queues/&lt;queue_filter&gt;</b> + <b>URL of the receiver in the entity</b><br/>
+Response: <b>200 OK </b> - succesfully subscribed given receiver.<br/>
+Response: <b>400 Bad Request</b> + <b>Error string</b> - failed to subscribe<br/>
+
+Note: Upond subscribtion, the module will try to ping the receiver URL with a PUT request containg the topic filter 
+in the endity and expects 201 Created to confirm the subscription.NOTE: Messages for the given filter will then be 
+POSTed to the receiver's URL and will contain http headers representing the custom message headers and the follwing 
+JMS internal headers:<br/>
+
+<ul>
+<li>JMSMessageID: string</li>
+<li>JMSDestination: string</li>
+<li>JMSPriority: int</li>
+<li>JMSCorrelationID: string</li>
+</ul>
+
+NOTE: Receivers are expected to acknowledge the reception of messages with <b>202 Accepted</b> status code, otherwise 
+will be rescheduled for delivery (and another POST) in 5 minute rounds.
+
+<h2>Unsubscribe from topic or queue</h2>Request: <b>DELETE topics/&lt;topic_filter&gt;</b> + <b>URL of the receiver in the entity</b><br/>
+
+Request: <b>DELETE queues/&lt;topic_filter&gt;</b> + <b>URL of the receiver in the entity</b><br/>
+Response: <b>200 OK </b> - succesfully unsubscribed given receiver from the filter<br/>
+Response: <b>400 Bad Request</b> + <b>Error string</b> - failed to unsubscribe<br/>
+
+<h2>Publish a persistent Message</h2>Request: <b>POST topics/&lt;topic&gt;</b> + <b>message content in the entity</b></br>
+Request: <b>POST queues/&lt;queue&gt;</b> + <b>message content in the entity</b></br>
+Response: <b>202 Accepted</b> + <b>Message ID</b> - message has been published and acknowledged by the JMS server.<br/>
+
+Response: <b>400 Bad Request</b> + <b>Error string</b> - failed to publish the message<br/>
+NOTE: All http request headers will be turned into jms message header properties or JMS attributes as follows:<br/>
+<ul><li>JMSPriority: int</li><li>JMSCorrelationID: string</li></ul>
+NOTE: Messages are currently published 
+without expiration ttl and the following headers are special JMS attributes:<br/>
+<h2>List Subscribers</h2>Request: <b>GET topics/&lt;topic_filter&gt;</b></br>
+Request: <b>GET queues/&lt;queue_filter&gt;</b></br>
+Response: <b>200 OK</b> + <b>text/plain of receiver URLs that are subscribed to the given topics/queue filter<b/><br/>

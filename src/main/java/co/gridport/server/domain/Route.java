@@ -2,7 +2,7 @@ package co.gridport.server.domain;
 
 import java.util.ArrayList;
 
-import co.gridport.server.SubRequest;
+import co.gridport.server.router.SubRequest;
 
 public class Route {
 	public boolean wildcard;

@@ -10,9 +10,13 @@ import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 import org.apache.velocity.runtime.RuntimeConstants;
+import org.apache.velocity.tools.generic.DateTool;
 
 public class VelocityResource extends VelocityContext {
 
+    public DateTool date = new DateTool();
+    public Long now = System.currentTimeMillis();
+    
     static  {
         Properties p = new Properties();
         p.setProperty("resource.loader", "file");
@@ -36,7 +40,7 @@ public class VelocityResource extends VelocityContext {
             if (key.equals("this")) {
                 return this;
             } else try {
-                Field f = this.getClass().getDeclaredField(key);
+                Field f = this.getClass().getField(key);
                 return f.get(this);
             } catch (NoSuchFieldException e) {
                 return super.get(key);

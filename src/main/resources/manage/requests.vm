@@ -1,0 +1,24 @@
+ #include("manage/header.vm")
+
+<header>
+    #menu( )
+</header>
+
+<div>
+    <h2>Active Client Threads $date</h2>
+    <table cellpadding="5">
+        #foreach( $r in $requests )
+            <tr>
+            #set ($running = $date.getSystemTime() - $r.getReceivedTimestampMs())
+            <td>$date.format($r.getReceivedTimestampMs())</td>
+            <td>$r.getConsumerAddr()</td>
+            <td>$r.getUsername()@$r.getRealm()</td>
+            <td>://$r.getHost()$r.getURI()</td>
+            <td>[$running ms]</td>
+            <td>$r.getStatus()</td>
+            </tr>
+        #end
+    </table> 
+</div>
+
+#include("manage/footer.vm")

@@ -1,3 +1,11 @@
+#macro( menu )
+    <em>GridPort Server Instance</em> | $request.getRemoteHost() | $this.getCurrentUser()
+    | <a href="$this.getHomeUrl()">configuration</a>  
+    | <a href="$this.getRequestsUrl()">processes</a> 
+    | <a href="$this.getLogsUrl()">logs</a>
+    | <form style="display:inline;" method="POST" action="$this.getRestartUrl()" onsubmit='return confirm("Reload configuration and restart the server ?");'><input type="submit" name="restart" value="RESTART"/></form>
+#end
+
 #macro( contracts $contracts )
      <table>
         <thead>
@@ -20,5 +28,4 @@
         #end
         </tbody>
     </table>
-
 #end

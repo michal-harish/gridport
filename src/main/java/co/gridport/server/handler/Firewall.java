@@ -40,7 +40,6 @@ public class Firewall extends AbstractHandler
         HttpServletResponse response) 
         throws IOException, ServletException
     {
-
         if (request.getRequestURI().equals("/favicon.ico"))
         {
             response.setStatus(200);
@@ -48,7 +47,7 @@ public class Firewall extends AbstractHandler
             baseRequest.setHandled(true);
             return; 
         }
-
+        baseRequest.setAttribute("status", "Initializing");
         //Check available contracts first and reject if none available
         String remoteIP = request.getRemoteAddr();
         if (request.getHeader("X-forwarded-for") != null) {

@@ -1,10 +1,7 @@
  #include("manage/header.vm")
 
 <header>
- <em>GridPort Server Instance</em> | $request.getRemoteHost() | $this.getCurrentUser()
- | <a href="$this.getHomeUrl()">home</a>   
- | <a href="$this.getLogsUrl()">logs</a> 
- | <form style="display:inline;" method="POST" action="$this.getRestartUrl()" onsubmit='return confirm("Reload configuration and restart the server ?");'><input type="submit" name="restart" value="RESTART"/></form>
+    #menu()
 </header>
 
 <h2>Contract: $contract.getName() </h2>

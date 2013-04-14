@@ -12,6 +12,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -20,21 +21,25 @@ import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.naming.InitialContext;
+import javax.naming.NameClassPair;
+import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
+import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import co.gridport.server.ConfigProvider;
 import co.gridport.server.domain.Endpoint;
-import co.gridport.server.handler.RequestHandler;
 import co.gridport.server.utils.Utils;
 
 public class ModuleJMS implements co.gridport.server.Module {
     static protected Logger log = LoggerFactory.getLogger("mod_jms");
-
-    private org.eclipse.jetty.server.handler.ContextHandler contextHandler;
 
     public boolean initialized = false;
     private HashMap<String,POSTListener> subs = new HashMap<String,POSTListener>();
@@ -44,7 +49,7 @@ public class ModuleJMS implements co.gridport.server.Module {
     private java.sql.Connection storage;
 
     @Override
-    public ContextHandler register(ConfigProvider config, String contextPath) throws Exception {
+    public Handler register(ConfigProvider config, final String contextPath) throws Exception {
 
         //open jms.db storage
         initializeStorage();
@@ -121,10 +126,24 @@ public class ModuleJMS implements co.gridport.server.Module {
         }
 
         log.info("Registering module://jms at context " + contextPath);
-        contextHandler = new org.eclipse.jetty.server.handler.ContextHandler();
-        contextHandler.setContextPath(contextPath);
-        contextHandler.setHandler(new RequestHandler());
-        return contextHandler;
+        return 
+            new ContextHandlerCollection() {{
+                setHandlers(new Handler[] {
+                    new ContextHandler(contextPath + "/topics") {{ setHandler(new PubSubHandler("Topics")); }},
+                    new ContextHandler(contextPath + "/queues") {{ setHandler(new PubSubHandler("Queues")); }},
+                    new ServletContextHandler(ServletContextHandler.NO_SESSIONS) {{ 
+                        setContextPath(contextPath);
+                        ServletHolder s = new ServletHolder(new HttpServletDispatcher());
+                        s.setInitOrder(1);
+                        s.setInitParameter("resteasy.scan", "false");
+                        s.setInitParameter("resteasy.providers", "org.jboss.resteasy.plugins.providers.jackson.ResteasyJacksonProvider");
+                        s.setInitParameter("resteasy.resources",
+                             HelpResource.class.getName()
+                        );
+                        addServlet(s,"/*");
+                    }}
+                });
+            }};
     }
 
     @Override
@@ -171,6 +190,21 @@ public class ModuleJMS implements co.gridport.server.Module {
         }
     }
 
+    public List<String> listDestinations(String type) {
+        NamingEnumeration<NameClassPair> queues;
+        List<String> destinations = new ArrayList<String>();
+        try {
+            queues = ctx.list("dynamic" + type); 
+            while (queues.hasMoreElements()) {
+                NameClassPair element = (NameClassPair) queues
+                        .nextElement();
+                destinations.add(element.getName());
+            }
+        } catch (Exception e) {
+            log.error("Could not read list of jms destinations", e);
+        }
+        return destinations;
+    }
    public void createListener(String destination, String target) throws MalformedURLException, IOException, JMSException, NamingException {
         POSTListener newListener;
         //create runtime subscription
@@ -337,4 +371,5 @@ public class ModuleJMS implements co.gridport.server.Module {
         if (data == null) return "";
         else return data.replace("'","''");
     }
+
 }

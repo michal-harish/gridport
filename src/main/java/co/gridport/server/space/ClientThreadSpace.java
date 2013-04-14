@@ -5,8 +5,8 @@ import java.io.StringWriter;
 
 import org.json.JSONWriter;
 
-import co.gridport.server.ClientThread;
 import co.gridport.server.domain.RequestContext;
+import co.gridport.server.router.ClientThread;
 
 public class ClientThreadSpace extends ClientThread {
 

@@ -141,5 +141,9 @@ public class RequestContext {
         return queryString;
     }
 
+    public String getStatus() {
+        return (String)request.getAttribute("status");
+    }
+
 
 }

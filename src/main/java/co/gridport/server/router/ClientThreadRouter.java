@@ -1,4 +1,4 @@
-package co.gridport.server;
+package co.gridport.server.router;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -99,12 +99,12 @@ public class ClientThreadRouter extends ClientThread {
             if (GridPortServer.getModule(ModuleJMS.class).initialized) {
                 HashMap<String,String> log_properties = new HashMap<String,String>();
                 log_properties.put("gridport-log-version", "1");
-                log_properties.put("gridport-log-date", GridPortServer.date.format(System.currentTimeMillis()));
+                log_properties.put("gridport-log-date", date.format(System.currentTimeMillis()));
                 String log_payload = "gateway="+context.getHost()+"\r\n";
                 log_payload += "protocol="+(context.isHttps() ? "https":"http" ) + "\r\n";
                 log_payload += "port="+ request.getLocalPort() +"\r\n";
                 log_payload += "url=" +  request.getRequestURL()+"\r\n";
-                log_payload += "received=" + GridPortServer.date.format(received.getTime() ) +"\r\n";
+                log_payload += "received=" + date.format(received.getTime() ) +"\r\n";
                 log_payload += "contract=" + contract.getName() +"\r\n";
                 log_payload += "consumer.ip=" + context.getConsumerAddr() +"\r\n";
                 log_payload += "consumer.id=" + context.getUsername() +"@" + group + "\r\n";

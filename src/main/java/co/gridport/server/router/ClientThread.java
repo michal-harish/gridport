@@ -1,4 +1,4 @@
-package co.gridport.server;
+package co.gridport.server.router;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -8,6 +8,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -19,7 +20,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.gridport.GridPortServer;
 import co.gridport.server.domain.Contract;
 import co.gridport.server.domain.RequestContext;
 import co.gridport.server.domain.Route;
@@ -29,6 +29,7 @@ import co.gridport.server.utils.Utils;
 abstract public class ClientThread extends Thread {
 
     static protected Logger log = LoggerFactory.getLogger("request");
+    static protected SimpleDateFormat date = new SimpleDateFormat("EEE dd MMM yyyy HH:mm:ss.SSS zzz");
 
     protected HttpServletRequest request;
     protected HttpServletResponse response;
@@ -438,7 +439,7 @@ abstract public class ClientThread extends Thread {
             if (request.getHeader("If-Modified-Since") != null) {
                 String ifmod = request.getHeader("If-Modified-Since");
                 try {
-                    if (inFile.lastModified() <= GridPortServer.date.parse(ifmod).getTime()) {
+                    if (inFile.lastModified() <= date.parse(ifmod).getTime()) {
                         response.setStatus(304);
                         response.setContentLength(-1);
                         return;

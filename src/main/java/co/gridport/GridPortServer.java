@@ -3,27 +3,31 @@ package co.gridport;
 import java.io.BufferedInputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
+import java.util.concurrent.Executors;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Application;
 
 import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.ContextHandler;
-import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.server.ssl.SslSocketConnector;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.eclipse.jetty.util.thread.QueuedThreadPool;
+import org.eclipse.jetty.util.thread.ExecutorThreadPool;
+import org.eclipse.jetty.util.thread.ThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.gridport.server.ClientThreadRouter;
 import co.gridport.server.ConfigProvider;
 import co.gridport.server.ConfigProviderSQLite;
 import co.gridport.server.Module;
@@ -33,14 +37,16 @@ import co.gridport.server.handler.RequestHandler;
 import co.gridport.server.jms.ModuleJMS;
 import co.gridport.server.kafka.ModuleKafka;
 import co.gridport.server.manager.ModuleManager;
+import co.gridport.server.router.ClientThreadRouter;
 import co.gridport.server.router.ModuleRouter;
 import co.gridport.server.utils.Utils;
 
 public class GridPortServer extends Application {
 
     private static Logger log = LoggerFactory.getLogger("server");
-    public static  SimpleDateFormat date = new SimpleDateFormat("EEE dd MMM yyyy HH:mm:ss.SSS zzz");
+    private static Thread mainThread;
     private static GridPortServer instance;
+    public static List<Request> activeRequests;
 
     public static void main(String[] args) throws UnknownHostException {
         boolean cliEnabled = false;
@@ -49,8 +55,14 @@ public class GridPortServer extends Application {
                 if (A.equals("cli")) cliEnabled=true;
             }
         }
+        mainThread = Thread.currentThread();
         instance = new GridPortServer(cliEnabled);
+        activeRequests = new ArrayList<Request>();
         instance.run();
+    }
+
+    public static ThreadGroup getGroup() {
+        return mainThread.getThreadGroup();
     }
 
     public static String getInstanceId() {
@@ -85,7 +97,7 @@ public class GridPortServer extends Application {
     private boolean cliEnabled = false;
     private Server server;
     private List<Module> modules = new ArrayList<Module>();
-    private ContextHandlerCollection contextHandlers;
+    private HandlerCollection requestHandlers;
     private ConfigProvider config;
 
     public GridPortServer(Boolean cliEnabled) throws UnknownHostException {
@@ -138,9 +150,13 @@ public class GridPortServer extends Application {
 
     private void createServer() {
         server = new Server();
-        server.setThreadPool(
-            new QueuedThreadPool(50)
-        );
+        ThreadPool pool = new ExecutorThreadPool(Executors.newFixedThreadPool(50/*,new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread t = new RequestThread(r);
+                return t;
+            }}*/));
+        server.setThreadPool(pool);
         server.setGracefulShutdown(1000);
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override public void run() {
@@ -183,13 +199,31 @@ public class GridPortServer extends Application {
             log.info("*** SSL CONNECTOR PORT " + connector2.getPort());
         }
 
+        requestHandlers = new HandlerCollection();
+        HandlerList requestPathHandlers = new HandlerList();
         //all requests pass through the following chain of handlers:
-        HandlerList serialHandlers = new HandlerList();
-        serialHandlers.addHandler(new Firewall(config));
-        serialHandlers.addHandler(new Authenticator(config));
-        contextHandlers = new ContextHandlerCollection();
-        serialHandlers.addHandler(contextHandlers);
-        server.setHandler(serialHandlers);
+        requestPathHandlers.setHandlers(new Handler[] {
+            new Firewall(config),
+            new Authenticator(config),
+            requestHandlers
+        });
+
+        HandlerCollection aspects = new HandlerCollection();
+        aspects.setHandlers(new Handler[] {
+            new AbstractHandler() {
+                @Override public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) {
+                    activeRequests.add(baseRequest);
+                }
+            },
+            requestPathHandlers,
+            new AbstractHandler() {
+                @Override public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) {
+                    activeRequests.remove(baseRequest);
+                    baseRequest.setAttribute("status", "Completed");
+                }
+            }
+        });
+        server.setHandler(aspects);
     }
 
     private void initializeModules() {
@@ -202,9 +236,9 @@ public class GridPortServer extends Application {
 
     private void addModule(Module module, String contextPath) {
         try {
-            ContextHandler contextHandler = module.register(config, contextPath);
+            Handler contextHandler = module.register(config, contextPath);
             modules.add(module);
-            contextHandlers.addHandler(contextHandler);
+            requestHandlers.addHandler(contextHandler);
         } catch (Exception e) {
             log.error("*** " + module.getClass().getSimpleName() + " initialization failed",e);
         }
