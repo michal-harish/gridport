@@ -25,8 +25,6 @@ public class ModuleManager implements Module {
         //update endpoint policies
         Endpoint defaultEndpoint = config.getEndpointByTargetUrl("module://manager");
         if (defaultEndpoint == null) defaultEndpoint = config.newEndpoint("module://manager");
-        defaultEndpoint.setGatewayHost("");
-        defaultEndpoint.setSsl(null);
         defaultEndpoint.setHttpMethod("GET POST DELETE");
         defaultEndpoint.setUriBase(contextPath.replaceFirst("/?$",  "")+"/*");
         config.updateEndpoint(defaultEndpoint);

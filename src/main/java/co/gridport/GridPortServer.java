@@ -2,6 +2,7 @@ package co.gridport;
 
 import java.io.BufferedInputStream;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +42,7 @@ public class GridPortServer extends Application {
     public static  SimpleDateFormat date = new SimpleDateFormat("EEE dd MMM yyyy HH:mm:ss.SSS zzz");
     private static GridPortServer instance;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws UnknownHostException {
         boolean cliEnabled = false;
         if (args.length>0) {
             for(String A:args) {
@@ -87,15 +88,16 @@ public class GridPortServer extends Application {
     private ContextHandlerCollection contextHandlers;
     private ConfigProvider config;
 
-    public GridPortServer(Boolean cliEnabled) {
+    public GridPortServer(Boolean cliEnabled) throws UnknownHostException {
 
         this.cliEnabled = cliEnabled;
+        instanceId = "GRIDPORT-"+InetAddress.getLocalHost().getHostName();
+        log.info("*** " + instanceId);
 
+    }
+
+    public void run() {
         try {
-
-            instanceId = "GRIDPORT-"+InetAddress.getLocalHost().getHostName();
-            log.info("*** " + instanceId);
-
             createServer();
             reloadServerConfig();
             initializeModules();
@@ -107,9 +109,7 @@ public class GridPortServer extends Application {
         }
 
         log.info("***************************************");
-    }
 
-    public void run() {
         if (cliEnabled) {
             log.info("(to install as service execute ./sh.daemon start)");
             String charsetName = "UTF-8";

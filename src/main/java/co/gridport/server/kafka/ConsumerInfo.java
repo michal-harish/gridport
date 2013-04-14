@@ -43,17 +43,32 @@ public class ConsumerInfo {
         public TopicConsumptionStatus(ConsumptionStatus consumption) {
             consumed = 0.0;
             Integer n = 0;
-            Map<Integer, Long> committedOffsets = consumption.getLastConsumedOffset();
+            Map<String, Long> committedOffsets = consumption.getLastConsumedOffset();
             for(PartitionInfo partition: consumption.getTopic().getPartitions().values()) {
-                Long watermark = committedOffsets.get(partition.getId());
-                Long available = Math.max(watermark, partition.getLargestOffset());
-                partitions.put(partition.getFullId(), watermark +"/" + available);
+                Long origin = partition.getSmallestOffset();
+                Long watermark = committedOffsets.get(partition.getFullId()) - origin;
+                Long available = partition.getLargestOffset() - origin;
+                partitions.put(
+                    partition.getFullId(), 
+                    formatBytes(watermark) + " / " + formatBytes(available)
+                );
                 if (available>0) {
                     consumed += Double.valueOf(watermark) / Double.valueOf(available) * 100 ;
                     n++;
                 }
             }
             consumed = consumed / n;
+        }
+        private String formatBytes(Long data) {
+            if (data < 1024 ) {
+                return data + " b";
+            } else if (data < 1024*1024 ) {
+                return Math.round(Double.valueOf(data)/1024.0*100.0)/100.0 + " Kb";
+            } else if (data < 1024*1024*1024 ) {
+                return Math.round(Double.valueOf(data)/1024.0/1024*100.0)/100.0 + " Mb";
+            } else {
+                return Math.round(Double.valueOf(data)/1024.0/1024/1024*100.0)/100.0 + " Gb";
+            }
         }
     }
 

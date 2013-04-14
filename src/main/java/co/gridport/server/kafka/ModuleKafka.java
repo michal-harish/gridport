@@ -29,8 +29,6 @@ public class ModuleKafka implements co.gridport.server.Module {
 
         Endpoint defaultEndpoint = config.getEndpointByTargetUrl("module://kafka");
         if (defaultEndpoint == null) defaultEndpoint = config.newEndpoint("module://kafka");
-        defaultEndpoint.setGatewayHost("");
-        defaultEndpoint.setSsl(null);
         defaultEndpoint.setHttpMethod("GET POST");
         defaultEndpoint.setUriBase(contextPath.replaceFirst("/?$",  "")+"/*");
         config.updateEndpoint(defaultEndpoint);

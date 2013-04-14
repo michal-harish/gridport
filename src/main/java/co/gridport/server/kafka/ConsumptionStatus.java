@@ -11,40 +11,39 @@ public class ConsumptionStatus {
     private ClusterInfo cluster;
     private TopicInfo topic;
     private ConsumerInfo consumer;
-    private Map<Integer,Long> committedOffsets;
+    private Map<String,Long> committedOffsets;
 
     public ConsumptionStatus(ClusterInfo cluster, TopicInfo topic, ConsumerInfo consumer) {
         this.cluster = cluster;
         this.topic = topic;
         this.consumer = consumer;
-        this.committedOffsets = new ConcurrentHashMap<Integer,Long>();
+        this.committedOffsets = new ConcurrentHashMap<String,Long>();
     }
 
     public TopicInfo getTopic() {
         return topic;
     }
 
-    public Map<Integer,Long> getLastConsumedOffset() {
+    public Map<String,Long> getLastConsumedOffset() {
        for(PartitionInfo partition: topic.getPartitions().values()) {
            final String pathId = partition.getFullId();
-           final Integer id = partition.getId();
             if (!committedOffsets.containsKey(partition)) {
                 if (cluster.zk.exists("/consumers/"+consumer.getGroupId()+"/offsets/"+topic.getName()+"/"+pathId)) {
                     String watermark = cluster.zk.readData("/consumers/"+consumer.getGroupId()+"/offsets/"+topic.getName()+"/"+pathId);
-                    committedOffsets.put(id, Long.valueOf(watermark));
+                    committedOffsets.put(pathId, Long.valueOf(watermark));
                     cluster.zk.subscribeDataChanges("/consumers/"+consumer.getGroupId()+"/offsets/"+topic.getName()+"/"+pathId, new IZkDataListener() {
                         @Override
                         public void handleDataDeleted(String dataPath) throws Exception {
-                            setCommittedOffset(id, 0L);
+                            setCommittedOffset(pathId, 0L);
                             //TODO set up watcher for children again
                         }
                         @Override
                         public void handleDataChange(String dataPath, Object data) throws Exception {
-                            setCommittedOffset(id, Long.valueOf(data.toString()));
+                            setCommittedOffset(pathId, Long.valueOf(data.toString()));
                         }
                     });
                 } else {
-                    setCommittedOffset(partition.getId(), 0L);
+                    setCommittedOffset(pathId, 0L);
                     //TODO watcher for children in "/consumers/"+consumer.getGroupId()+"/offsets/"+topic.getName()
                 }
             }
@@ -54,7 +53,7 @@ public class ConsumptionStatus {
        }
     }
 
-    private void setCommittedOffset(Integer id, long watermark) {
+    private void setCommittedOffset(String id, long watermark) {
         committedOffsets.put(id, watermark);
     }
 

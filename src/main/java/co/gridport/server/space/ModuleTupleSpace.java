@@ -19,8 +19,6 @@ public class ModuleTupleSpace implements Module {
 
         Endpoint defaultEndpoint = config.getEndpointByTargetUrl("module://space");
         if (defaultEndpoint == null) defaultEndpoint = config.newEndpoint("module://space");
-        defaultEndpoint.setGatewayHost("");
-        defaultEndpoint.setSsl(null);
         defaultEndpoint.setHttpMethod("POST GET OPTIONS MOVE PUT");
         defaultEndpoint.setUriBase(contextPath.replaceFirst("/?$",  "")+"/*");
         config.updateEndpoint(defaultEndpoint);
