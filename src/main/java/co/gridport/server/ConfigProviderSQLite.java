@@ -402,7 +402,7 @@ public class ConfigProviderSQLite implements ConfigProvider {
                         contracts.put(name, new Contract(
                             name,
                             rs.getString("ip_range"),
-                            new Long(Math.round(rs.getFloat("interval") * 1000)),
+                            new Long(Math.round(rs.getFloat("interval"))),
                             rs.getLong("frequency"),
                             groups,
                             endpoints

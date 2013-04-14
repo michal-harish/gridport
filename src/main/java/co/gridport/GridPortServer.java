@@ -84,6 +84,7 @@ public class GridPortServer extends Application {
             @Override public void run() {
                 try {
                     instance.stopServer();
+                    instance.createServer();
                     instance.reloadServerConfig();
                     instance.initializeModules();
                     instance.startServer();
@@ -166,7 +167,6 @@ public class GridPortServer extends Application {
     }
 
     public void reloadServerConfig() throws Exception {
-        stopServer();
 
         config = new ConfigProviderSQLite();
 
@@ -274,6 +274,7 @@ public class GridPortServer extends Application {
                 modules.clear();
 
                 if (config !=null) config.close();
+                server = null;
             } catch (Exception e) {
                 e.printStackTrace();
             }
