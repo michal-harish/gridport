@@ -1,6 +1,7 @@
 package co.gridport.server.manager;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -28,7 +29,7 @@ public class UsersResource extends Resource {
     @Path("")
     @Produces(MediaType.APPLICATION_JSON)
     public Collection<User> getUsers() {
-        return config.getUsers();
+        return Collections.unmodifiableCollection(config.getUsers());
     }
 
     @POST

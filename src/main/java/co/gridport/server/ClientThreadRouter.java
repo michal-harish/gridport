@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.jms.JMSException;
-
 import co.gridport.GridPortServer;
 import co.gridport.server.domain.RequestContext;
 import co.gridport.server.domain.Route;
@@ -120,7 +118,7 @@ public class ClientThreadRouter extends ClientThread {
                 try {
                     // week expiration for log messages
                     GridPortServer.getModule(ModuleJMS.class).publish(ClientThreadRouter.logTopic, log_payload, log_properties,60*60*24*7);
-                } catch (JMSException e) {
+                } catch (Exception e) {
                     log.warn(ClientThreadRouter.logTopic+" ERROR " + e.getMessage());
                 }
 

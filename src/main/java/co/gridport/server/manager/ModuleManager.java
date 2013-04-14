@@ -43,6 +43,7 @@ public class ModuleManager implements Module {
         });
         s.setInitOrder(1);
         s.setInitParameter("resteasy.scan", "false");
+        s.setInitParameter("resteasy.providers", "org.jboss.resteasy.plugins.providers.jackson.ResteasyJacksonProvider");
         s.setInitParameter("resteasy.resources",
                  HomeResource.class.getName()
             +","+UsersResource.class.getName()

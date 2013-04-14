@@ -43,6 +43,7 @@ public class ModuleKafka implements co.gridport.server.Module {
         ServletHolder s = new ServletHolder(httpDispatcher);
         s.setInitOrder(1);
         s.setInitParameter("resteasy.scan", "false");
+        s.setInitParameter("resteasy.providers", "org.jboss.resteasy.plugins.providers.jackson.ResteasyJacksonProvider");
         s.setInitParameter("resteasy.resources",
              ClusterInfoResource.class.getName()
             +","+HelpResource.class.getName()

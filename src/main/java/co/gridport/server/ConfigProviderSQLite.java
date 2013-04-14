@@ -286,7 +286,7 @@ public class ConfigProviderSQLite implements ConfigProvider {
             if (version <8 ) {
                 s.addBatch("ALTER TABLE contracts ADD auth_group TEXT ");
                 s.addBatch("INSERT INTO users(groups,username) VALUES('examplegroup','exampleuser')");
-                s.addBatch("INSERT INTO contracts(name,content,ip_range) VALUES('localAdmin','1,2','127.0.0.1,0:0:0:0:0:0:0:1')");
+                s.addBatch("INSERT INTO contracts(name,content,ip_range) VALUES('local','','127.0.0.1,0:0:0:0:0:0:0:1')");
                 s.addBatch("INSERT INTO contracts(name,content,interval,frequency,auth_group) VALUES('examplecontract','3',1.0,1,'examplegroup')");
                 s.executeBatch();
                 s.close();
