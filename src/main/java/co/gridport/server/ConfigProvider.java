@@ -23,6 +23,7 @@ public interface ConfigProvider {
     Endpoint getEndpointByTargetUrl(String string);
     Endpoint updateEndpoint(Endpoint endpoint);
     Endpoint newEndpoint();
+    Endpoint newEndpoint(String endpoint);
 
     Map<String,List<User>> getGroups();
     Collection<User> getUsers();

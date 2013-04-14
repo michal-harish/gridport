@@ -63,7 +63,7 @@ public class ModuleJMS implements co.gridport.server.Module {
         }
 
         Endpoint defaultEndpoint = config.getEndpointByTargetUrl("module://jms");
-        if (defaultEndpoint == null) defaultEndpoint = config.newEndpoint();
+        if (defaultEndpoint == null) defaultEndpoint = config.newEndpoint("module://jms");
         defaultEndpoint.setGatewayHost("");
         defaultEndpoint.setSsl(null);
         defaultEndpoint.setHttpMethod("GET PUT DELETE POST");

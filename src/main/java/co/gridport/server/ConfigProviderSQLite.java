@@ -145,6 +145,10 @@ public class ConfigProviderSQLite implements ConfigProvider {
 
     @Override
     public Endpoint newEndpoint() {
+        return newEndpoint("");
+    }
+    @Override
+    public Endpoint newEndpoint(String endpointAddress) {
         try {
             Statement s = policydb.createStatement();
             s.executeUpdate("INSERT INTO endpoints(uri_base) VALUES('')");
@@ -153,7 +157,7 @@ public class ConfigProviderSQLite implements ConfigProvider {
             if (rs.next()) {
                 Integer id = rs.getInt(1);
                 s.close();
-                Endpoint endpoint = new Endpoint(id,null,null,null,null,null,null,null);
+                Endpoint endpoint = new Endpoint(id,null,null,null,null,null,endpointAddress,null);
                 endpoints.put(id, endpoint);
                 return endpoint;
             } else {

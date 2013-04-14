@@ -28,7 +28,7 @@ public class ModuleKafka implements co.gridport.server.Module {
     public ContextHandler register(ConfigProvider config, String contextPath) throws Exception {
 
         Endpoint defaultEndpoint = config.getEndpointByTargetUrl("module://kafka");
-        if (defaultEndpoint == null) defaultEndpoint = config.newEndpoint();
+        if (defaultEndpoint == null) defaultEndpoint = config.newEndpoint("module://kafka");
         defaultEndpoint.setGatewayHost("");
         defaultEndpoint.setSsl(null);
         defaultEndpoint.setHttpMethod("GET POST");

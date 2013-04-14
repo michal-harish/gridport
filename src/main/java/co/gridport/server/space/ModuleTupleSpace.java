@@ -18,7 +18,7 @@ public class ModuleTupleSpace implements Module {
     public ContextHandler register(ConfigProvider config, String contextPath) throws Exception {
 
         Endpoint defaultEndpoint = config.getEndpointByTargetUrl("module://space");
-        if (defaultEndpoint == null) defaultEndpoint = config.newEndpoint();
+        if (defaultEndpoint == null) defaultEndpoint = config.newEndpoint("module://space");
         defaultEndpoint.setGatewayHost("");
         defaultEndpoint.setSsl(null);
         defaultEndpoint.setHttpMethod("POST GET OPTIONS MOVE PUT");
