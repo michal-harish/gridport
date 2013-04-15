@@ -29,7 +29,7 @@ public class PartitionOwnerInfo {
     @SuppressWarnings("serial")
     public synchronized Map<String,Object> getStatus() {
         final Long now = System.currentTimeMillis();
-        if (status == null || (Long)status.get("timestamp") <  - 1000) {
+        if (status == null || (Long)status.get("timestamp") <  now - 1000) {
             status = new HashMap<String,Object>() {{
                 put("timestamp", now);
                 Long origin = partition.getSmallestOffset();

@@ -1,5 +1,7 @@
 package co.gridport.server.kafka;
 
+import java.sql.Date;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -8,6 +10,8 @@ import org.codehaus.jackson.annotate.JsonPropertyOrder;
 
 @JsonPropertyOrder({"status","partitions"})
 public class ConsumerTopicInfo {
+
+    static protected SimpleDateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss.SSS");
 
     private ClusterInfo cluster;
     private TopicInfo topic;
@@ -25,12 +29,19 @@ public class ConsumerTopicInfo {
 
     public Map<String,Object> getStatus() {
         getPartitions();
+        updateStatus();
+        return status;
+    }
+    
+    public void updateStatus() {
         Long available = 0L;
         Long consumed = 0L;
         Integer activeStreams = 0;
+        Long timestamp = 0L;
         for(PartitionOwnerInfo partition: partitions.values()) {
             available += (Long) partition.getStatus().get("available");
             activeStreams += partition.getOwner() == null ? 0 : 1;
+            timestamp = Math.max(timestamp, (Long) partition.getStatus().get("timestamp"));
             if (partition.getStatus().get("consumed") != null) {
                 consumed += (Long) partition.getStatus().get("consumed");
             }
@@ -45,7 +56,7 @@ public class ConsumerTopicInfo {
             status.put("rate", rate);
             status.put("data", info);
             status.put("streams", streams);
-            return status;
+            status.put("timestamp", dateFormatter.format(new Date(timestamp)));
         }
     }
 

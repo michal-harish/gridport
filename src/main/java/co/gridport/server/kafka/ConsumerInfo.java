@@ -52,6 +52,9 @@ public class ConsumerInfo {
     }
 
     public Map<String,Map<String,Object>> getStatus() {
+        for(String topicName: status.keySet()) {
+            topics.get(topicName).updateStatus();
+        }
         return status;
     }
 
