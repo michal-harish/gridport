@@ -62,10 +62,12 @@ public class LoadBalancer extends GenericHandler
         }
         if (contract == null) {
             serveHtmlError(response, 403, "Forbidden", "No contract available");
+            baseRequest.setAttribute("status", "Rejected");
             baseRequest.setHandled(true);
             return;
         } 
 
+        baseRequest.setAttribute("status", "Serving");
         log.debug("Selected contract:"+ contract.getName() + " for user:" + context.getUsername());
         context.setWaitingTime(contract.consume());
         context.setPreferredContract(contract);

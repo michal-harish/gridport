@@ -70,7 +70,7 @@ public class Authenticator extends AbstractHandler
                 log.debug("auth not required");
                 context.setGroups(Arrays.asList("default"));
                 context.setUsername("guest");
-                baseRequest.setAttribute("status", "Serving");
+                baseRequest.setAttribute("status", "Authenticated");
                 return;
             } else {
                 log.debug("auth group required: "+auth_require);
@@ -178,7 +178,7 @@ public class Authenticator extends AbstractHandler
                                     context.setUsername(username);
                                     context.setGroups(groups);
                                     context.setSessionToken(nonce);
-                                    baseRequest.setAttribute("status", "Serving");
+                                    baseRequest.setAttribute("status", "Authenticated");
                                     return;
                                 }
                             }
@@ -198,7 +198,7 @@ public class Authenticator extends AbstractHandler
                 }
                 context.setUsername("guest");
                 context.setGroups(Arrays.asList("default"));
-                baseRequest.setAttribute("status", "Serving");
+                baseRequest.setAttribute("status", "Authenticated");
                 return;
             }
 
