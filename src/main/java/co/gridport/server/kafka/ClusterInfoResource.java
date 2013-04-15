@@ -79,9 +79,24 @@ public class ClusterInfoResource extends VelocityResource {
     @GET
     @Path("/consumers/{groupid}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ConsumerInfo getConsumerInfo(@PathParam("groupid") String groupid) {
+    public ConsumerInfo getConsumerInfo(@PathParam("groupid") String groupid) throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
         ClusterInfo cluster = ModuleKafka.getClusterInfo(zkServer);
-        return cluster.getConsumers().get(groupid);
+        ConsumerInfo info = cluster.getConsumers().get(groupid);
+        for(String topic: info.getStatus().keySet()) {
+            info.getStatus().get(topic).put("url", uriInfo.getBaseUriBuilder()
+            .path(ClusterInfoResource.class)
+            .path(ClusterInfoResource.class.getMethod("getConsumerTopicInfo", String.class, String.class))
+            .build(zkServer,groupid,topic).toString());
+        }
+        return info;
+    }
+
+    @GET
+    @Path("/consumers/{groupid}/{topic}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ConsumerTopicInfo getConsumerTopicInfo(@PathParam("groupid") String groupid, @PathParam("topic") String topicName) {
+        ClusterInfo cluster = ModuleKafka.getClusterInfo(zkServer);
+        return cluster.getConsumers().get(groupid).getPartitions(topicName);
     }
 
     @GET

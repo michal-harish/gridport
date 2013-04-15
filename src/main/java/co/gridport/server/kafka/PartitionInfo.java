@@ -1,5 +1,6 @@
 package co.gridport.server.kafka;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 public class PartitionInfo {
 
@@ -19,6 +20,11 @@ public class PartitionInfo {
         return id;
     }
 
+    @JsonIgnore
+    public TopicInfo getTopic() {
+        return topic;
+    }
+
     public long getSmallestOffset() {
         return broker.getConnector().getOffsetsBefore(topic.getName(), id, -2L, 1)[0];
     }
@@ -30,5 +36,6 @@ public class PartitionInfo {
     public String getFullId() {
         return pathId;
     }
+
 
 }
