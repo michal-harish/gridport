@@ -127,13 +127,14 @@ public class ConfigProviderSQLite implements ConfigProvider {
     public Contract updateContract(Contract contract) {
         try {
             Statement s = policydb.createStatement();
-            s.addBatch("UPDATE contracts SET " +
-                "content='"+StringUtils.join(contract.getEndpoints(),",")+"'" +
-                ", ip_range='"+StringUtils.join(contract.getIpFilters(),",")+"'" +
-                ", interval="+contract.getIntervalMs() +
-                ", frequency="+contract.getFrequency() +
-                ", auth_group='"+StringUtils.join(contract.getGroups(),",")+"'" +
-            " WHERE name ='"+contract.getName()+"'");
+            s.addBatch("REPLACE INTO contracts(name,content,ip_range,interval,frequency,auth_group) VALUES(" +
+                "'"+contract.getName()+"'" +
+                ",'"+StringUtils.join(contract.getEndpoints(),",")+"'" +
+                ",'"+StringUtils.join(contract.getIpFilters(),",")+"'" +
+                ","+contract.getIntervalMs() +
+                ","+contract.getFrequency() +
+                ",'"+StringUtils.join(contract.getGroups(),",")+"'" +
+            ")");
             s.executeBatch();
             s.close();
             return contracts.put(contract.getName(), contract);
@@ -316,6 +317,10 @@ public class ConfigProviderSQLite implements ConfigProvider {
                 s.close(); 
                 version = 11; 
             }
+            if (version <12 ) { 
+                s.executeUpdate("CREATE UNIQUE INDEX contract ON contracts(name ASC)");s.close();
+                version = 12; 
+        }
 
         } finally {
             log.info("*** POLICY-DB Version: "+ version);
@@ -403,7 +408,7 @@ public class ConfigProviderSQLite implements ConfigProvider {
                             name,
                             rs.getString("ip_range"),
                             new Long(Math.round(rs.getFloat("interval"))),
-                            rs.getLong("frequency"),
+                            rs.getInt("frequency"),
                             groups,
                             endpoints
                         ));

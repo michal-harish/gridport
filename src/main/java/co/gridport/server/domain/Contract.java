@@ -9,15 +9,17 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 
 
 public class Contract {
-    //private static Logger log = LoggerFactory.getLogger("request");
 
     protected String name;
     protected List<Integer> endpoints;
-    protected Long intervalms; 
-    protected Long last_request; 
-    protected Long frequency;
-    protected Long counter;
     protected List<String> groups = new ArrayList<String>();
+    protected long intervalms; 
+    protected long last_request; 
+    protected int frequency;
+
+    protected double decayRate;
+    protected double counter;
+    private Object lock = new Object();
 
     private List<String> ipFilters;
 
@@ -25,7 +27,7 @@ public class Contract {
         final String name,
         final String ipFilters,
         final Long intervalms,
-        final Long frequency,
+        final Integer frequency,
         final List<String> groups,
         final List<Integer> endpoints
     ) 
@@ -34,12 +36,15 @@ public class Contract {
         this.ipFilters = ipFilters == null 
             ? new ArrayList<String>() 
             : new ArrayList<String>(Arrays.asList(ipFilters.split("[,\n\r]")));
-        this.intervalms = intervalms;
-        this.frequency = frequency;
+        this.intervalms = intervalms == null ? 0 : intervalms;
+        this.frequency = frequency == null ? 0 : frequency;
         this.groups = groups == null ? new ArrayList<String>() : groups;
         this.endpoints = endpoints == null ? new ArrayList<Integer>() :  endpoints;
         last_request = 0L;
-        counter = 0L;
+        counter = 0.0;
+        if (intervalms>9999) {
+            decayRate = - Math.log(2) /  intervalms;
+        }
     }
 
     public String getName() {
@@ -74,33 +79,11 @@ public class Contract {
         this.intervalms = intervalms;
     }
 
-    public Long getFrequency() {
+    public Integer getFrequency() {
         return frequency;
     }
-    public void setFrequency(Long frequency) {
+    public void setFrequency(Integer frequency) {
         this.frequency = frequency;
-    }
-
-    @JsonIgnore
-    public long getCounter() {
-        return counter;
-    }
-
-    @JsonIgnore
-    public long getLastRequest() {
-        return last_request;
-    }
-
-    public void markCounter() {
-        if (last_request == 0) {
-            last_request = System.currentTimeMillis();
-        }
-        counter++;
-    }
-
-    public void resetCounter() {
-        counter = new Long(0);
-        last_request = System.currentTimeMillis();
     }
 
     public void setEndpoints(List<Integer> endpoints) {
@@ -111,6 +94,7 @@ public class Contract {
         return endpoints;
     }
 
+    @JsonIgnore
     public synchronized boolean hasEndpoint(Integer ID) {
         if (endpoints.size()== 0) {
             return true;
@@ -123,6 +107,7 @@ public class Contract {
         return false;
     }
 
+    @JsonIgnore
     public synchronized boolean hasEitherGroup(String[] groups) {
 
         if (groups.length == 0) {
@@ -137,5 +122,38 @@ public class Contract {
             }
         }
         return false;
+    }
+
+    @JsonIgnore
+    public Long consume()  {
+        double waited = 0;
+        if (frequency>0 && intervalms > 0) while (true) {
+            float sleep = 0;
+            synchronized(this) {
+                double elapsed = (System.currentTimeMillis() - last_request);
+                counter = counter * Math.pow(Math.E, decayRate * elapsed);
+                if (counter > frequency) {
+                    sleep = Math.round(Math.log(frequency / counter) / decayRate);
+                    if (sleep <0) {
+                        throw new IllegalArgumentException("Exponential decay resulted in negative waiting time.");
+                    }
+                } else {
+                    break;
+                }
+            }
+            synchronized(lock) {
+                double millis = Math.floor(sleep);
+                int nanos = (int) Math.round((sleep-millis) * 1000000);
+                try {
+                    lock.wait(Math.round(millis), nanos);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                waited += sleep;
+            }
+        }
+        counter+=1.0;
+        last_request = System.currentTimeMillis(); 
+        return Math.round(waited);
     }
 }

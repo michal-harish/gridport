@@ -155,13 +155,12 @@ Backlog
 * REFACTOR loadIncomingContentEntity() should not be used in the proxy requests, multiplex streaming should be impelemented
 * BUG ROUTER Set-Cookie passes only last cookie instruction
 * BUG make an internal function to read header by case-insensitive header name key
-* FEATURE exception handling and propagation with default html pages for 40x and 50x
 * FEATURE move log to /var/log/gridport.log, add log4j configurator and create install script for linux 
 * REFACTOR domain.Route as immutable POJO with reference to Endpoint
 * REFACTOR & review default jms auditing
 * FEATURE Win-64 wrapper native missing (not available in communit edition)
 * DESIGN KAFKA publish/subscribe RESTful API
-* DESIGN MANAGER account management (registration, password change, ...)
+* DESIGN MANAGER account management (registration, password change, storage delegation or http interface for providers)
 * DESIGN review OPTIONS usage and implement merging Allow headers with proxy settings
 * DESIGN proxyMulticast() - implement MATCH (200 ok if responses are identical); 
 * DESIGN testing strategy (ESP. EXPECTATIONS AND ASSUMPTIONS ABOUT ROUTING)
@@ -183,6 +182,8 @@ Change Log
 14 Apr 2013
  * Standalone PubSubHandler for JMSModule
  * Added serveHtmlError for standard 40x 50x responses
+ * New hase LoadBalancer after Authenticator which selects preferred contract
+ * Exponential Decay rate limiting behaviour
  * Bugfixes and cleanup
 13 Apr 2013
  * Interface Module for pluggable context handlers

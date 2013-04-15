@@ -7,12 +7,10 @@ import org.slf4j.LoggerFactory;
 import co.gridport.server.ConfigProvider;
 import co.gridport.server.Module;
 import co.gridport.server.domain.Endpoint;
-import co.gridport.server.handler.RequestHandler;
 
 public class ModuleTupleSpace implements Module {
 
     static private Logger log = LoggerFactory.getLogger("server");
-    private ContextHandler contextHandler;
 
     @Override
     public ContextHandler register(ConfigProvider config, String contextPath) throws Exception {
@@ -25,10 +23,10 @@ public class ModuleTupleSpace implements Module {
 
         Space2.initialize(MediumMemory.class);
 
-        log.info("Registering module://space at context " + contextPath);
-        contextHandler = new ContextHandler(contextPath);
-        contextHandler.setHandler(new RequestHandler());
-        return contextHandler;
+        log.info("Registering module://space at context " + contextPath); 
+        return new ContextHandler(contextPath) {{
+            //TODO setHandler(new TupleRequestHandler()); 
+        }};
     }
 
     @Override

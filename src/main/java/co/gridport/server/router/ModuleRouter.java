@@ -6,20 +6,25 @@ import org.slf4j.LoggerFactory;
 
 import co.gridport.server.ConfigProvider;
 import co.gridport.server.Module;
-import co.gridport.server.handler.RequestHandler;
 
 public class ModuleRouter implements Module {
 
     static private Logger log = LoggerFactory.getLogger("server");
-    private ContextHandler contextHandler;
+
+    protected String logTopic = null; //settings/router.log
 
     @Override
     public ContextHandler register(ConfigProvider config, String contextPath) throws Exception {
 
         log.info("Registering module://router at context " + contextPath);
-        contextHandler = new ContextHandler(contextPath);
-        contextHandler.setHandler(new RequestHandler());
-        return contextHandler;
+
+        if (config.has("router.log")) {
+            logTopic = config.get("router.log");
+        }
+
+        return new ContextHandler(contextPath) {{
+            setHandler(new ProxyRequestHandler());
+        }};
     }
 
     @Override

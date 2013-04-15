@@ -41,7 +41,7 @@ public class ContractsResource extends Resource {
             if (config.getContract(name) != null) {
                 throw new IllegalArgumentException("Contract `"+name+"` already exists");
             }
-            Contract contract = new Contract(name, null, 0L, 0L, null, null);
+            Contract contract = new Contract(name, null, 0L, 0, null, null);
             config.updateContract(contract);
             return Response.seeOther(uriInfo.getBaseUriBuilder().path(this.getClass()).path(this.getClass().getMethod("getContract",String.class)).build(name)).build();
         } catch (Exception e) { 
@@ -70,7 +70,7 @@ public class ContractsResource extends Resource {
     public Response updateContract(
         @PathParam("name") String name, 
         @FormParam("interval") Long interval,
-        @FormParam("frequency") Long frequency
+        @FormParam("frequency") Integer frequency
     ) throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
         Contract contract = config.getContract(name);
         contract.setIntervalMs(interval);

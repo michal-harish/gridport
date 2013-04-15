@@ -7,14 +7,14 @@ import co.gridport.server.utils.Utils;
 
 public class SubRequestSend extends SubRequest {
 	private String body = null;
-	public SubRequestSend(ClientThread t, String url, String method, String entity) throws MalformedURLException, IOException {
+	public SubRequestSend(ProxyRequestThread t, String url, String method, String entity) throws MalformedURLException, IOException {
 		super(t, url, null);
 		conn.setRequestMethod(method);					
 		conn.setRequestProperty("X-forwarded-host", income.context.getHost() );
 		conn.setDoInput(true);
 		body = entity;
 	}
-	public SubRequestSend(ClientThread t, String url, String method) throws MalformedURLException, IOException {
+	public SubRequestSend(ProxyRequestThread t, String url, String method) throws MalformedURLException, IOException {
 		super(t, url, null);
 		conn.setRequestMethod(method);
 		conn.setDoInput(true);

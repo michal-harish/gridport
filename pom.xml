@@ -164,7 +164,7 @@
                   <appendAssemblyId>false</appendAssemblyId>
                   <archive>
                       <manifest>
-                          <mainClass>co.gridport.GridPortServer</mainClass>
+                          <mainClass>co.gridport.server.GridPortServer</mainClass>
                       </manifest>
                   </archive>
                 <descriptorRefs>

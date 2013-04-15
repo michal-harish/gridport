@@ -6,9 +6,9 @@ import java.io.StringWriter;
 import org.json.JSONWriter;
 
 import co.gridport.server.domain.RequestContext;
-import co.gridport.server.router.ClientThread;
+import co.gridport.server.router.ProxyRequestThread;
 
-public class ClientThreadSpace extends ClientThread {
+public class ClientThreadSpace extends ProxyRequestThread {
 
     public ClientThreadSpace(RequestContext context) {
         super(context);
@@ -136,6 +136,18 @@ public class ClientThreadSpace extends ClientThread {
                 }
             }
         }
+    }
+    protected void serveText(int statusCode,String text) throws IOException {
+        response.setHeader("Connection", "close");
+        response.setHeader("Content-Length", String.valueOf(text.length()));
+        if (response.getHeader("Content-Type") == null) {
+            response.setHeader("Content-Type","text/plain");
+        }
+        byte[] b = text.getBytes();
+        response.setStatus(statusCode);
+        response.setContentLength(b.length);
+        response.getOutputStream().write(b);
+        merge_size += b.length;
     }
 }
 

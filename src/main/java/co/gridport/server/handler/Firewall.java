@@ -112,7 +112,7 @@ public class Firewall extends AbstractHandler
                     } else {
                         for(String IP:remoteIP) {
                             if (IP.trim().length()>=range.length() && IP.trim().substring(0,range.length()).equals(range)) {
-                                log.debug("available contract "+C.getName()+", EXACT MATCH="+IP);
+                                log.trace("available contract "+C.getName()+", EXACT MATCH="+IP);
                                 within = true;  
                                 break;
                             }
@@ -140,18 +140,16 @@ public class Firewall extends AbstractHandler
         for(Route route:routes) {
             route.defaultRoute = false;
             //remove route if it doesn't have available contract
-            boolean hasContract = false;
             for(Contract C: availableContracts) {
                 if (C.getEndpoints().size() > 0) {
                     if (!C.hasEndpoint(route.ID)) continue;
                 }
-                //if (!C.hasEitherGroup(E.auth_group)) continue;
                 route.contracts.add(C);
                 if (C.getGroups().size() == 0) route.defaultRoute = true;
-                log.debug("available contract "+C.getName());
-                hasContract = true;
+                log.debug("available contract "+C.getName() +" + route "+route.endpoint);
             }
-            if (!hasContract) {
+            if (route.contracts.size()==0) {
+                log.debug("route without contract: "+route.endpoint);
                 routes.remove(route);
                 if (routes.size()==0) break;
             }

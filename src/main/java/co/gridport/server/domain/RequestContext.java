@@ -24,6 +24,9 @@ public class RequestContext {
     private String username;
     private String sessionToken;
 
+    private Contract preferredContract;
+    private Long waitingTime;
+
     public RequestContext(
         HttpServletRequest request, 
         HttpServletResponse response
@@ -145,5 +148,20 @@ public class RequestContext {
         return (String)request.getAttribute("status");
     }
 
+    public void setPreferredContract(Contract contract) {
+        this.preferredContract = contract;
+    }
+
+    public Contract getPreferredContract() {
+        return preferredContract;
+    }
+
+    public Long getWaitingTime() {
+        return waitingTime;
+    }
+
+    public void setWaitingTime(Long waitingTime) {
+        this.waitingTime = waitingTime;  
+    }
 
 }

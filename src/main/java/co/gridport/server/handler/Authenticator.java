@@ -49,13 +49,6 @@ public class Authenticator extends AbstractHandler
             boolean hasDefaultContracts = false; 
             for(Route E:context.getRoutes()) {
                 log.debug("availble route "+E.endpoint);
-                if (E.contracts.size()==0) {
-                    log.debug("route without contract: "+E.endpoint);
-                    response.setStatus(409);
-                    baseRequest.setHandled(true);
-                    baseRequest.setAttribute("status", "Rejected");
-                    return;
-                }
                 for(Contract C:E.contracts) {
                     if (C.getGroups().size()==0) {
                         hasDefaultContracts = true;
@@ -80,7 +73,7 @@ public class Authenticator extends AbstractHandler
                 baseRequest.setAttribute("status", "Serving");
                 return;
             } else {
-                log.debug("auth group aggregate: "+auth_require);
+                log.debug("auth group required: "+auth_require);
             }
 
             List<String> groups = null;

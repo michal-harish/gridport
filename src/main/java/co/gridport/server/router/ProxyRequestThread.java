@@ -1,17 +1,13 @@
 package co.gridport.server.router;
 
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.EOFException;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -20,13 +16,14 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.gridport.server.domain.Contract;
+import co.gridport.server.GridPortServer;
 import co.gridport.server.domain.RequestContext;
 import co.gridport.server.domain.Route;
+import co.gridport.server.jms.ModuleJMS;
 import co.gridport.server.utils.Utils;
 
 
-abstract public class ClientThread extends Thread {
+public class ProxyRequestThread extends Thread {
 
     static protected Logger log = LoggerFactory.getLogger("request");
     static protected SimpleDateFormat date = new SimpleDateFormat("EEE dd MMM yyyy HH:mm:ss.SSS zzz");
@@ -42,18 +39,13 @@ abstract public class ClientThread extends Thread {
 
     protected String merge_duration = "-";
     protected long merge_size = 0;
-    protected Contract contract;
-    protected String group = null;
 
     protected ArrayList<String> logList = new ArrayList<String>();
-
-    abstract protected void execute() throws InterruptedException ;
-    abstract protected void complete();
 
     protected List<SubRequest> subrequests = new ArrayList<SubRequest>(); 
     protected List<SubRequest> asyncSubrequests = new ArrayList<SubRequest>();
 
-    public ClientThread(
+    public ProxyRequestThread(
         RequestContext context
     ) {
         this.request = context.getRequest();
@@ -103,11 +95,11 @@ abstract public class ClientThread extends Thread {
         try {
             log((context.isHttps() ? "SSL " : "") + request.getProtocol() + " " + request.getMethod() + " " + request.getRequestURI() +" FROM " + context.getConsumerAddr() + " VIA " + "/" + context.getHost());
 
-            if (!selectNextAvailableContract()) {
-                serveForbidden("No contract available");
-            } else try {
+            try {
 
-                consume(contract);
+                log("USING " + context.getPreferredContract().getName() 
+                    + (context.getWaitingTime() >0 ? " WAITING " + context.getWaitingTime() : "") 
+                );
 
                 execute();
 
@@ -124,12 +116,124 @@ abstract public class ClientThread extends Thread {
             } catch (IOException e1) {
                 serverError(e1);
             } catch (InterruptedException e2) {
-                serveGone();
+                response.setStatus(410); //Gone
+                response.setContentLength(-1);
+                return;
             }
 
         } finally {
             complete();
             flushLog();
+        }
+    }
+
+    protected void execute() throws InterruptedException {
+        try {
+            //1. initialize all subrequests within client thread
+            for(Route E:context.getRoutes()) {
+                //TODO ROUTING SECONDARY consider compensation settings for each executed method after finding out failure;
+                String URL = E.endpoint + E.uri + E.query_stirng;
+                try {
+                    E.subrequest = new SubRequestMerge(this , URL, E.async);
+                    E.subrequest.base = E.uri;
+
+                } catch (IOException e) {
+                    //TODO ROUTING SECONDARY consider compensation settings for each executed method after finding out failure;
+                    log.error("ROUTER SUBREQUEST",e);
+                }
+            }
+            //combine all tasks and events into a single list
+            List<SubRequest> newSubrequests = new ArrayList<SubRequest>();
+            newSubrequests.addAll(this.subrequests);
+            newSubrequests.addAll(this.asyncSubrequests);
+
+            //2.stream client request to all subrequests in parallel 
+            if (request.getHeader("Content-Type") != null) {
+                if (request.getHeader("Content-Length") == null) {
+                    log("! No Content-Length for entity " + request.getHeader("Content-Type"));
+                } else {
+                    int body_size = request.getIntHeader("Content-Length");
+                    byte[] buffer = new byte[8192];
+                    int read;
+                    int read_offset = 0;
+                    int zero_read = 0;
+                    InputStream is = request.getInputStream();
+                    do {
+                        int block_size = Math.min(body_size-read_offset, buffer.length);
+                        read = is.read(buffer, 0, block_size);
+                        for(SubRequest subrequest:newSubrequests)
+                        {
+                            if (read > 0
+                                && !subrequest.conn.getRequestMethod().equals("OPTIONS")
+                                && !subrequest.conn.getRequestMethod().equals("DELETE")
+                            )
+                            {
+                                try {
+                                    System.err.println("Writing " + new String(buffer));
+                                    subrequest.writeOut(buffer, read);
+                                } 
+                                catch (IOException e) 
+                                {
+                                    log(e.getMessage());
+                                }
+                            }
+                        }
+                        if (read>0) {
+                            read_offset += read;
+                        } else {
+                            if (zero_read++>512) throw new IOException("ClientTrhead.init() too many zero packets int the inputstream");
+                        }
+                    } while (read>=0 && read_offset < body_size);
+                    if (read_offset != body_size)
+                    {
+                        throw new IOException("Expecting content length: " + body_size+", actually read: " + read_offset);
+                    }
+                }
+            }
+
+            //3. start() all tasks and events to complete within their own thread space
+            for(SubRequest subrequest:newSubrequests)
+            {
+                subrequest.start();
+            }
+        } catch (Exception e) {
+            log.error("ROUTER SUBREQUESTS",e);
+        }
+    }
+
+    protected void complete() {
+        ModuleRouter routerModule = GridPortServer.getModule(ModuleRouter.class);
+        ModuleJMS jmsModule = GridPortServer.getModule(ModuleJMS.class);
+        if (!Utils.blank(routerModule.logTopic)) {
+            if (jmsModule.initialized) {
+                HashMap<String,String> log_properties = new HashMap<String,String>();
+                log_properties.put("gridport-log-version", "1");
+                log_properties.put("gridport-log-date", date.format(System.currentTimeMillis()));
+                String log_payload = "gateway="+context.getHost()+"\r\n";
+                log_payload += "protocol="+(context.isHttps() ? "https":"http" ) + "\r\n";
+                log_payload += "port="+ request.getLocalPort() +"\r\n";
+                log_payload += "url=" +  request.getRequestURL()+"\r\n";
+                log_payload += "received=" + date.format(received.getTime() ) +"\r\n";
+                log_payload += "contract=" + context.getPreferredContract().getName() +"\r\n";
+                log_payload += "consumer.ip=" + context.getConsumerAddr() +"\r\n";
+                log_payload += "consumer.id=" + context.getUsername() + "\r\n";
+                log_payload += "duration=" + String.valueOf( (double) ( System.currentTimeMillis() - received.getTime() ) / 1000 )+"\r\n";
+                log_payload += "input="+body_len+"\r\n";
+                log_payload += "output="+merge_size+"\r\n";
+                log_payload += "volume="+(body_len+merge_size)+"\r\n";
+                for(Route E:context.getRoutes()) {
+                    log_payload += "endpoint="+E.endpoint+"\r\n";
+                }
+                try {
+                    // week expiration for log messages
+                    GridPortServer.getModule(ModuleJMS.class).publish(routerModule.logTopic, log_payload, log_properties,60*60*24*7);
+                } catch (Exception e) {
+                    log.warn(routerModule.logTopic+" ERROR " + e.getMessage());
+                }
+
+            } else {
+                log.warn("JMS module not available for sending logs to "+routerModule.logTopic);
+            }
         }
     }
 
@@ -164,64 +268,6 @@ abstract public class ClientThread extends Thread {
                 }
             } 
         }
-    }
-
-    private void consume(Contract contract) throws InterruptedException {
-        log("USING " + contract.getName());
-        long sleep_ms = 0;
-        while (true) {
-            if (sleep_ms>0) {
-                log.warn("WAITING FOR SLA SLOT");
-                synchronized(contract) {
-                    log("Waiting "+sleep_ms+" ms ("+contract.getName()+": FQ = "+contract.getFrequency()+"/"+contract.getIntervalMs()+" ms )");
-                }
-                Thread.sleep(sleep_ms);
-            }
-            synchronized(contract) {
-                sleep_ms = contract.getIntervalMs() - (System.currentTimeMillis() - contract.getLastRequest());
-                if (contract.getFrequency()>0 && contract.getCounter()<contract.getFrequency()) {
-                    contract.markCounter();
-                } else {
-                    if (sleep_ms>0) continue;
-                    contract.resetCounter();
-                }
-
-                break;
-            }
-        }
-    }
-
-    private boolean selectNextAvailableContract() {
-        contract = null; 
-        List<String> groups = context.getGroups();
-        if (groups.size()==0 || Utils.blank(groups.get(0))) group=null; 
-        else group = groups.get(0);
-        for(Route E:context.getRoutes()) {   
-            for(Contract C:E.contracts) synchronized(C) {
-                String found = null;
-                if (C.getGroups().size()>0) { // contract is only for some auth groups
-                    for(String gC:C.getGroups()) {
-                        for(String g:groups) if (g.trim().equals(gC.trim())) {
-                            found = g.trim(); 
-                            break;
-                        }
-                        if (found!=null) break;
-                    }
-                    if (found==null) continue;
-                }
-                if (contract == null) { 
-                    contract = C;
-                    if (found!=null) group = found;
-                } else if (C.getIntervalMs()<contract.getIntervalMs()) {
-                    contract = C;
-                    if (found!=null) group = found;
-                } else if (C.getFrequency()-C.getCounter()>contract.getFrequency()-contract.getCounter()) {
-                    contract = C;
-                    if (found!=null) group = found;
-                }
-            }
-        }
-        return contract != null;
     }
 
     private void proxyPassthrough(SubRequest subrequest) {
@@ -425,83 +471,6 @@ abstract public class ClientThread extends Thread {
             }
         } while (read>=0);
         return response_len;
-    }
-
-    protected void serveFile(String filename) throws IOException {
-        File inFile = new File(filename);
-        if (!inFile.isFile()) {
-            serveNotFound();
-        } else {
-
-            response.setHeader("Connection", "close");
-
-            //TODO extension to mime type
-            if (request.getHeader("If-Modified-Since") != null) {
-                String ifmod = request.getHeader("If-Modified-Since");
-                try {
-                    if (inFile.lastModified() <= date.parse(ifmod).getTime()) {
-                        response.setStatus(304);
-                        response.setContentLength(-1);
-                        return;
-                    }
-                } catch (ParseException e) {
-                    log.warn("Invalid If-Modified-since time format: "+ifmod);
-                }
-            }
-            Date lm = new Date(inFile.lastModified());
-
-            response.setHeader("Last-Modified", lm.toString());
-            response.setStatus(200);
-            response.setContentLength((int) inFile.length());
-            DataInputStream in = new DataInputStream(new FileInputStream(inFile));
-            DataOutputStream out = new DataOutputStream(response.getOutputStream());
-            try {
-                byte[] buffer = new byte[32768];
-                while (true) { // exception deals catches EOF
-                    int size = in.read(buffer);
-                    if (size<0) throw new EOFException();
-                    out.write(buffer,0,size);
-                    merge_size += size;
-                }
-            } catch (EOFException eof) {
-                log("File sent: "+ String.valueOf(inFile.length()));
-            } finally {
-                in.close();
-            }
-        }
-    }
-
-    protected void serveText(int statusCode,String text) throws IOException {
-        response.setHeader("Connection", "close");
-        response.setHeader("Content-Length", String.valueOf(text.length()));
-        if (response.getHeader("Content-Type") == null) {
-            response.setHeader("Content-Type","text/plain");
-        }
-        byte[] b = text.getBytes();
-        response.setStatus(statusCode);
-        response.setContentLength(b.length);
-        response.getOutputStream().write(b);
-        merge_size += b.length;
-    }
-
-    protected void serveForbidden(String reason) {
-        log(reason);
-        response.setStatus(403);
-        response.setContentLength(-1);
-    }
-
-    protected void serveNotFound() {
-        response.setStatus(404);
-        response.setContentLength(-1);
-    }
-
-    protected void serveGone() {
-        synchronized(subrequests) { for(SubRequest T:subrequests) T.interrupt(); }
-        synchronized(asyncSubrequests) { for(SubRequest T:asyncSubrequests) T.interrupt(); }
-        String info = "Client Thread Killed " + logList.get(1) + " " + logList.get(0);
-        log(info);
-        response.setStatus(410); //Gone
-        response.setContentLength(-1);
     }
 
     protected void serverError(Throwable e) {

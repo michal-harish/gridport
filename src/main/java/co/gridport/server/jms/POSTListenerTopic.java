@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Enumeration;
@@ -19,8 +20,6 @@ import javax.naming.NamingException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import co.gridport.GridPortServer;
 
 
 public class POSTListenerTopic extends POSTListener {
@@ -54,7 +53,7 @@ public class POSTListenerTopic extends POSTListener {
 			//now create the JMS listener
 			javax.jms.TopicConnectionFactory factory  = (javax.jms.TopicConnectionFactory)ctx.lookup("ConnectionFactory");
 			connection = factory.createConnection();
-	        connection.setClientID(GridPortServer.getInstanceId()+":"+topicId);
+	        connection.setClientID("GRIDPORT-"+InetAddress.getLocalHost().getHostName()+":"+topicId);
 	        session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);        			
 			Topic topic = session.createTopic(topicId);
 	        consumer = session.createDurableSubscriber(topic,name);        

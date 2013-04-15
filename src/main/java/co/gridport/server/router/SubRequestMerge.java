@@ -8,7 +8,7 @@ import java.util.Enumeration;
 
 public class SubRequestMerge extends SubRequest {
 	
-	public SubRequestMerge(ClientThread t, String url, String async_status) throws MalformedURLException, IOException {
+	public SubRequestMerge(ProxyRequestThread t, String url, String async_status) throws MalformedURLException, IOException {
 		super(t, url, async_status);
 		conn.setRequestMethod(t.request.getMethod());			
 		if (async_status == null || async_status.equals(""))

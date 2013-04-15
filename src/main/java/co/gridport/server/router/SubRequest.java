@@ -17,7 +17,7 @@ import co.gridport.server.utils.Utils;
 public abstract class SubRequest extends Thread { 
     static protected Logger log = LoggerFactory.getLogger("subrequest");
     
-	protected ClientThread income;	
+	protected ProxyRequestThread income;	
 	protected HttpURLConnection conn;
 	
 	public Exception error = null;
@@ -33,7 +33,7 @@ public abstract class SubRequest extends Thread {
 	
 	private OutputStream ost = null;
 	
-	public SubRequest( ClientThread t, String url, String async_status) throws MalformedURLException, IOException {
+	public SubRequest( ProxyRequestThread t, String url, String async_status) throws MalformedURLException, IOException {
 		income = t;
 		received = System.currentTimeMillis();
 		

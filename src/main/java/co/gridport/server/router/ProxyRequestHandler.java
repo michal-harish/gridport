@@ -1,8 +1,7 @@
-package co.gridport.server.handler;
+package co.gridport.server.router;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -14,15 +13,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import co.gridport.server.domain.RequestContext;
-import co.gridport.server.router.ClientThread;
-import co.gridport.server.router.ClientThreadRouter;
-import co.gridport.server.router.SubRequest;
 import co.gridport.server.space.ClientThreadSpace;
 
-public class RequestHandler extends AbstractHandler {
+public class ProxyRequestHandler extends AbstractHandler {
     static private Logger log = LoggerFactory.getLogger("request");
 
-    static private ArrayList<ClientThread> threads = new ArrayList<ClientThread>();
+    static private ArrayList<ProxyRequestThread> threads = new ArrayList<ProxyRequestThread>();
 
     public void handle(String target,
         Request baseRequest,
@@ -32,7 +28,7 @@ public class RequestHandler extends AbstractHandler {
     {
         RequestContext context = (RequestContext) request.getAttribute("context");
         baseRequest.setAttribute("status", "Routing");
-        ClientThread thread;
+        ProxyRequestThread thread;
         if (context.getRoutes().get(0).endpoint.equals("module://space")) {
             log.info("GridPortHandler -> ClientThreadSpace " + request.getRequestURI());
             thread = new ClientThreadSpace(context);
@@ -40,7 +36,7 @@ public class RequestHandler extends AbstractHandler {
         } else {
             log.info("GridPortHandler -> ClientThreadRouter " + request.getRequestURI());
             baseRequest.setAttribute("status", "Serving Proxy");
-            thread = new ClientThreadRouter(context);
+            thread = new ProxyRequestThread(context);
         }
 
         synchronized(threads) {
@@ -50,7 +46,7 @@ public class RequestHandler extends AbstractHandler {
 
         thread.start();
         try {
-            thread.join(); //TODO investigate the SelectChannel connector thread context
+            thread.join();
             baseRequest.setHandled(true);
         } catch (InterruptedException e) {
             log.error(e.getMessage());
@@ -63,29 +59,10 @@ public class RequestHandler extends AbstractHandler {
 
     public static void notifyEventThreads() {
         synchronized(threads) {
-            for(ClientThread T:threads) {
+            for(ProxyRequestThread T:threads) {
                 T.notifyAsyncSubrequests();
             }
         }
-    }
-
-    public static List<String> getActiveThreadsInfo() {
-        List<String> result = new ArrayList<String>();
-        synchronized (threads) {
-            for(ClientThread T:RequestHandler.threads) { 
-                result.add (T.getInfo());
-                if (T instanceof ClientThreadRouter) {
-                    ClientThreadRouter TR = (ClientThreadRouter) T;
-                    synchronized (TR.getAsyncSubrequests()) 
-                    {
-                        for(SubRequest S:TR.getAsyncSubrequests()) {
-                            result.add(" + EVENT " + S.getRequestMethod() + " " +S.getURL() + " ; "+ (S.error!=null ? S.error : "") +"\n");
-                        }
-                    }
-                }
-            }
-        }
-        return result;
     }
 
 }

@@ -1,8 +1,6 @@
 package co.gridport.server.manager;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DefaultValue;
@@ -17,11 +15,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilderException;
 import javax.ws.rs.core.UriInfo;
 
-import co.gridport.GridPortServer;
 import co.gridport.server.ConfigProvider;
-import co.gridport.server.handler.RequestHandler;
-import co.gridport.server.space.Space2;
-import co.gridport.server.space.Subscription;
+import co.gridport.server.GridPortServer;
 
 @Path("/")
 public class HomeResource extends Resource {
@@ -37,7 +32,6 @@ public class HomeResource extends Resource {
     public Response index(@QueryParam("msg") @DefaultValue("") String msg) 
             throws IllegalArgumentException, SecurityException, NoSuchMethodException 
     {
-        put("processes", getProcessList());
         put("endpoints", config.getEndpoints());
         put("contracts", config.getContracts());
         put("users", config.getUsers());
@@ -53,21 +47,6 @@ public class HomeResource extends Resource {
         GridPortServer.restart();
         URI uri = uriInfo.getBaseUriBuilder().path(HomeResource.class).path(HomeResource.class.getMethod("index", String.class)).build();
         return Response.ok().header("Refresh", "2;url="+uri.toString()).build();
-    }
-
-    public String[] getProcessList() {
-        List<String> processList = new ArrayList<String>();
-
-        for(String threadInfo: RequestHandler.getActiveThreadsInfo()) {
-            processList.add(threadInfo);
-        }
-
-        synchronized(Space2.subs) {
-            for(Subscription T:Space2.subs) {   
-                processList.add("SPACE SUBSCRIPTION " + T.pattern + " TO " + T.target + " "+ ((System.currentTimeMillis() - T.started )/1000) + "sec) \n");
-            }
-        }
-        return processList.toArray(new String[processList.size()]);
     }
 
 }
