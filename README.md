@@ -19,6 +19,8 @@ Motivation and Objectives
    * Tuple Space Module - experimental
    * Kafka Module - working, but not with publish/subscribe, just topology
 
+![Configuration Screen](http://media.gridport.co/gridport-server/screen-configuration.png "/manage")
+
 Quick Start Instructions
 ========================================================================
 
