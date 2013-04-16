@@ -19,9 +19,16 @@ Motivation and Objectives
    * Tuple Space Module - experimental
    * Kafka Module - working, but not with publish/subscribe, just topology
 
-![Configuration Screen](http://media.gridport.co/gridport-server/screen-configuration.png "/manage")
+![Screenshot](http://media.gridport.co/gridport-server/screen-configuration.png "/manage")
 
-Quick Start Instructions
+Contracts & SLAs
+------------------------------------------------------------------------
+SLA Contracs define under which conditions and how frequently can certain
+endpoint be queried.
+
+![Screenshot](http://media.gridport.co/gridport-server/screen-contract.png "/manage/contracts/examplecontract")
+
+Quick Start
 ========================================================================
 
 Installation
@@ -60,15 +67,6 @@ Configuration
     * the user must be from the 'exampleuser' group so use 'exampleuser' as username and no password
     * if you have apache or another http server running on port 80 you should see now its default page
 
-SLA Contracts
-------------------------------------------------------------------------
-SLA Contracs define under which conditions and how frequently can certain
-endpoint be queried.
-
-ACL Rules reference
-------------------------------------------------------------------------
-ACL Rules define groups and users who can be added to contracts for authorisation
-
 
 Anatomy and The Request Path
 ========================================================================
@@ -91,7 +89,9 @@ Anatomy and The Request Path
         * if there are only routes requiring authentication it checks if there's existing user
         * if the current user doesn't match any of the route contracts' groups, authentication is requested
         * if the there is a user match the routes are reduced to the ones available for the user
-    3. RequestHandler
+    3. Loadbalacner
+        * based on the current load chooses a preferred contract from the ones filtered by authenticator
+    4. RequestHandler(Collection)
         * only if the request passed Firewall and Authenticator 
         * module is chosen and a ClientThread of that module is invoked 
         * (?) modules are initialized on demand (only if there is actual Client Request)
