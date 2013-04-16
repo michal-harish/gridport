@@ -44,7 +44,7 @@ public class TopicInfo {
         return result;
     }
 
-    public List<String> getInctiveConsumers() {
+    public List<String> getInactiveConsumers() {
         List<String> result = new ArrayList<String>();
         getConsumers();
         for(Entry<String,Boolean> entry: consumers.entrySet()) {
