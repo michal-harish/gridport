@@ -37,9 +37,9 @@ public class PartitionOwnerInfo {
                 put("available", available);
                 Long watermark = getWatermark();
                 if (watermark != null) {
-                    Long consumed = getWatermark() - origin;
+                    Long consumed = Math.max(-1, getWatermark() - origin);
                     put("consumed", consumed);
-                    Double rate = Double.valueOf(consumed) / Double.valueOf(available) * 100;
+                    Double rate = Math.max(0,Double.valueOf(consumed) / Double.valueOf(available) * 100);
                     put("rate", rate);
                     put("data", formatBytes(consumed) + " / " + formatBytes(available));
                 }
@@ -50,12 +50,13 @@ public class PartitionOwnerInfo {
 
     public Long getWatermark() {
         if (watermark == null) {
-            String zkPath = "/consumers/"+consumer.getGroupId()+"/offsets/"+partition.getTopic().getName()+"/"+getFullId();
+            final String zkPath = "/consumers/"+consumer.getGroupId()+"/offsets/"+partition.getTopic().getName()+"/"+getFullId();
             if (cluster.zk.exists(zkPath)) {
                 watermark = Long.valueOf(cluster.zk.readData(zkPath).toString());
                 cluster.zk.subscribeDataChanges(zkPath, new IZkDataListener() {
                     @Override public void handleDataChange(String dataPath, Object data) throws Exception {
                         synchronized(this) { 
+                            System.err.println(zkPath);
                             watermark = Long.valueOf(data.toString());
                             status = null;
                         }
@@ -63,6 +64,7 @@ public class PartitionOwnerInfo {
                     @Override
                     public void handleDataDeleted(String dataPath) throws Exception {
                         synchronized(this) { 
+                            System.err.println(zkPath);
                             watermark = null;
                             status = null;
                         }

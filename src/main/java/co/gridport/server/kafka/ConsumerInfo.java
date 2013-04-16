@@ -21,7 +21,6 @@ public class ConsumerInfo {
     public ConsumerInfo(ClusterInfo cluster, String groupid) {
         this.cluster = cluster;
         this.groupid = groupid;
-        getTopics();
     }
 
     public String getGroupId() {
@@ -52,6 +51,7 @@ public class ConsumerInfo {
     }
 
     public Map<String,Map<String,Object>> getStatus() {
+        getTopics();
         for(String topicName: status.keySet()) {
             topics.get(topicName).updateStatus();
         }

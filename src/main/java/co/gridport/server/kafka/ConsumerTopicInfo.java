@@ -47,13 +47,13 @@ public class ConsumerTopicInfo {
             }
         }
         final Double rate = Double.valueOf(consumed) / Double.valueOf(available) * 100;
-        final String info = PartitionOwnerInfo.formatBytes(consumed) + " / " + PartitionOwnerInfo.formatBytes(available);
+        final String info = PartitionOwnerInfo.formatBytes(Math.max(-1,consumed)) 
+                + " / " + PartitionOwnerInfo.formatBytes(available);
         final Boolean live = activeStreams.equals(partitions.size());
         final String streams = activeStreams + " / " + partitions.size();
         synchronized(this) {
-            status.clear();
             status.put("live", live);
-            status.put("rate", rate);
+            status.put("rate", Math.max(-1,rate));
             status.put("data", info);
             status.put("streams", streams);
             status.put("timestamp", dateFormatter.format(new Date(timestamp)));
