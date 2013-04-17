@@ -11,10 +11,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilderException;
 import javax.ws.rs.core.UriInfo;
 
-import co.gridport.server.VelocityResource;
+import co.gridport.server.GenericResource;
 
 @Path("")
-public class HelpResource  extends VelocityResource {
+public class HelpResource  extends GenericResource {
 
     @Context UriInfo uriInfo;
 

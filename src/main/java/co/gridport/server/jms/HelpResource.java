@@ -6,10 +6,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import co.gridport.server.VelocityResource;
+import co.gridport.server.GenericResource;
 
 @Path("/")
-public class HelpResource extends VelocityResource {
+public class HelpResource extends GenericResource {
 
     @GET
     @Path("")

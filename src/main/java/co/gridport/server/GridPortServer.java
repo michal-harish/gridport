@@ -8,6 +8,8 @@ import java.util.concurrent.Executors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import joptsimple.internal.Strings;
+
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
@@ -22,6 +24,9 @@ import org.eclipse.jetty.util.thread.ExecutorThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import co.gridport.server.config.ConfigProvider;
+import co.gridport.server.config.ConfigProviderSQLite;
+import co.gridport.server.domain.Module;
 import co.gridport.server.handler.Authenticator;
 import co.gridport.server.handler.Firewall;
 import co.gridport.server.handler.LoadBalancer;
@@ -29,7 +34,6 @@ import co.gridport.server.jms.ModuleJMS;
 import co.gridport.server.kafka.ModuleKafka;
 import co.gridport.server.manager.ModuleManager;
 import co.gridport.server.router.ModuleRouter;
-import co.gridport.server.utils.Utils;
 
 public class GridPortServer {
 
@@ -39,11 +43,9 @@ public class GridPortServer {
     public static void main(String[] args) throws InterruptedException {
         instance = new GridPortServer();
         instance.startServer();
-        log.info("****************************************************");
         synchronized(instance) {
             instance.wait();
         }
-        log.info("****************************************************");
     }
 
     public static List<Request> getActiveRequests() {
@@ -87,11 +89,16 @@ public class GridPortServer {
             server.setGracefulShutdown(1000);
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 @Override public void run() {
-                    shutdown();
+                    stopServer();
+                    config.close();
+                    log.info("*** SHUT DOWN COMPLETE ***");
+                    this.notifyAll();
                 }
             });
             initializeHandlers();
             server.start();
+            log.info("****************************************************");
+
         } catch (Exception e) {
             log.error("*** initialization critical failure ",e);
             System.exit(0);
@@ -107,7 +114,7 @@ public class GridPortServer {
             config.has("threads") ? Integer.valueOf(config.get("threads")) : 50
         )));
 
-        if (config.has("keyStoreFile") && !Utils.blank(config.get("keyStoreFile"))) {
+        if (config.has("keyStoreFile") && !Strings.isNullOrEmpty(config.get("keyStoreFile"))) {
             System.setProperty("javax.net.ssl.trustStore", config.get("keyStoreFile"));
             System.setProperty("javax.net.ssl.trustStorePassword", config.get("keyStorePass"));
             log.info("*** TRUST KEYSTORE " +  config.get("keyStoreFile"));
@@ -175,13 +182,6 @@ public class GridPortServer {
         } catch (Exception e) {
             log.error("*** " + module.getClass().getSimpleName() + " initialization failed",e);
         }
-    }
-
-    public void shutdown() {
-        stopServer();
-        config.close();
-        log.info("*** SHUT DOWN COMPLETE ***");
-        this.notifyAll();
     }
 
     private void stopServer() {

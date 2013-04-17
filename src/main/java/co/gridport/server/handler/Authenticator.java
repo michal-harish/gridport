@@ -9,19 +9,20 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import joptsimple.internal.Strings;
+
 import org.apache.commons.codec.binary.Base64;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.gridport.server.ConfigProvider;
+import co.gridport.server.Crypt;
+import co.gridport.server.config.ConfigProvider;
 import co.gridport.server.domain.Contract;
 import co.gridport.server.domain.RequestContext;
 import co.gridport.server.domain.Route;
 import co.gridport.server.domain.User;
-import co.gridport.server.utils.Crypt;
-import co.gridport.server.utils.Utils;
 
 
 public class Authenticator extends AbstractHandler
@@ -54,13 +55,13 @@ public class Authenticator extends AbstractHandler
                         hasDefaultContracts = true;
                     } else for(String g:C.getGroups()) {
                         if (auth_require.equals("default")) auth_require="";
-                        if(Utils.blank(g)) log.warn(C.getName());
+                        if(Strings.isNullOrEmpty(g)) log.warn(C.getName());
                         auth_require += (auth_require.equals("") ? "" : ",")+g;
                     }
                 }
             }
 
-            if (Utils.blank(auth_require)) {
+            if (Strings.isNullOrEmpty(auth_require)) {
                 log.debug("invalid auth group configuration");
                 response.setStatus(409);
                 baseRequest.setHandled(true);
@@ -78,7 +79,7 @@ public class Authenticator extends AbstractHandler
 
             List<String> groups = null;
             String URI = request.getRequestURI().toString();
-            if (!Utils.blank(request.getQueryString())) URI+="?"+request.getQueryString();
+            if (!Strings.isNullOrEmpty(request.getQueryString())) URI+="?"+request.getQueryString();
             String nonce = null;
             String realm = "";
             String qop = "auth";

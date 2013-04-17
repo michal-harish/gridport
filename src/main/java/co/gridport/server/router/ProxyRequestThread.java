@@ -13,6 +13,8 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import joptsimple.internal.Strings;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +22,6 @@ import co.gridport.server.GridPortServer;
 import co.gridport.server.domain.RequestContext;
 import co.gridport.server.domain.Route;
 import co.gridport.server.jms.ModuleJMS;
-import co.gridport.server.utils.Utils;
 
 
 public class ProxyRequestThread extends Thread {
@@ -204,7 +205,7 @@ public class ProxyRequestThread extends Thread {
     protected void complete() {
         ModuleRouter routerModule = GridPortServer.getModule(ModuleRouter.class);
         ModuleJMS jmsModule = GridPortServer.getModule(ModuleJMS.class);
-        if (!Utils.blank(routerModule.logTopic)) {
+        if (!Strings.isNullOrEmpty(routerModule.logTopic)) {
             if (jmsModule.initialized) {
                 HashMap<String,String> log_properties = new HashMap<String,String>();
                 log_properties.put("gridport-log-version", "1");

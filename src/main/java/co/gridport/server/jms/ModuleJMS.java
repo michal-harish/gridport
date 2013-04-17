@@ -25,6 +25,8 @@ import javax.naming.NameClassPair;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 
+import joptsimple.internal.Strings;
+
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
@@ -34,11 +36,10 @@ import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.gridport.server.ConfigProvider;
+import co.gridport.server.config.ConfigProvider;
 import co.gridport.server.domain.Endpoint;
-import co.gridport.server.utils.Utils;
 
-public class ModuleJMS implements co.gridport.server.Module {
+public class ModuleJMS implements co.gridport.server.domain.Module {
     static protected Logger log = LoggerFactory.getLogger("mod_jms");
 
     public boolean initialized = false;
@@ -63,7 +64,7 @@ public class ModuleJMS implements co.gridport.server.Module {
         String factory = config.get("java.naming.factory.initial");
         String provider = config.get("java.naming.provider.url");
 
-        if (Utils.blank(factory) || Utils.blank(provider)) {
+        if (Strings.isNullOrEmpty(factory) || Strings.isNullOrEmpty(provider)) {
             return null;
         }
 

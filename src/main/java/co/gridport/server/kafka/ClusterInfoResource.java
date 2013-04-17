@@ -15,10 +15,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilderException;
 import javax.ws.rs.core.UriInfo;
 
-import co.gridport.server.VelocityResource;
+import co.gridport.server.GenericResource;
 
 @Path("/{zk}")
-public class ClusterInfoResource extends VelocityResource {
+public class ClusterInfoResource extends GenericResource {
 
     @Context public UriInfo uriInfo;
 

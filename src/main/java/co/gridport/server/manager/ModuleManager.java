@@ -10,9 +10,9 @@ import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.gridport.server.ConfigProvider;
-import co.gridport.server.Module;
+import co.gridport.server.config.ConfigProvider;
 import co.gridport.server.domain.Endpoint;
+import co.gridport.server.domain.Module;
 
 public class ModuleManager implements Module {
 

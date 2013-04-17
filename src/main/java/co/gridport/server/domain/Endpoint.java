@@ -1,6 +1,6 @@
 package co.gridport.server.domain;
 
-import co.gridport.server.utils.Utils;
+import joptsimple.internal.Strings;
 
 
 public class Endpoint {
@@ -65,8 +65,8 @@ public class Endpoint {
     public String getUrlPattern(String ServerName) {
         return 
             (ssl == null ? "http(s)" : ssl ? "https" : "http" ) +"://"
-            + (!Utils.blank(gatewayHost) ? gatewayHost : ServerName )
-            + (!Utils.blank(uriBase) ? uriBase : "/*" )
+            + (!Strings.isNullOrEmpty(gatewayHost) ? gatewayHost : ServerName )
+            + (!Strings.isNullOrEmpty(uriBase) ? uriBase : "/*" )
             ;
     }
 
@@ -99,7 +99,7 @@ public class Endpoint {
     }
 
     public Boolean isWildcard() {
-        if (Utils.blank(uriBase)) {
+        if (Strings.isNullOrEmpty(uriBase)) {
             return true;
         } else if (uriBase.substring(uriBase.length()-1).equals("*")) { 
             return true;

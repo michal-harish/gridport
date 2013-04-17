@@ -11,18 +11,19 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import joptsimple.internal.Strings;
+
 import org.apache.log4j.lf5.util.StreamUtils;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.gridport.server.ConfigProvider;
+import co.gridport.server.config.ConfigProvider;
 import co.gridport.server.domain.Contract;
 import co.gridport.server.domain.Endpoint;
 import co.gridport.server.domain.RequestContext;
 import co.gridport.server.domain.Route;
-import co.gridport.server.utils.Utils;
 
 public class Firewall extends AbstractHandler
 {
@@ -161,9 +162,9 @@ public class Firewall extends AbstractHandler
 
         List<Endpoint> endpoints = new ArrayList<Endpoint>();
         for(Endpoint e: config.getEndpoints().values()) {
-            if (!Utils.blank(e.getGateway()) && !e.getGateway().equals(context.getGateway())) continue;
-            if (!Utils.blank(e.getGatewayHost()) && !e.getGatewayHost().equals(context.getHost())) continue;
-            if (!Utils.blank(e.getHttpMethod()) && !e.getHttpMethod().contains(context.getMethod())) continue;
+            if (!Strings.isNullOrEmpty(e.getGateway()) && !e.getGateway().equals(context.getGateway())) continue;
+            if (!Strings.isNullOrEmpty(e.getGatewayHost()) && !e.getGatewayHost().equals(context.getHost())) continue;
+            if (!Strings.isNullOrEmpty(e.getHttpMethod()) && !e.getHttpMethod().contains(context.getMethod())) continue;
             if (e.getSsl()!=null && !e.getSsl().equals(context.isHttps())) continue;
             endpoints.add(e);
         }
@@ -177,9 +178,9 @@ public class Firewall extends AbstractHandler
         String longestWildCard = "";
         for (Endpoint e: endpoints) {
             String base  = "";  
-            if (!Utils.blank(e.getUriBase())) {
+            if (!Strings.isNullOrEmpty(e.getUriBase())) {
                 base = e.getUriBase();
-                if (Utils.blank(URI)) {
+                if (Strings.isNullOrEmpty(URI)) {
                     // empty query cannot match where uri_base is set
                     continue;
                 }

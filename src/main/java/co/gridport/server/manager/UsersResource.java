@@ -16,7 +16,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilderException;
 
-import co.gridport.server.ConfigProvider;
+import co.gridport.server.config.ConfigProvider;
 import co.gridport.server.domain.User;
 
 @Path("/users")

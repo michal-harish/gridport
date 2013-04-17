@@ -3,12 +3,13 @@ package co.gridport.server.domain;
 import java.util.ArrayList;
 import java.util.List;
 
+import joptsimple.internal.Strings;
+
 import org.apache.commons.lang.NotImplementedException;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 
-import co.gridport.server.utils.Crypt;
-import co.gridport.server.utils.Utils;
+import co.gridport.server.Crypt;
 
 public class User {
 
@@ -32,24 +33,24 @@ public class User {
     public void setGroups(String groups) {
         this.groups = new ArrayList<String>();
         for(String group:groups.split("[\\s\\,\\;]")) {
-            if (!Utils.blank(group)) this.groups.add(group);
+            if (!Strings.isNullOrEmpty(group)) this.groups.add(group);
         }
     }
 
     @JsonProperty("hasPassword")
     public Boolean hasPassword() {
-        return !Utils.blank(passport);
+        return !Strings.isNullOrEmpty(passport);
     }
 
     @JsonIgnore
     public String getPassport(String realm) {
-       if (Utils.blank(realm)) {
-           return Utils.blank(passport) ?  Crypt.md5(username +"::") : passport;
+       if (Strings.isNullOrEmpty(realm)) {
+           return Strings.isNullOrEmpty(passport) ?  Crypt.md5(username +"::") : passport;
        } else throw new NotImplementedException();
     }
 
     public void setPassword(String realm, String password) {
-        if (Utils.blank(realm)) {
+        if (Strings.isNullOrEmpty(realm)) {
             passport = Crypt.md5(username +":" + realm + ":" + password);
         } else throw new NotImplementedException();
     }

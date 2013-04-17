@@ -12,7 +12,7 @@ import org.apache.velocity.app.Velocity;
 import org.apache.velocity.runtime.RuntimeConstants;
 import org.apache.velocity.tools.generic.DateTool;
 
-public class VelocityResource extends VelocityContext {
+public class GenericResource extends VelocityContext {
 
     public DateTool date = new DateTool();
     public Long now = System.currentTimeMillis();

@@ -1,4 +1,4 @@
-package co.gridport.server;
+package co.gridport.server.config;
 
 import java.util.Collection;
 import java.util.List;

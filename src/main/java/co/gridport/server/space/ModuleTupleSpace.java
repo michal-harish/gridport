@@ -4,9 +4,9 @@ import org.eclipse.jetty.server.handler.ContextHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.gridport.server.ConfigProvider;
-import co.gridport.server.Module;
+import co.gridport.server.config.ConfigProvider;
 import co.gridport.server.domain.Endpoint;
+import co.gridport.server.domain.Module;
 
 public class ModuleTupleSpace implements Module {
 

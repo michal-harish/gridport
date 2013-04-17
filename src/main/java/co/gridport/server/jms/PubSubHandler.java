@@ -10,6 +10,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import joptsimple.internal.Strings;
+
 import org.eclipse.jetty.server.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +20,6 @@ import co.gridport.server.GenericHandler;
 import co.gridport.server.GridPortServer;
 import co.gridport.server.domain.RequestContext;
 import co.gridport.server.domain.Route;
-import co.gridport.server.utils.Utils;
 
 public class PubSubHandler extends GenericHandler {
 
@@ -43,7 +44,7 @@ public class PubSubHandler extends GenericHandler {
 
         //list all destinations
         String destName = target.substring(1).replaceAll("/", ".");
-        if (Utils.blank(destName)) {
+        if (Strings.isNullOrEmpty(destName)) {
             String reply = new String();
             List<String> list = jmsModule.listDestinations(type);
             if (list.size() == 0) {

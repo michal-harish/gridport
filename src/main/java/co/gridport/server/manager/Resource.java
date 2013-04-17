@@ -8,11 +8,11 @@ import javax.ws.rs.core.UriInfo;
 
 import org.eclipse.jetty.server.Request;
 
-import co.gridport.server.VelocityResource;
+import co.gridport.server.GenericResource;
 import co.gridport.server.domain.Contract;
 import co.gridport.server.domain.RequestContext;
 
-public abstract class Resource extends VelocityResource {
+public abstract class Resource extends GenericResource {
 
     @Context public UriInfo uriInfo;
     @Context public HttpServletRequest request;

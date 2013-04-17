@@ -1,4 +1,4 @@
-package co.gridport.server;
+package co.gridport.server.config;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,6 +15,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import joptsimple.internal.Strings;
+
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import co.gridport.server.domain.Contract;
 import co.gridport.server.domain.Endpoint;
 import co.gridport.server.domain.User;
-import co.gridport.server.utils.Utils;
 
 public class ConfigProviderSQLite implements ConfigProvider {
 
@@ -361,7 +362,7 @@ public class ConfigProviderSQLite implements ConfigProvider {
         while (rs.next()) {
             Endpoint endpoint = new Endpoint(
                 rs.getInt("ID"),
-                Utils.blank(rs.getString("ssl")) ? null : rs.getString("ssl").equals("1") ? true : false,
+                Strings.isNullOrEmpty(rs.getString("ssl")) ? null : rs.getString("ssl").equals("1") ? true : false,
                 rs.getString("gateway"),
                 rs.getString("gateway_host"),
                 rs.getString("http_method"),
@@ -377,8 +378,10 @@ public class ConfigProviderSQLite implements ConfigProvider {
         settings = new LinkedHashMap<String,String>();
         ResultSet rs;
         rs = policydb.createStatement().executeQuery("SELECT * FROM settings ORDER BY name");
-        while (rs.next()) if (!Utils.blank(rs.getString("name")) && !Utils.blank(rs.getString("value"))) {
-            settings.put(rs.getString("name"), rs.getString("value"));
+        while (rs.next()) {
+            if (!Strings.isNullOrEmpty(rs.getString("name")) && !Strings.isNullOrEmpty(rs.getString("value"))) {
+                settings.put(rs.getString("name"), rs.getString("value"));
+            }
         }
     }
 
@@ -395,13 +398,13 @@ public class ConfigProviderSQLite implements ConfigProvider {
                         ArrayList<String> groups = new ArrayList<String>();
                         if (rs.getString("auth_group") != null && !rs.getString("auth_group").trim().equals("")) {
                             for(String s:rs.getString("auth_group").trim().split("[\\s\\n\\r,]+")) {
-                                if (!Utils.blank(s.trim())) groups.add(s.trim());
+                                if (!Strings.isNullOrEmpty(s.trim())) groups.add(s.trim());
                             }
                         }
                         List<Integer> endpoints = new ArrayList<Integer>();
                         if (rs.getString("content") != null  && !rs.getString("content").trim().equals("")) {
                             for(String s:rs.getString("content").trim().split("[\\s\\n\\r,]+")) {
-                                if (!Utils.blank(s.trim())) endpoints.add(Integer.valueOf(s.trim()));
+                                if (!Strings.isNullOrEmpty(s.trim())) endpoints.add(Integer.valueOf(s.trim()));
                             }
                         }
                         contracts.put(name, new Contract(

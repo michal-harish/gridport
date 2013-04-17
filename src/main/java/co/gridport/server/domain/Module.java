@@ -1,6 +1,8 @@
-package co.gridport.server;
+package co.gridport.server.domain;
 
 import org.eclipse.jetty.server.Handler;
+
+import co.gridport.server.config.ConfigProvider;
 
 public interface Module {
 

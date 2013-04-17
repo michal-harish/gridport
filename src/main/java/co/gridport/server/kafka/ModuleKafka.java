@@ -12,11 +12,11 @@ import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.gridport.server.ConfigProvider;
+import co.gridport.server.Crypt;
+import co.gridport.server.config.ConfigProvider;
 import co.gridport.server.domain.Endpoint;
-import co.gridport.server.utils.Crypt;
 
-public class ModuleKafka implements co.gridport.server.Module {
+public class ModuleKafka implements co.gridport.server.domain.Module {
 
     static private Logger log = LoggerFactory.getLogger("server");
 

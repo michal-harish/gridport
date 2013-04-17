@@ -15,8 +15,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilderException;
 import javax.ws.rs.core.UriInfo;
 
-import co.gridport.server.ConfigProvider;
 import co.gridport.server.GridPortServer;
+import co.gridport.server.config.ConfigProvider;
 
 @Path("/")
 public class HomeResource extends Resource {

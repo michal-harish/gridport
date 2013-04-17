@@ -1,4 +1,4 @@
-package co.gridport.server.utils;
+package co.gridport.server;
 
 import java.security.MessageDigest;
 import java.util.UUID;

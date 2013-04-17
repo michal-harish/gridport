@@ -11,8 +11,8 @@ import org.eclipse.jetty.server.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.gridport.server.ConfigProvider;
 import co.gridport.server.GenericHandler;
+import co.gridport.server.config.ConfigProvider;
 import co.gridport.server.domain.Contract;
 import co.gridport.server.domain.RequestContext;
 import co.gridport.server.domain.Route;
