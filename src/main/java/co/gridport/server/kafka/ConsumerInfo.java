@@ -1,6 +1,7 @@
 package co.gridport.server.kafka;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,15 +28,24 @@ public class ConsumerInfo {
         return groupid;
     }
 
-    public List<String> getProcesses() {
+    public synchronized List<String> getProcesses() {
         if (processes == null) {
+            processes = new ArrayList<String>();
             if (cluster.zk.exists("/consumers/"+groupid+"/ids")) {
-                processes = new ArrayList<String>();
                 setProcesses(cluster.zk.getChildren("/consumers/"+groupid+"/ids"));
                 cluster.zk.subscribeChildChanges("/consumers/"+groupid+"/ids", new IZkChildListener() {
                     @Override
                     public void handleChildChange(String parentPath, List<String> processList) throws Exception {
                         setProcesses(processList);
+                    }
+                });
+            } else {
+                cluster.zk.subscribeChildChanges("/consumers/"+groupid, new IZkChildListener() {
+                    @Override
+                    public void handleChildChange(String parentPath, List<String> changes) throws Exception {
+                        if (changes.contains("ids")) {
+                            processes = null;
+                        }  
                     }
                 });
             }
@@ -47,6 +57,7 @@ public class ConsumerInfo {
         synchronized(processes) {
             processes.clear();
             processes.addAll(processList);
+            Collections.sort(processes);
         }
     }
 
@@ -59,7 +70,7 @@ public class ConsumerInfo {
     }
 
     @JsonIgnore
-    public ConsumerTopicInfo getPartitions(String topicName) {
+    public ConsumerTopicInfo getConsumerTopic(String topicName) {
         getTopics();
         return topics.get(topicName);
     }

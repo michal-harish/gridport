@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.I0Itec.zkclient.IZkChildListener;
 import org.I0Itec.zkclient.ZkClient;
@@ -31,7 +32,7 @@ public class ClusterInfo {
 
     public Map<String, ConsumerInfo> getConsumers() {
         if (consumers == null) {
-            consumers = new HashMap<String, ConsumerInfo>();
+            consumers = new TreeMap<String, ConsumerInfo>();
             try {
                 setConsumers(zk.getChildren("/consumers"));
                 zk.subscribeChildChanges("/consumers", new IZkChildListener() {

@@ -56,7 +56,6 @@ public class PartitionOwnerInfo {
                 cluster.zk.subscribeDataChanges(zkPath, new IZkDataListener() {
                     @Override public void handleDataChange(String dataPath, Object data) throws Exception {
                         synchronized(this) { 
-                            System.err.println(zkPath);
                             watermark = Long.valueOf(data.toString());
                             status = null;
                         }
@@ -64,7 +63,6 @@ public class PartitionOwnerInfo {
                     @Override
                     public void handleDataDeleted(String dataPath) throws Exception {
                         synchronized(this) { 
-                            System.err.println(zkPath);
                             watermark = null;
                             status = null;
                         }

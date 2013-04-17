@@ -1,17 +1,18 @@
 package co.gridport.server.kafka;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.Map.Entry;
 
 import org.I0Itec.zkclient.IZkChildListener;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 
 
-@JsonPropertyOrder({"name","activeConsumers","inactiveConsumers","partitions"})
+@JsonPropertyOrder({"name","consumers","partitions"})
 public class TopicInfo {
 
     private ClusterInfo cluster;
@@ -20,7 +21,7 @@ public class TopicInfo {
 
     private Map<String,PartitionInfo> partitions;
 
-    private Map<String,Boolean> consumers;
+    private Map<String,Map<String,Object>> consumers;
 
     public TopicInfo(ClusterInfo cluster, String topicName) {
         this.cluster = cluster;
@@ -35,28 +36,9 @@ public class TopicInfo {
         this.name = name;
     }
 
-    public List<String> getActiveConsumers() {
-        List<String> result = new ArrayList<String>();
-        getConsumers();
-        for(Entry<String,Boolean> entry: consumers.entrySet()) {
-            if (entry.getValue()!=null && entry.getValue()) result.add(entry.getKey());
-        }
-        return result;
-    }
-
-    public List<String> getInactiveConsumers() {
-        List<String> result = new ArrayList<String>();
-        getConsumers();
-        for(Entry<String,Boolean> entry: consumers.entrySet()) {
-            if (entry.getValue()!=null && !entry.getValue()) result.add(entry.getKey());
-        }
-        return result;
-    }
-
-
     public Map<String,PartitionInfo> getPartitions() {
         if (partitions == null) {
-            partitions = new HashMap<String,PartitionInfo>();
+            partitions = new TreeMap<String,PartitionInfo>();
             try {
                 setPartitions(cluster.zk.getChildren("/brokers/topics/"+name));
                 //TODO set up watch /brokers/topics/name
@@ -94,10 +76,14 @@ public class TopicInfo {
         }
     }
 
-    private Map<String,Boolean> getConsumers() {
+    @SuppressWarnings("serial")
+    public Map<String,Map<String,Object>> getConsumers() {
         synchronized(this) {
-            if (consumers == null){
-                consumers = new HashMap<String,Boolean>();
+            if (consumers == null) {
+                consumers = new LinkedHashMap<String,Map<String,Object>>() {{
+                    put("active", new TreeMap<String,Object>());
+                    put("inactive", new TreeMap<String,Object>());
+                }};
             }
             for(Entry<String,ConsumerInfo> entry: cluster.getConsumers().entrySet()) {
                 final String groupId = entry.getKey();
@@ -137,8 +123,21 @@ public class TopicInfo {
         }
     }
 
-    private synchronized void flagConsumer(String groupId, Boolean isOwner) {
-        consumers.put(groupId, isOwner);
+    private synchronized void flagConsumer(String groupId, Boolean isActive) {
+        if (isActive == null) {
+            consumers.get("active").remove(groupId);
+            consumers.get("inactive").remove(groupId);
+        } else if (isActive) {
+            consumers.get("inactive").remove(groupId);
+            if (!consumers.get("active").containsKey(groupId)) {
+                consumers.get("active").put(groupId, null);
+            }
+        } else {
+            consumers.get("active").remove(groupId);
+            if (!consumers.get("inactive").containsKey(groupId)) {
+                consumers.get("inactive").put(groupId, null);
+            }
+        }
     }
 
 

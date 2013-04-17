@@ -1,7 +1,9 @@
 package co.gridport.server.kafka;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -37,7 +39,7 @@ public class ClusterInfoResource extends VelocityResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String,String> getTopicList() throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
         ClusterInfo cluster = ModuleKafka.getClusterInfo(zkServer);
-        Map<String,String> result = new HashMap<String,String>();
+        Map<String,String> result = new TreeMap<String,String>();
         for(String topic: cluster.getTopics().keySet()) {
             result.put(
                 topic,
@@ -53,27 +55,42 @@ public class ClusterInfoResource extends VelocityResource {
     @GET
     @Path("/topics/{topic}")
     @Produces(MediaType.APPLICATION_JSON)
-    public TopicInfo getTopicInfo(@PathParam("topic") String topic) {
+    public TopicInfo getTopicInfo(@PathParam("topic") String topicName) throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
         ClusterInfo cluster = ModuleKafka.getClusterInfo(zkServer);
-        return cluster.getTopics().get(topic);
+        TopicInfo topic = cluster.getTopics().get(topicName);
+        for(String category: topic.getConsumers().keySet()) {
+            for(Entry<String,Object> consumer: topic.getConsumers().get(category).entrySet()) {
+                consumer.setValue(getConsumerUrl(consumer.getKey()));
+            }
+        }
+        return topic ;
     }
 
     @GET
     @Path("/consumers")
     @Produces(MediaType.APPLICATION_JSON)
-    public Map<String,String> getConsumerList() throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
+    public Map<String,Map<String,String>> getConsumerList() throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
         ClusterInfo cluster = ModuleKafka.getClusterInfo(zkServer);
-        Map<String,String> result = new HashMap<String,String>();
-        for(String groupid: cluster.getConsumers().keySet()) {
-            result.put(
-                groupid,
-                uriInfo.getBaseUriBuilder()
-                    .path(ClusterInfoResource.class)
-                    .path(ClusterInfoResource.class.getMethod("getConsumerInfo", String.class))
-                    .build(zkServer,groupid).toString()
-            );
+        @SuppressWarnings("serial")
+        Map<String,Map<String,String>> result = new LinkedHashMap<String,Map<String,String>>() {{
+            put("active", new TreeMap<String,String>());
+            put("inactive", new TreeMap<String,String>());
+        }};
+        for(Entry<String,ConsumerInfo> entry: cluster.getConsumers().entrySet()) {
+            String groupid = entry.getKey();
+            ConsumerInfo consumer = entry.getValue();
+            result
+                .get(consumer.getProcesses().size() > 0 ? "active" : "inactive")
+                .put(groupid, getConsumerUrl(groupid));
         }
         return result;
+    }
+
+    private String getConsumerUrl(String groupid) throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
+        return uriInfo.getBaseUriBuilder()
+                .path(ClusterInfoResource.class)
+                .path(ClusterInfoResource.class.getMethod("getConsumerInfo", String.class))
+                .build(zkServer,groupid).toString();
     }
 
     @GET
@@ -96,7 +113,7 @@ public class ClusterInfoResource extends VelocityResource {
     @Produces(MediaType.APPLICATION_JSON)
     public ConsumerTopicInfo getConsumerTopicInfo(@PathParam("groupid") String groupid, @PathParam("topic") String topicName) {
         ClusterInfo cluster = ModuleKafka.getClusterInfo(zkServer);
-        return cluster.getConsumers().get(groupid).getPartitions(topicName);
+        return cluster.getConsumers().get(groupid).getConsumerTopic(topicName);
     }
 
     @GET
