@@ -78,9 +78,9 @@ public class ConsumerInfo {
     private Map<String,ConsumerTopicInfo> getTopics() {
         if (topics == null) {
             try {
+                topics = new HashMap<String,ConsumerTopicInfo>();
+                status = new HashMap<String,Map<String, Object>>();
                 if (cluster.zk.exists("/consumers/"+groupid+"/offsets")) {
-                    topics = new HashMap<String,ConsumerTopicInfo>();
-                    status = new HashMap<String,Map<String, Object>>();
                     setTopics(cluster.zk.getChildren("/consumers/"+groupid+"/offsets"));
                     cluster.zk.subscribeChildChanges("/consumers/"+groupid+"/offsets", new IZkChildListener() {
                         @Override
