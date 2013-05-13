@@ -37,9 +37,6 @@ public abstract class SubRequest extends Thread {
         income = t;
         received = System.currentTimeMillis();
 
-        //adding trailing slash to prevent default 301 from http servers
-        url = url.replaceFirst("^(.*/)?([^/\\.\\?]+)(\\?.*)?$","$1$2/$3");
-
         URL U = new URL(url);
         conn = (HttpURLConnection) U.openConnection();
         conn.setConnectTimeout(Math.max(1000, 1000 * 6)); //6 seconds connection timeout

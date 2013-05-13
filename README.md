@@ -153,6 +153,7 @@ JMS Receiver Example (php)
 Backlog
 ========================================================================
 
+* REFACTOR uri translation is messy (3 different places add/remove slashes)
 * FEATURE sendHtmlError with 400,403,404,500 from Firewall and Authenticator
 * REFACTOR loadIncomingContentEntity() should not be used in the proxy requests, multiplex streaming should be impelemented
 * BUG ROUTER Set-Cookie passes only last cookie instruction

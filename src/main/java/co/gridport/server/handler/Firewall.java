@@ -158,7 +158,7 @@ public class Firewall extends AbstractHandler
         return routes; 
     }
 
-    private List<Route> filterEndpointsByRequest(RequestContext context) {
+    public List<Route> filterEndpointsByRequest(RequestContext context) {
 
         List<Endpoint> endpoints = new ArrayList<Endpoint>();
         for(Endpoint e: config.getEndpoints().values()) {
@@ -170,7 +170,6 @@ public class Firewall extends AbstractHandler
         }
 
         String URI = context.getURI();
-        if (!URI.matches("^.*?\\.[^/]+$")) URI += "/";
 
         List<Route> result = new ArrayList<Route>();
         boolean removeAllWildCards = false;
@@ -212,6 +211,10 @@ public class Firewall extends AbstractHandler
                 }
             }
 
+            //Glue base uri and context uri with a slash - this is not a trailing slash
+            String targetUri = URI.substring(base.length());
+            targetUri = targetUri.replaceFirst("^([^/]{1})","/$1");
+
             // route has passed the uri filter
             Route route = new Route(
                     e.isWildcard(),
@@ -220,7 +223,7 @@ public class Firewall extends AbstractHandler
                     context.getMethod(), //e.getHttpMethod(),
                     context.getHost(), //e.getGatewayHost(),
                     e.getAsync(),
-                    URI.substring(base.length()).replaceFirst("^([^/]{1})","/$1"), //target URI
+                    targetUri,
                     e.getEndpoint().replaceFirst("/$",""),
                     context.getQueryString(),
                     e.getUriBase() == null ? "" : e.getUriBase(),
