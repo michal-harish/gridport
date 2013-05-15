@@ -36,15 +36,12 @@ public class Contract {
         this.ipFilters = ipFilters == null 
             ? new ArrayList<String>() 
             : new ArrayList<String>(Arrays.asList(ipFilters.split("[,\n\r]")));
-        this.intervalms = intervalms == null ? 0 : intervalms;
-        this.frequency = frequency == null ? 0 : frequency;
+        setIntervalMs(intervalms == null ? 0 : intervalms);
+        setFrequency(frequency == null ? 0 : frequency);
         this.groups = groups == null ? new ArrayList<String>() : groups;
         this.endpoints = endpoints == null ? new ArrayList<Integer>() :  endpoints;
         last_request = 0L;
         counter = 0.0;
-        if (intervalms > 0 ) {
-            decayRate = - Math.log(2) /  intervalms;
-        }
     }
 
     public String getName() {
@@ -77,6 +74,7 @@ public class Contract {
     }
     public void setIntervalMs(Long intervalms) {
         this.intervalms = intervalms;
+        decayRate = intervalms > 0 ? - Math.log(2) /  intervalms : 0;
     }
 
     public Integer getFrequency() {
