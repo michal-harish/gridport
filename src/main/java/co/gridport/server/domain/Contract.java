@@ -42,7 +42,7 @@ public class Contract {
         this.endpoints = endpoints == null ? new ArrayList<Integer>() :  endpoints;
         last_request = 0L;
         counter = 0.0;
-        if (intervalms>9999) {
+        if (intervalms > 0 ) {
             decayRate = - Math.log(2) /  intervalms;
         }
     }
@@ -129,7 +129,7 @@ public class Contract {
         double waited = 0;
         if (frequency>0 && intervalms > 0) while (true) {
             float sleep = 0;
-            synchronized(this) {
+             synchronized(this) {
                 double elapsed = (System.currentTimeMillis() - last_request);
                 counter = counter * Math.pow(Math.E, decayRate * elapsed);
                 if (counter > frequency) {
