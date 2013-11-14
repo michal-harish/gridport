@@ -36,6 +36,7 @@ import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import co.gridport.server.Utils;
 import co.gridport.server.config.ConfigProvider;
 import co.gridport.server.domain.Endpoint;
 
@@ -136,11 +137,8 @@ public class ModuleJMS implements co.gridport.server.domain.Module {
                         setContextPath(contextPath);
                         ServletHolder s = new ServletHolder(new HttpServletDispatcher());
                         s.setInitOrder(1);
-                        s.setInitParameter("resteasy.scan", "false");
                         s.setInitParameter("resteasy.providers", "org.jboss.resteasy.plugins.providers.jackson.ResteasyJacksonProvider");
-                        s.setInitParameter("resteasy.resources",
-                             HelpResource.class.getName()
-                        );
+                        s.setInitParameter("resteasy.resources",Utils.scanRestEasyResources("co.gridport.server.jms"));
                         addServlet(s,"/*");
                     }}
                 });

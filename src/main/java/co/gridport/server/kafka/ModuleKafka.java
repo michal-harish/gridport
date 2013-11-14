@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import co.gridport.server.Crypt;
+import co.gridport.server.Utils;
 import co.gridport.server.config.ConfigProvider;
 import co.gridport.server.domain.Endpoint;
 
@@ -39,12 +40,8 @@ public class ModuleKafka implements co.gridport.server.domain.Module {
 
         ServletHolder s = new ServletHolder(new HttpServletDispatcher());
         s.setInitOrder(1);
-        s.setInitParameter("resteasy.scan", "false");
         s.setInitParameter("resteasy.providers", "org.jboss.resteasy.plugins.providers.jackson.ResteasyJacksonProvider");
-        s.setInitParameter("resteasy.resources",
-             ClusterInfoResource.class.getName()
-            +","+HelpResource.class.getName()
-        );
+        s.setInitParameter("resteasy.resources", Utils.scanRestEasyResources("co.gridport.server.kafka"));
         contextHandler.addServlet(s,"/*");
         return contextHandler;
 

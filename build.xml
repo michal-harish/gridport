@@ -60,9 +60,9 @@ java -Djava.library.path=. -jar gridport-server.jar cli</echo>
                     <!--
                     <fileset dir="c:/apache/bin" includes="keystore.jks"/>
                     -->
-                    <zipfileset prefix="bin" dir="target/bin" includes="gridport-server.jar"/>
-                    <zipfileset prefix="bin" dir="target/bin" includes="wrapper.conf"/>
-                    <zipfileset prefix="bin" dir="target/bin" includes="*.properties"/>
+                    <zipfileset dir="target/bin" includes="gridport-server.jar"/>
+                    <zipfileset dir="target/bin" includes="wrapper.conf"/>
+                    <zipfileset dir="target/bin" includes="*.properties"/>
                     
                     <os-specific/>
                     
@@ -74,64 +74,64 @@ java -Djava.library.path=. -jar gridport-server.jar cli</echo>
         <!--generate i386 distro-->
         <distro destfile="target/dist/GridPort-i386.zip">
             <os-specific>
-                <zipfileset prefix="bin" dir="target/bin" includes="run.sh"/>
-                <zipfileset prefix="bin" dir="target/bin" includes="sh.daemon"/>
-                <zipfileset prefix="bin" dir="dwrapper" includes="wrapper.jar"/>
-                <zipfileset prefix="bin" dir="dwrapper" includes="wrapper-linux-x86-32" />                
-                <zipfileset prefix="bin" dir="dwrapper" includes="libwrapper-linux-x86-32.so" />
+                <zipfileset dir="target/bin" includes="run.sh"/>
+                <zipfileset dir="target/bin" includes="sh.daemon"/>
+                <zipfileset dir="dwrapper" includes="wrapper.jar"/>
+                <zipfileset dir="dwrapper" includes="wrapper-linux-x86-32" />                
+                <zipfileset dir="dwrapper" includes="libwrapper-linux-x86-32.so" />
             </os-specific>
         </distro>
             
         <!--generate Amd64 distro -->    
         <distro destfile="target/dist/GridPort-amd64.zip">
             <os-specific>
-                <zipfileset prefix="bin" dir="target/bin" includes="run.sh"/>
-                <zipfileset prefix="bin" dir="target/bin" includes="sh.daemon"/>
-                <zipfileset prefix="bin" dir="dwrapper" includes="wrapper.jar"/>
-                <zipfileset prefix="bin" dir="dwrapper" includes="wrapper-linux-x86-64" />
-                <zipfileset prefix="bin" dir="dwrapper" includes="libwrapper-linux-x86-64.so" />
+                <zipfileset dir="target/bin" includes="run.sh"/>
+                <zipfileset dir="target/bin" includes="sh.daemon"/>
+                <zipfileset dir="dwrapper" includes="wrapper.jar"/>
+                <zipfileset dir="dwrapper" includes="wrapper-linux-x86-64" />
+                <zipfileset dir="dwrapper" includes="libwrapper-linux-x86-64.so" />
             </os-specific>
         </distro>
 
         <!--generate win32 distro-->
         <distro destfile="target/dist/GridPort-win32.zip">
             <os-specific>
-                <zipfileset prefix="bin" dir="target/bin" includes="*.bat"/>
-                <zipfileset prefix="bin" dir="dwrapper" includes="*.bat"/>                
-                <zipfileset prefix="bin" dir="dwrapper" includes="wrapper.jar"/>
-                <zipfileset prefix="bin" dir="dwrapper" includes="wrapper-windows-x86-32.*" />
+                <zipfileset dir="target/bin" includes="*.bat"/>
+                <zipfileset dir="dwrapper" includes="*.bat"/>                
+                <zipfileset dir="dwrapper" includes="wrapper.jar"/>
+                <zipfileset dir="dwrapper" includes="wrapper-windows-x86-32.*" />
             </os-specific>
         </distro>
     
         <!--generate win64 distro-->
         <distro destfile="target/dist/GridPort-win64.zip">
             <os-specific>
-                <zipfileset prefix="bin" dir="target/bin" includes="*.bat"/>
-                <zipfileset prefix="bin" dir="dwrapper" includes="*.bat"/>                
-                <zipfileset prefix="bin" dir="dwrapper" includes="wrapper.jar"/>
-                <zipfileset prefix="bin" dir="dwrapper" includes="wrapper-windows-x86-64.*" />
+                <zipfileset dir="target/bin" includes="*.bat"/>
+                <zipfileset dir="dwrapper" includes="*.bat"/>                
+                <zipfileset dir="dwrapper" includes="wrapper.jar"/>
+                <zipfileset dir="dwrapper" includes="wrapper-windows-x86-64.*" />
             </os-specific>
         </distro>    
     	
         <!--generate macosx32 distro-->
         <distro destfile="target/dist/GridPort-osx32.zip">
             <os-specific>
-                <zipfileset prefix="bin" dir="target/bin" includes="run.sh"/>
-                <zipfileset prefix="bin" dir="target/bin" includes="sh.daemon"/>
-                <zipfileset prefix="bin" dir="dwrapper" includes="wrapper.jar"/>
-                <zipfileset prefix="bin" dir="dwrapper" includes="wrapper-macosx-universal-32" />
-                <zipfileset prefix="bin" dir="dwrapper" includes="libwrapper-macosx-universal-32.*" />
+                <zipfileset dir="target/bin" includes="run.sh"/>
+                <zipfileset dir="target/bin" includes="sh.daemon"/>
+                <zipfileset dir="dwrapper" includes="wrapper.jar"/>
+                <zipfileset dir="dwrapper" includes="wrapper-macosx-universal-32" />
+                <zipfileset dir="dwrapper" includes="libwrapper-macosx-universal-32.*" />
             </os-specific>
         </distro>        
 
     	<!--generate macosx64 distro-->
         <distro destfile="target/dist/GridPort-osx64.zip">
             <os-specific>
-                <zipfileset prefix="bin" dir="target/bin" includes="run.sh"/>
-                <zipfileset prefix="bin" dir="target/bin" includes="sh.daemon"/>
-                <zipfileset prefix="bin" dir="dwrapper" includes="wrapper.jar"/>
-                <zipfileset prefix="bin" dir="dwrapper" includes="wrapper-macosx-universal-64" />
-                <zipfileset prefix="bin" dir="dwrapper" includes="libwrapper-macosx-universal-64.*" />
+                <zipfileset dir="target/bin" includes="run.sh"/>
+                <zipfileset dir="target/bin" includes="sh.daemon"/>
+                <zipfileset dir="dwrapper" includes="wrapper.jar"/>
+                <zipfileset dir="dwrapper" includes="wrapper-macosx-universal-64" />
+                <zipfileset dir="dwrapper" includes="libwrapper-macosx-universal-64.*" />
             </os-specific>
         </distro>        
     </target>    

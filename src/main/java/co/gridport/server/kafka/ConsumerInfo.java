@@ -101,6 +101,9 @@ public class ConsumerInfo {
         synchronized(topics) {
             for(String topicName: topicList) {
                 if (!topics.containsKey(topicName)) {
+                    if (!cluster.getTopics().containsKey(topicName)) {
+                        continue;
+                    }
                     ConsumerTopicInfo topicInfo = new ConsumerTopicInfo(
                         cluster, 
                         cluster.getTopics().get(topicName),
