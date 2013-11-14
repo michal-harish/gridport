@@ -15,6 +15,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilderException;
 import javax.ws.rs.core.UriInfo;
 
+import org.jboss.resteasy.spi.NotFoundException;
+
 import co.gridport.server.GenericResource;
 
 @Path("/{zk}")
@@ -58,6 +60,9 @@ public class ClusterInfoResource extends GenericResource {
     public TopicInfo getTopicInfo(@PathParam("topic") String topicName) throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
         ClusterInfo cluster = ModuleKafka.getClusterInfo(zkServer);
         TopicInfo topic = cluster.getTopics().get(topicName);
+        if (topic == null) {
+            throw new NotFoundException("Topic `"+topicName+"` not found"); 
+        }
         for(String category: topic.getConsumers().keySet()) {
             for(Entry<String,Object> consumer: topic.getConsumers().get(category).entrySet()) {
                 consumer.setValue(getConsumerUrl(consumer.getKey()));
@@ -99,6 +104,9 @@ public class ClusterInfoResource extends GenericResource {
     public ConsumerInfo getConsumerInfo(@PathParam("groupid") String groupid) throws IllegalArgumentException, UriBuilderException, SecurityException, NoSuchMethodException {
         ClusterInfo cluster = ModuleKafka.getClusterInfo(zkServer);
         ConsumerInfo info = cluster.getConsumers().get(groupid);
+        if (info == null) {
+            throw new NotFoundException("Consumer group `"+groupid+"` not found"); 
+        }
         for(String topic: info.getStatus().keySet()) {
             info.getStatus().get(topic).put("url", uriInfo.getBaseUriBuilder()
             .path(ClusterInfoResource.class)
